@@ -1,0 +1,25 @@
+/* Базовые стили - сброс, body, общие элементы */
+
+* {
+    color: #cd853f;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto Condensed', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #0d0d0d;
+    color: #cd853f;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.screen {
+    display: none;
+    background-color: #0d0d0d;
+}
+
+.screen.active {
+    display: block !important;
+}

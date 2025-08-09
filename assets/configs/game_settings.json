@@ -1,0 +1,12 @@
+{
+  "gameSettings": {
+    "name": "Настройки игры",
+    "description": "Основные настройки игрового процесса",
+    "maxUnitsPerArmy": 10,
+    "hitThreshold": 11,
+    "criticalHit": 20,
+    "battleSettings": {
+      "showDetailedLog": true
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "warrior": {
+    "id": "warrior",
+    "name": "Воин",
+    "hp": 12,
+    "damage": "1d6",
+    "view": "⚔️"
+  },
+  "archer": {
+    "id": "archer",
+    "name": "Лучник",
+    "hp": 8,
+    "damage": "1d6",
+    "view": "🏹"
+  },
+  "knight": {
+    "id": "knight",
+    "name": "Рыцарь",
+    "hp": 20,
+    "damage": "1d8",
+    "view": "🛡️"
+  },
+  "mage": {
+    "id": "mage",
+    "name": "Маг",
+    "hp": 6,
+    "damage": "1d8",
+    "view": "🔮"
+  },
+  "orc": {
+    "id": "orc",
+    "name": "Орк",
+    "hp": 10,
+    "damage": "1d6",
+    "view": "👹"
+  },
+  "goblin": {
+    "id": "goblin",
+    "name": "Гоблин",
+    "hp": 4,
+    "damage": "1d3",
+    "view": "👺"
+  },
+  "troll": {
+    "id": "troll",
+    "name": "Тролль",
+    "hp": 25,
+    "damage": "2d6",
+    "view": "👿"
+  },
+  "wizard": {
+    "id": "wizard",
+    "name": "Волшебник",
+    "hp": 8,
+    "damage": "1d10",
+    "view": "🧙‍♂️"
+  },
+  "skeleton": {
+    "id": "skeleton",
+    "name": "Скелет",
+    "hp": 6,
+    "damage": "1d4",
+    "view": "💀"
+  },
+  "wolf": {
+    "id": "wolf",
+    "name": "Волк",
+    "hp": 7,
+    "damage": "1d6",
+    "view": "🐺"
+  },
+  "bear": {
+    "id": "bear",
+    "name": "Медведь",
+    "hp": 18,
+    "damage": "2d4",
+    "view": "🐻"
+  },
+  "giant_snake": {
+    "id": "giant_snake",
+    "name": "Гигантская змея",
+    "hp": 10,
+    "damage": "1d8",
+    "view": "🐍"
+  },
+  "boar": {
+    "id": "boar",
+    "name": "Кабан",
+    "hp": 9,
+    "damage": "1d6",
+    "view": "🐗"
+  },
+  "spider": {
+    "id": "spider",
+    "name": "Ядовитый паук",
+    "hp": 5,
+    "damage": "1d6",
+    "view": "🕷️"
+  }
+}

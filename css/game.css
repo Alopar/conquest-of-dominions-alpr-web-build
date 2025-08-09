@@ -1,0 +1,99 @@
+/* Игровые элементы - юниты, анимации, боевые элементы */
+
+.unit {
+    width: 55px;
+    height: 55px;
+    border: 3px solid #654321;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    background: linear-gradient(145deg, #8b7355, #a0845c, #8b7355);
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3);
+    transition: all 0.2s ease;
+}
+
+.unit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.4);
+}
+
+.unit.active {
+    border-color: #cd853f;
+    box-shadow: 0 0 15px #cd853f, 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.unit.dead {
+    opacity: 0.4;
+    background: linear-gradient(145deg, #555, #777, #555);
+    border-color: #666;
+    transform: none;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.unit.attacked {
+    background: linear-gradient(145deg, #654321, #8b7355, #654321);
+    border-color: #4a3218;
+    opacity: 0.8;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.army-line {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 25px 0;
+    min-height: 70px;
+    border: 3px solid #654321;
+    background-color: rgba(26, 26, 26, 0.5);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.hp-bar {
+    position: absolute;
+    bottom: -18px;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    background: linear-gradient(90deg, #8b0000, #dc143c, #8b0000);
+    border-radius: 3px;
+    border: 1px solid #654321;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.army-label {
+    font-weight: 600;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #cd853f;
+}
+
+.battle-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.battle-info h2 {
+    color: #cd853f;
+    font-size: 2em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+#battle-status {
+    font-size: 1.2em;
+    color: #cd853f;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+}
