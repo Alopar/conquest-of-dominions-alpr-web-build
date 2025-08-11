@@ -57,37 +57,32 @@ function renderArmies() {
 
 // Обновление состояния кнопок
 function updateButtonStates() {
-    const attackersBtn = document.getElementById('attackers-btn');
-    const defendersBtn = document.getElementById('defenders-btn');
+    const stepBtn = document.getElementById('step-btn');
     const nextTurnBtn = document.getElementById('next-turn-btn');
-    
+
+    if (!stepBtn || !nextTurnBtn) return;
+
     if (window.gameState.battleEnded) {
-        attackersBtn.disabled = true;
-        defendersBtn.disabled = true;
+        stepBtn.disabled = true;
         nextTurnBtn.disabled = true;
         return;
     }
-    
-    let attackersCanAttack = 0;
-    let defendersCanAttack = 0;
+
     let totalCanAttack = 0;
-    
+
     for (let unit of window.gameState.attackers) {
         if (unit.alive && !unit.hasAttackedThisTurn) {
-            attackersCanAttack++;
             totalCanAttack++;
         }
     }
-    
+
     for (let unit of window.gameState.defenders) {
         if (unit.alive && !unit.hasAttackedThisTurn) {
-            defendersCanAttack++;
             totalCanAttack++;
         }
     }
-    
-    attackersBtn.disabled = (attackersCanAttack === 0);
-    defendersBtn.disabled = (defendersCanAttack === 0);
+
+    stepBtn.disabled = (totalCanAttack === 0);
     nextTurnBtn.disabled = (totalCanAttack > 0);
 }
 
@@ -162,16 +157,50 @@ function showIntro() {
     introScreen.style.display = 'flex';
     battleScreen.classList.remove('active');
     battleScreen.style.display = 'none';
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) logDiv.innerHTML = '';
 }
 
 function showBattle() {
-    const introScreen = document.getElementById('intro-screen');
+    // Скрываем все экраны и показываем только экран боя
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
     const battleScreen = document.getElementById('battle-screen');
-    
-    introScreen.classList.remove('active');
-    introScreen.style.display = 'none';
     battleScreen.classList.add('active');
     battleScreen.style.display = 'flex';
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) logDiv.innerHTML = '';
+}
+
+// Экран "Схватка"
+function showFight() {
+    // Скрываем все экраны
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
+    // Показываем экран схватки
+    const fightScreen = document.getElementById('fight-screen');
+    fightScreen.classList.add('active');
+    fightScreen.style.display = 'flex';
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) logDiv.innerHTML = '';
+}
+
+function backToIntroFromFight() {
+    // Скрываем все экраны
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
+    // Показываем главный экран
+    const introScreen = document.getElementById('intro-screen');
+    introScreen.classList.add('active');
+    introScreen.style.display = 'flex';
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) logDiv.innerHTML = '';
 }
 
 // Запуск боя
@@ -180,11 +209,14 @@ function startBattle() {
         alert('Сначала загрузите конфигурацию!');
         return;
     }
-    
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) {
+        logDiv.innerHTML = '';
+    }
     initializeArmies();
     renderArmies();
     showBattle();
-    
+
     window.addToLog('🚩 Бой начался!');
     window.addToLog(`Атакующие: ${window.gameState.attackers.length} юнитов`);
     window.addToLog(`Защитники: ${window.gameState.defenders.length} юнитов`);
@@ -194,6 +226,8 @@ function startBattle() {
 window.startBattle = startBattle;
 window.showIntro = showIntro;
 window.showBattle = showBattle;
+window.showFight = showFight;
+window.backToIntroFromFight = backToIntroFromFight;
 window.addToLog = addToLog;
 window.showUnitInfo = showUnitInfo;
 window.hideUnitInfo = hideUnitInfo;

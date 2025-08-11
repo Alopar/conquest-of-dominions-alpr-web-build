@@ -91,7 +91,8 @@ function downloadSampleConfig() {
     const sampleConfig = {
         "battleConfig": {
             "name": "Образец конфигурации",
-            "description": "Пример настройки боя для создания собственной конфигурации"
+            "description": "Пример настройки боя для создания собственной конфигурации",
+            "defendersStart": true
         },
         "armies": {
             "attackers": {

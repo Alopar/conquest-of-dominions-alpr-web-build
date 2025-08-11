@@ -4,7 +4,8 @@ let gameState = {
     defenders: [],
     currentTurn: 1,
     battleLog: [],
-    battleEnded: false
+    battleEnded: false,
+    activeSide: 'defenders' // активная сторона (по умолчанию защитники)
 };
 
 // Делаем gameState доступным глобально
@@ -100,6 +101,16 @@ function initializeArmies() {
     window.gameState.battleEnded = false;
     window.gameState.battleLog = [];
     window.gameState.currentTurn = 1;
+
+    // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
+    const cfg = window.battleConfig && window.battleConfig.battleConfig ? window.battleConfig.battleConfig : {};
+    const firstSide = (cfg.defendersStart === false) ? 'attackers' : 'defenders';
+    window.gameState.activeSide = firstSide;
+
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) {
+        logDiv.innerHTML = '';
+    }
 }
 
 // Логика боя
@@ -145,6 +156,69 @@ function executeStep(army) {
     checkBattleEnd();
 }
 
+function step() {
+    if (window.gameState.battleEnded) return;
+
+    // Текущие настройки
+    const currentSettings = window.getCurrentSettings();
+    const alternate = !!(currentSettings && currentSettings.battleSettings && currentSettings.battleSettings.attackAlternate);
+
+    // Подсчитываем доступных к атаке
+    const attackersAvailable = window.gameState.attackers.filter(u => u.alive && !u.hasAttackedThisTurn);
+    const defendersAvailable = window.gameState.defenders.filter(u => u.alive && !u.hasAttackedThisTurn);
+
+    // Если нет доступных действий – ожидаем перехода хода
+    if (attackersAvailable.length === 0 && defendersAvailable.length === 0) {
+        window.addToLog('⏸ Нет доступных действий. Нажмите "Следующий ход".');
+        updateButtonStates();
+        return;
+    }
+
+    // Определяем активную сторону (если текущая сторона не может действовать — переключаемся)
+    let side = window.gameState.activeSide || 'defenders';
+    let available = side === 'attackers' ? attackersAvailable : defendersAvailable;
+    if (available.length === 0) {
+        side = side === 'attackers' ? 'defenders' : 'attackers';
+        window.gameState.activeSide = side;
+        available = side === 'attackers' ? attackersAvailable : defendersAvailable;
+        if (available.length === 0) {
+            // На случай гонки состояний
+            updateButtonStates();
+            return;
+        }
+    }
+
+    // Выбираем атакующего и цель
+    const attacker = available[Math.floor(Math.random() * available.length)];
+    const enemies = side === 'attackers' ? window.gameState.defenders : window.gameState.attackers;
+    const aliveEnemies = enemies.filter(u => u.alive);
+    if (aliveEnemies.length === 0) {
+        endBattle(side);
+        return;
+    }
+    const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+
+    // Атака
+    performAttack(attacker, target, side);
+    attacker.hasAttackedThisTurn = true;
+
+    // Переключение активной стороны в зависимости от режима
+    if (alternate) {
+        window.gameState.activeSide = (side === 'attackers') ? 'defenders' : 'attackers';
+    } else {
+        // Остаемся на стороне, пока у нее есть доступные юниты, иначе переключаемся
+        const stillHas = (side === 'attackers' ? window.gameState.attackers : window.gameState.defenders)
+            .some(u => u.alive && !u.hasAttackedThisTurn);
+        if (!stillHas) {
+            window.gameState.activeSide = (side === 'attackers') ? 'defenders' : 'attackers';
+        }
+    }
+
+    // Обновляем UI и проверяем конец боя
+    renderArmies();
+    checkBattleEnd();
+}
+
 function performAttack(attacker, target, army) {
     const currentSettings = window.getCurrentSettings();
     const hitThreshold = currentSettings.hitThreshold;
@@ -183,6 +257,11 @@ function nextTurn() {
     window.gameState.attackers.forEach(unit => unit.hasAttackedThisTurn = false);
     window.gameState.defenders.forEach(unit => unit.hasAttackedThisTurn = false);
     
+    // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
+    const cfg = window.battleConfig && window.battleConfig.battleConfig ? window.battleConfig.battleConfig : {};
+    const firstSide = (cfg.defendersStart === false) ? 'attackers' : 'defenders';
+    window.gameState.activeSide = firstSide;
+
     window.gameState.currentTurn++;
     
     // Обновляем счетчик ходов
@@ -238,6 +317,7 @@ function resetBattle() {
 
 // Делаем функции доступными глобально
 window.executeStep = executeStep;
+window.step = step;
 window.nextTurn = nextTurn;
 window.resetBattle = resetBattle;
 window.initializeArmies = initializeArmies;

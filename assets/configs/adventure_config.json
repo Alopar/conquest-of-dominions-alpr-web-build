@@ -1,0 +1,31 @@
+{
+  "adventure": {
+    "name": "Путь героя",
+    "description": "От разминки до логова дракона",
+    "startingGold": 20
+  },
+  "startingArmy": [
+    {"id": "warrior", "count": 1}
+  ],
+  "shop": {
+    "mercenaries": [
+      {"id": "warrior", "price": 12},
+      {"id": "archer", "price": 10},
+      {"id": "knight", "price": 20},
+      {"id": "mage", "price": 18}
+    ]
+  },
+  "encounters": [
+    { "name": "Разминка: амбарные крысы", "rewardGold": 5, "defenders": [ {"id": "rat", "count": 3}, {"id": "chicken", "count": 2} ] },
+    { "name": "Двор фермы: крысы и куры", "rewardGold": 6, "defenders": [ {"id": "rat", "count": 4}, {"id": "chicken", "count": 3} ] },
+    { "name": "Болото: лягушки", "rewardGold": 7, "defenders": [ {"id": "frog", "count": 4}, {"id": "rat", "count": 2} ] },
+    { "name": "Болото: змеиное гнездо", "rewardGold": 8, "defenders": [ {"id": "giant_snake", "count": 1}, {"id": "frog", "count": 3} ] },
+    { "name": "Лагерь гоблиноидов: разведка", "rewardGold": 10, "defenders": [ {"id": "goblin", "count": 4} ] },
+    { "name": "Лагерь гоблиноидов: отряд", "rewardGold": 12, "defenders": [ {"id": "goblin", "count": 4}, {"id": "orc", "count": 1}, {"id": "troll", "count": 1} ] },
+    { "name": "Склеп: стражи из костей", "rewardGold": 14, "defenders": [ {"id": "skeleton", "count": 5}, {"id": "spider", "count": 2} ] },
+    { "name": "Склеп: вампир-хозяин", "rewardGold": 16, "defenders": [ {"id": "skeleton", "count": 3}, {"id": "vampire", "count": 1} ] },
+    { "name": "Пещеры: звериный дозор", "rewardGold": 18, "defenders": [ {"id": "wolf", "count": 2}, {"id": "bear", "count": 1} ] },
+    { "name": "Логово дракона", "rewardGold": 30, "defenders": [ {"id": "dragon", "count": 1} ] }
+  ]
+}
+

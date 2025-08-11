@@ -5,7 +5,8 @@ let gameSettings = {
     hitThreshold: 11,
     criticalHit: 20,
     battleSettings: {
-        showDetailedLog: true
+        showDetailedLog: true,
+        attackAlternate: true
     }
 };
 
@@ -56,6 +57,8 @@ function displaySettings() {
     document.getElementById('criticalHit').value = gameSettings.criticalHit;
     
     document.getElementById('showDetailedLog').checked = gameSettings.battleSettings.showDetailedLog;
+    const altEl = document.getElementById('attackAlternate');
+    if (altEl) altEl.checked = !!gameSettings.battleSettings.attackAlternate;
 }
 
 // Сохранение настроек с экрана
@@ -65,6 +68,8 @@ function saveSettingsFromScreen() {
     gameSettings.criticalHit = parseInt(document.getElementById('criticalHit').value);
     
     gameSettings.battleSettings.showDetailedLog = document.getElementById('showDetailedLog').checked;
+    const altEl = document.getElementById('attackAlternate');
+    if (altEl) gameSettings.battleSettings.attackAlternate = altEl.checked;
     
     saveGameSettings();
 }
@@ -76,7 +81,8 @@ function resetSettingsToDefault() {
         hitThreshold: 11,
         criticalHit: 20,
         battleSettings: {
-            showDetailedLog: true
+            showDetailedLog: true,
+            attackAlternate: true
         }
     };
     displaySettings();

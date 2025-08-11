@@ -1,7 +1,8 @@
 {
   "battleConfig": {
     "name": "Стандартное сражение",
-    "description": "Базовая конфигурация боя между людьми и орками"
+    "description": "Базовая конфигурация боя между людьми и орками",
+    "defendersStart": true
   },
   "armies": {
     "attackers": {

@@ -6,7 +6,8 @@
     "hitThreshold": 11,
     "criticalHit": 20,
     "battleSettings": {
-      "showDetailedLog": true
+      "showDetailedLog": true,
+      "attackAlternate": true
     }
   }
 }

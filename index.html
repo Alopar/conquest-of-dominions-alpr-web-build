@@ -24,42 +24,11 @@
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <div class="config-section">
-                            <div class="config-info">
-                                <h3 style="color: #cd853f; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
-                                    ⚙️ Конфигурация боя
-                                </h3>
-                                <div id="file-status" class="file-status"></div>
-                            </div>
-                            
-                            <div class="config-actions">
-                                <div class="action-group">
-                                    <label for="config-file" class="file-label">Загрузить свою конфигурацию:</label>
-                                    <label for="config-file" class="custom-file-btn" id="custom-file-btn">📁 ВЫБРАТЬ ФАЙЛ</label>
-                                    <input type="file" id="config-file" accept=".json" class="file-input">
-                                </div>
-                                
-                                <div class="action-group">
-                                    <button class="btn secondary-btn" onclick="downloadSampleConfig()" style="width: 200px;">
-                                        📥 ОБРАЗЕЦ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
-                            <button class="btn" onclick="showSettings()" style="width: 200px; font-size:1.1em;">
-                                ⚙️ Настройки
-                            </button>
-                            <button class="btn" onclick="showBestiary()" style="width: 200px; font-size:1.1em;">
-                                🐉 Бестиарий
-                            </button>
-                            <button class="btn" id="battle-btn" onclick="startBattle()" disabled style="width: 250px; font-size:1.15em;">
-                                🚩 Начать бой! 🚩
-                            </button>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 20px;">
+                            <button class="btn" onclick="showAdventureSetup()" style="width: 220px; font-size:1.1em;">🗺️ Приключение</button>
+                            <button class="btn" onclick="showFight()" style="width: 220px; font-size:1.1em;">⚔️ Схватка</button>
+                            <button class="btn" onclick="showBestiary()" style="width: 220px; font-size:1.1em;">🐉 Бестиарий</button>
+                            <button class="btn" onclick="showSettings()" style="width: 220px; font-size:1.1em;">⚙️ Настройки</button>
                         </div>
                     </td>
                 </tr>
@@ -67,12 +36,163 @@
         </div>
     </div>
 
+    <!-- Экран Схватка -->
+    <div id="fight-screen" class="screen" style="display: none !important;">
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button class="btn" onclick="backToIntroFromFight()">Главная</button>
+            </div>
+        </div>
+
+        <div class="settings-container">
+            <div class="settings-content">
+                <h2>⚔️ Схватка</h2>
+                <div class="config-section">
+                    <div class="config-info">
+                        <h3 style="color: #cd853f; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
+                            ⚙️ Конфигурация боя
+                        </h3>
+                        <div id="file-status" class="file-status"></div>
+                    </div>
+
+                    <div class="config-actions">
+                        <div class="action-group">
+                            <label for="config-file" class="file-label">Загрузить свою конфигурацию:</label>
+                            <label for="config-file" class="custom-file-btn" id="custom-file-btn">📁 ВЫБРАТЬ ФАЙЛ</label>
+                            <input type="file" id="config-file" accept=".json" class="file-input">
+                        </div>
+
+                        <div class="action-group">
+                            <button class="btn secondary-btn" onclick="downloadSampleConfig()" style="width: 200px;">
+                                📥 ОБРАЗЕЦ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
+                    <button class="btn" id="battle-btn" onclick="startBattle()" disabled style="width: 250px; font-size:1.15em;">
+                        🚩 Начать бой! 🚩
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран Приключения: загрузка -->
+    <div id="adventure-setup-screen" class="screen" style="display: none !important;">
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button class="btn" onclick="backToIntroFromAdventure()">Главная</button>
+            </div>
+        </div>
+        <div class="settings-container">
+            <div class="settings-content">
+                <h2>🗺️ Приключение</h2>
+                <div class="config-section">
+                    <div class="config-info">
+                        <h3 style="color: #cd853f; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
+                            ⚙️ Конфигурация приключения
+                        </h3>
+                        <div id="adventure-file-status" class="file-status"></div>
+                    </div>
+                        <div class="config-actions">
+                        <div class="action-group">
+                            <label for="adventure-file" class="file-label">Загрузить конфигурацию приключения:</label>
+                            <label for="adventure-file" class="custom-file-btn" id="adventure-custom-file-btn">📁 ВЫБРАТЬ ФАЙЛ</label>
+                            <input type="file" id="adventure-file" accept=".json" class="file-input">
+                        </div>
+                        <div class="action-group">
+                            <button class="btn secondary-btn" onclick="downloadSampleAdventureConfig()" style="width: 200px;">
+                                📥 ОБРАЗЕЦ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
+                    <button class="btn" id="adventure-begin-btn" onclick="beginAdventureFromSetup()" disabled style="width: 350px; font-size:1.15em;">
+                        📯 Начать приключение! 📯
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран Приключения: основной -->
+    <div id="adventure-screen" class="screen" style="display: none !important;">
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button class="btn" onclick="backToIntroFromAdventure()">Главная</button>
+            </div>
+        </div>
+        <div class="settings-container">
+            <div class="settings-content">
+                <h2>🗺️ Приключение</h2>
+                <div id="adventure-summary" style="margin-bottom: 10px;"></div>
+                <div class="settings-layout">
+                    <div class="settings-section">
+                        <h3>Ресурсы</h3>
+                        <div style="font-size:1.1em">Золото: <span id="adventure-gold">0</span> 💰</div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Армия игрока</h3>
+                        <div id="adventure-pool" class="bestiary-table-wrapper"></div>
+                    </div>
+                </div>
+                <div class="settings-layout">
+                    <div class="settings-section">
+                        <h3>Магазин наемников</h3>
+                        <div class="bestiary-table-wrapper">
+                            <table class="bestiary-table unit-info-table">
+                                <thead>
+                                    <tr>
+                                        <th class="icon-cell">👤</th>
+                                        <th>Имя</th>
+                                        <th>ID</th>
+                                        <th>Цена</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adventure-shop-table">
+                                    <tr><td colspan="5">Загрузка...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Следующая встреча</h3>
+                        <div id="adventure-encounter"></div>
+                        <div style="margin-top: 12px; display:flex; justify-content:center;">
+                            <button class="btn" id="adventure-start-btn" onclick="startAdventureBattle()" disabled style="width: 250px; font-size:1.05em;">🚩 Начать бой 🚩</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран результата приключения -->
+    <div id="adventure-result-screen" class="screen" style="display: none !important;">
+        <div class="menu-bar">
+            <div class="menu-left"></div>
+        </div>
+        <div class="settings-container">
+            <div class="settings-content" style="text-align:center;">
+                <h2>🧭 Итоги приключения</h2>
+                <div id="adventure-result-message" style="font-size:1.2em; margin: 16px 0 24px 0;"></div>
+                <div style="display:flex; justify-content:center;">
+                    <button class="btn" onclick="showIntro()" style="width: 220px; font-size:1.05em;">На главный</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Экран боя -->
     <div id="battle-screen" class="screen" style="display: none !important;">
         <div class="menu-bar">
             <div class="menu-left">
-                <button class="btn" onclick="showIntro()">Главная</button>
-                <button class="btn" onclick="resetBattle()">Заново</button>
+                <button class="btn" id="battle-btn-home" onclick="showIntro()">Главная</button>
+                <button class="btn" id="battle-btn-reset" onclick="resetBattle()">Заново</button>
             </div>
         </div>
         
@@ -94,8 +214,7 @@
                     <div id="attackers-line" class="army-line"></div>
                     
                     <div class="controls">
-                        <button class="btn" onclick="executeStep('attackers')" id="attackers-btn">Ход Атакующих</button>
-                        <button class="btn" onclick="executeStep('defenders')" id="defenders-btn">Ход Защитников</button>
+                        <button class="btn" onclick="step()" id="step-btn">Шаг</button>
                         <button class="btn" onclick="nextTurn()" id="next-turn-btn">Следующий ход</button>
                     </div>
                 </div>
@@ -157,6 +276,12 @@
                                 <label for="showDetailedLog">Подробный лог</label>
                             </div>
                         </div>
+                        <div class="setting-group">
+                            <div class="custom-checkbox">
+                                <input type="checkbox" id="attackAlternate" checked>
+                                <label for="attackAlternate">Атака по очереди</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -210,6 +335,7 @@
     <script src="js/config.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/adventure.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/app.js"></script>
 </body>

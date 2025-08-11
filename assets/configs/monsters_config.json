@@ -4,97 +4,167 @@
     "name": "Воин",
     "hp": 12,
     "damage": "1d6",
-    "view": "⚔️"
+    "view": "⚔️",
+    "price": 12
   },
   "archer": {
     "id": "archer",
     "name": "Лучник",
     "hp": 8,
     "damage": "1d6",
-    "view": "🏹"
+    "view": "🏹",
+    "price": 10
   },
   "knight": {
     "id": "knight",
     "name": "Рыцарь",
     "hp": 20,
     "damage": "1d8",
-    "view": "🛡️"
+    "view": "🛡️",
+    "price": 20
   },
   "mage": {
     "id": "mage",
     "name": "Маг",
     "hp": 6,
     "damage": "1d8",
-    "view": "🔮"
+    "view": "🔮",
+    "price": 18
   },
   "orc": {
     "id": "orc",
     "name": "Орк",
     "hp": 10,
     "damage": "1d6",
-    "view": "👹"
+    "view": "👹",
+    "price": 11
   },
   "goblin": {
     "id": "goblin",
     "name": "Гоблин",
     "hp": 4,
     "damage": "1d3",
-    "view": "👺"
+    "view": "👺",
+    "price": 6
   },
   "troll": {
     "id": "troll",
     "name": "Тролль",
     "hp": 25,
     "damage": "2d6",
-    "view": "👿"
+    "view": "👿",
+    "price": 30
   },
   "wizard": {
     "id": "wizard",
     "name": "Волшебник",
     "hp": 8,
     "damage": "1d10",
-    "view": "🧙‍♂️"
+    "view": "🧙‍♂️",
+    "price": 22
   },
   "skeleton": {
     "id": "skeleton",
     "name": "Скелет",
     "hp": 6,
     "damage": "1d4",
-    "view": "💀"
+    "view": "💀",
+    "price": 7
   },
   "wolf": {
     "id": "wolf",
     "name": "Волк",
     "hp": 7,
     "damage": "1d6",
-    "view": "🐺"
+    "view": "🐺",
+    "price": 9
   },
   "bear": {
     "id": "bear",
     "name": "Медведь",
     "hp": 18,
     "damage": "2d4",
-    "view": "🐻"
+    "view": "🐻",
+    "price": 24
   },
   "giant_snake": {
     "id": "giant_snake",
     "name": "Гигантская змея",
     "hp": 10,
     "damage": "1d8",
-    "view": "🐍"
+    "view": "🐍",
+    "price": 14
   },
   "boar": {
     "id": "boar",
     "name": "Кабан",
     "hp": 9,
     "damage": "1d6",
-    "view": "🐗"
+    "view": "🐗",
+    "price": 10
   },
   "spider": {
     "id": "spider",
     "name": "Ядовитый паук",
     "hp": 5,
     "damage": "1d6",
-    "view": "🕷️"
+    "view": "🕷️",
+    "price": 8
+  },
+  "rat": {
+    "id": "rat",
+    "name": "Крыса",
+    "hp": 2,
+    "damage": "1d2",
+    "view": "🐭",
+    "price": 3
+  },
+  "chicken": {
+    "id": "chicken",
+    "name": "Курица",
+    "hp": 2,
+    "damage": "1d1",
+    "view": "🐔",
+    "price": 2
+  },
+  "frog": {
+    "id": "frog",
+    "name": "Лягушка",
+    "hp": 3,
+    "damage": "1d2",
+    "view": "🐸",
+    "price": 3
+  },
+  "bat": {
+    "id": "bat",
+    "name": "Летучая мышь",
+    "hp": 3,
+    "damage": "1d2",
+    "view": "🦇",
+    "price": 3
+  },
+  "rabbit": {
+    "id": "rabbit",
+    "name": "Кролик",
+    "hp": 2,
+    "damage": "1d1",
+    "view": "🐰",
+    "price": 2
+  },
+  "dragon": {
+    "id": "dragon",
+    "name": "Дракон",
+    "hp": 40,
+    "damage": "2d8",
+    "view": "🐉",
+    "price": 60
+  },
+  "vampire": {
+    "id": "vampire",
+    "name": "Вампир",
+    "hp": 16,
+    "damage": "1d8",
+    "view": "🧛",
+    "price": 25
   }
 }
