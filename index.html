@@ -29,10 +29,30 @@
                             <button class="btn" onclick="showFight()" style="width: 220px; font-size:1.1em;">⚔️ Схватка</button>
                             <button class="btn" onclick="showBestiary()" style="width: 220px; font-size:1.1em;">🐉 Бестиарий</button>
                             <button class="btn" onclick="showSettings()" style="width: 220px; font-size:1.1em;">⚙️ Настройки</button>
+                             <button class="btn" onclick="showRules()" style="width: 220px; font-size:1.1em;">📜 Правила</button>
                         </div>
                     </td>
                 </tr>
             </table>
+        </div>
+    </div>
+
+    <!-- Экран Правила -->
+    <div id="rules-screen" class="screen" style="display: none !important;">
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button class="btn" onclick="showIntro()">Главная</button>
+            </div>
+        </div>
+        <div class="settings-container">
+            <div class="settings-content">
+                <h2>📜 Правила</h2>
+                <div class="rules-scroll bestiary-table-wrapper">
+                    <div id="rules-content" class="rules-markdown">
+                        Загрузка правил...
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -192,7 +212,6 @@
         <div class="menu-bar">
             <div class="menu-left">
                 <button class="btn" id="battle-btn-home" onclick="showIntro()">Главная</button>
-                <button class="btn" id="battle-btn-reset" onclick="resetBattle()">Заново</button>
             </div>
         </div>
         
@@ -214,8 +233,12 @@
                     <div id="attackers-line" class="army-line"></div>
                     
                     <div class="controls">
-                        <button class="btn" onclick="step()" id="step-btn">Шаг</button>
-                        <button class="btn" onclick="nextTurn()" id="next-turn-btn">Следующий ход</button>
+                        <button class="btn" onclick="step()" id="step-btn">⏳ Шаг</button>
+                        <button class="btn" onclick="nextTurn()" id="next-turn-btn">🔄 Ход</button>
+                        <div style="display:flex; gap:12px; justify-content:center; margin-top:10px;">
+                            <button class="btn" id="battle-finish-btn" onclick="finishBattleToAdventure()" style="display:none;">🗺️ Завершить бой</button>
+                            <button class="btn" id="battle-retry-btn" onclick="retryBattle()" style="display:none;">⚔️ Повторить бой</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -223,9 +246,11 @@
                 <div id="unit-info-panel" class="unit-info-panel">
                     <table class="unit-info-table">
                         <tr>
+                            <td class="unit-info-label"><span class="unit-info-value" id="unit-name"></span></td>
                             <td class="unit-info-label">ТИП: <span class="unit-info-value" id="unit-type"></span></td>
                             <td class="unit-info-label">HP: <span class="unit-info-value" id="unit-hp"></span> ❤️</td>
                             <td class="unit-info-label">УРОН: <span class="unit-info-value" id="unit-damage"></span> 💥</td>
+                            <td class="unit-info-label">ЦЕЛИ: <span class="unit-info-value" id="unit-targets"></span> 🎯</td>
                             <td class="unit-info-label">СТАТУС: <span class="unit-info-value" id="unit-status"></span></td>
                         </tr>
                     </table>
@@ -259,12 +284,12 @@
                             <label for="maxUnitsPerArmy">Максимум юнитов в армии</label>
                         </div>
                         <div class="setting-group">
-                            <input type="number" id="hitThreshold" min="1" max="20" value="11">
-                            <label for="hitThreshold">Порог попадания</label>
+                            <input type="number" id="meleeHitThreshold" min="1" max="20" value="5">
+                            <label for="meleeHitThreshold">Порог попадания (melee)</label>
                         </div>
                         <div class="setting-group">
-                            <input type="number" id="criticalHit" min="1" max="20" value="20">
-                            <label for="criticalHit">Критическое попадание</label>
+                            <input type="number" id="rangeHitThreshold" min="1" max="20" value="11">
+                            <label for="rangeHitThreshold">Порог попадания (range)</label>
                         </div>
                     </div>
                     
@@ -316,12 +341,14 @@
                                 <th class="icon-cell">👤</th>
                                 <th>Имя</th>
                                 <th>ID</th>
+                                <th>Тип</th>
                                 <th>❤️ HP</th>
                                 <th>💥 Урон</th>
+                                <th>🎯 Цели</th>
                             </tr>
                         </thead>
                         <tbody id="bestiary-table">
-                            <tr><td colspan="5">Загрузка...</td></tr>
+                            <tr><td colspan="7">Загрузка...</td></tr>
                         </tbody>
                     </table>
                 </div>

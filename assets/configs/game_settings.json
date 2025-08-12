@@ -3,8 +3,8 @@
     "name": "Настройки игры",
     "description": "Основные настройки игрового процесса",
     "maxUnitsPerArmy": 10,
-    "hitThreshold": 11,
-    "criticalHit": 20,
+    "meleeHitThreshold": 5,
+    "rangeHitThreshold": 11,
     "battleSettings": {
       "showDetailedLog": true,
       "attackAlternate": true

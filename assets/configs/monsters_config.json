@@ -4,167 +4,197 @@
     "name": "Воин",
     "hp": 12,
     "damage": "1d6",
+    "targets": 1,
     "view": "⚔️",
-    "price": 12
+    "type": "melee"
+  },
+  "rogue": {
+    "id": "rogue",
+    "name": "Вор",
+    "hp": 8,
+    "damage": "1d3",
+    "targets": 2,
+    "view": "🔪",
+    "type": "melee"
   },
   "archer": {
     "id": "archer",
     "name": "Лучник",
     "hp": 8,
     "damage": "1d6",
+    "targets": 1,
     "view": "🏹",
-    "price": 10
+    "type": "range"
   },
   "knight": {
     "id": "knight",
     "name": "Рыцарь",
     "hp": 20,
     "damage": "1d8",
+    "targets": 1,
     "view": "🛡️",
-    "price": 20
+    "type": "melee"
   },
   "mage": {
     "id": "mage",
     "name": "Маг",
     "hp": 6,
-    "damage": "1d8",
+    "damage": "1d3",
+    "targets": 3,
     "view": "🔮",
-    "price": 18
+    "type": "support"
   },
   "orc": {
     "id": "orc",
     "name": "Орк",
     "hp": 10,
     "damage": "1d6",
+    "targets": 1,
     "view": "👹",
-    "price": 11
+    "type": "melee"
   },
   "goblin": {
     "id": "goblin",
     "name": "Гоблин",
     "hp": 4,
     "damage": "1d3",
+    "targets": 1,
     "view": "👺",
-    "price": 6
+    "type": "range"
   },
   "troll": {
     "id": "troll",
     "name": "Тролль",
     "hp": 25,
     "damage": "2d6",
+    "targets": 1,
     "view": "👿",
-    "price": 30
+    "type": "melee"
   },
   "wizard": {
     "id": "wizard",
     "name": "Волшебник",
     "hp": 8,
-    "damage": "1d10",
+    "damage": "1d6",
+    "targets": 5,
     "view": "🧙‍♂️",
-    "price": 22
+    "type": "support"
   },
   "skeleton": {
     "id": "skeleton",
     "name": "Скелет",
     "hp": 6,
     "damage": "1d4",
+    "targets": 1,
     "view": "💀",
-    "price": 7
-  },
-  "wolf": {
-    "id": "wolf",
-    "name": "Волк",
-    "hp": 7,
-    "damage": "1d6",
-    "view": "🐺",
-    "price": 9
-  },
-  "bear": {
-    "id": "bear",
-    "name": "Медведь",
-    "hp": 18,
-    "damage": "2d4",
-    "view": "🐻",
-    "price": 24
-  },
-  "giant_snake": {
-    "id": "giant_snake",
-    "name": "Гигантская змея",
-    "hp": 10,
-    "damage": "1d8",
-    "view": "🐍",
-    "price": 14
-  },
-  "boar": {
-    "id": "boar",
-    "name": "Кабан",
-    "hp": 9,
-    "damage": "1d6",
-    "view": "🐗",
-    "price": 10
-  },
-  "spider": {
-    "id": "spider",
-    "name": "Ядовитый паук",
-    "hp": 5,
-    "damage": "1d6",
-    "view": "🕷️",
-    "price": 8
-  },
-  "rat": {
-    "id": "rat",
-    "name": "Крыса",
-    "hp": 2,
-    "damage": "1d2",
-    "view": "🐭",
-    "price": 3
-  },
-  "chicken": {
-    "id": "chicken",
-    "name": "Курица",
-    "hp": 2,
-    "damage": "1d1",
-    "view": "🐔",
-    "price": 2
-  },
-  "frog": {
-    "id": "frog",
-    "name": "Лягушка",
-    "hp": 3,
-    "damage": "1d2",
-    "view": "🐸",
-    "price": 3
-  },
-  "bat": {
-    "id": "bat",
-    "name": "Летучая мышь",
-    "hp": 3,
-    "damage": "1d2",
-    "view": "🦇",
-    "price": 3
-  },
-  "rabbit": {
-    "id": "rabbit",
-    "name": "Кролик",
-    "hp": 2,
-    "damage": "1d1",
-    "view": "🐰",
-    "price": 2
-  },
-  "dragon": {
-    "id": "dragon",
-    "name": "Дракон",
-    "hp": 40,
-    "damage": "2d8",
-    "view": "🐉",
-    "price": 60
+    "type": "melee"
   },
   "vampire": {
     "id": "vampire",
     "name": "Вампир",
     "hp": 16,
     "damage": "1d8",
+    "targets": 3,
     "view": "🧛",
-    "price": 25
+    "type": "support"
+  },
+  "wolf": {
+    "id": "wolf",
+    "name": "Волк",
+    "hp": 7,
+    "damage": "1d6",
+    "targets": 1,
+    "view": "🐺",
+    "type": "melee"
+  },
+  "bear": {
+    "id": "bear",
+    "name": "Медведь",
+    "hp": 18,
+    "damage": "2d4",
+    "targets": 2,
+    "view": "🐻",
+    "type": "melee"
+  },
+  "giant_snake": {
+    "id": "giant_snake",
+    "name": "Гигантская змея",
+    "hp": 10,
+    "damage": "1d8",
+    "targets": 1,
+    "view": "🐍",
+    "type": "melee"
+  },
+  "boar": {
+    "id": "boar",
+    "name": "Кабан",
+    "hp": 9,
+    "damage": "1d6",
+    "targets": 1,
+    "view": "🐗",
+    "type": "melee"
+  },
+  "spider": {
+    "id": "spider",
+    "name": "Ядовитый паук",
+    "hp": 5,
+    "damage": "1d6",
+    "targets": 1,
+    "view": "🕷️",
+    "type": "melee"
+  },
+  "rat": {
+    "id": "rat",
+    "name": "Крыса",
+    "hp": 2,
+    "damage": "1d2",
+    "targets": 1,
+    "view": "🐭",
+    "type": "melee"
+  },
+  "chicken": {
+    "id": "chicken",
+    "name": "Курица",
+    "hp": 2,
+    "damage": "1d1",
+    "targets": 1,
+    "view": "🐔",
+    "type": "melee"
+  },
+  "frog": {
+    "id": "frog",
+    "name": "Лягушка",
+    "hp": 3,
+    "damage": "1d2",
+    "targets": 1,
+    "view": "🐸",
+    "type": "melee"
+  },
+  "bat": {
+    "id": "bat",
+    "name": "Летучая мышь",
+    "hp": 3,
+    "damage": "1d2",
+    "targets": 1,
+    "view": "🦇",
+    "type": "range"
+  },
+  "rabbit": {
+    "id": "rabbit",
+    "name": "Кролик",
+    "hp": 2,
+    "damage": "1d1",
+    "targets": 1,
+    "view": "🐰",
+    "type": "melee"
+  },
+  "dragon": {
+    "id": "dragon",
+    "name": "Дракон",
+    "hp": 40,
+    "damage": "2d8",
+    "targets": 5,
+    "view": "🐉",
+    "type": "range"
   }
 }

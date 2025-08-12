@@ -2,8 +2,8 @@
 
 let gameSettings = {
     maxUnitsPerArmy: 10,
-    hitThreshold: 11,
-    criticalHit: 20,
+    meleeHitThreshold: 5,
+    rangeHitThreshold: 11,
     battleSettings: {
         showDetailedLog: true,
         attackAlternate: true
@@ -53,8 +53,10 @@ function loadGameSettingsFromStorage() {
 // Отображение настроек на экране
 function displaySettings() {
     document.getElementById('maxUnitsPerArmy').value = gameSettings.maxUnitsPerArmy;
-    document.getElementById('hitThreshold').value = gameSettings.hitThreshold;
-    document.getElementById('criticalHit').value = gameSettings.criticalHit;
+    const meleeEl = document.getElementById('meleeHitThreshold');
+    const rangeEl = document.getElementById('rangeHitThreshold');
+    if (meleeEl) meleeEl.value = gameSettings.meleeHitThreshold;
+    if (rangeEl) rangeEl.value = gameSettings.rangeHitThreshold;
     
     document.getElementById('showDetailedLog').checked = gameSettings.battleSettings.showDetailedLog;
     const altEl = document.getElementById('attackAlternate');
@@ -64,8 +66,10 @@ function displaySettings() {
 // Сохранение настроек с экрана
 function saveSettingsFromScreen() {
     gameSettings.maxUnitsPerArmy = parseInt(document.getElementById('maxUnitsPerArmy').value);
-    gameSettings.hitThreshold = parseInt(document.getElementById('hitThreshold').value);
-    gameSettings.criticalHit = parseInt(document.getElementById('criticalHit').value);
+    const meleeEl = document.getElementById('meleeHitThreshold');
+    const rangeEl = document.getElementById('rangeHitThreshold');
+    gameSettings.meleeHitThreshold = parseInt(meleeEl ? meleeEl.value : 5);
+    gameSettings.rangeHitThreshold = parseInt(rangeEl ? rangeEl.value : 11);
     
     gameSettings.battleSettings.showDetailedLog = document.getElementById('showDetailedLog').checked;
     const altEl = document.getElementById('attackAlternate');
@@ -78,8 +82,8 @@ function saveSettingsFromScreen() {
 function resetSettingsToDefault() {
     gameSettings = {
         maxUnitsPerArmy: 10,
-        hitThreshold: 11,
-        criticalHit: 20,
+        meleeHitThreshold: 5,
+        rangeHitThreshold: 11,
         battleSettings: {
             showDetailedLog: true,
             attackAlternate: true
@@ -91,14 +95,14 @@ function resetSettingsToDefault() {
 
 // Показать экран настроек
 function showSettings() {
-    const introScreen = document.getElementById('intro-screen');
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
     const settingsScreen = document.getElementById('settings-screen');
-    
-    introScreen.classList.remove('active');
-    introScreen.style.display = 'none';
     settingsScreen.classList.add('active');
     settingsScreen.style.display = 'flex';
-    
+
     displaySettings();
 }
 

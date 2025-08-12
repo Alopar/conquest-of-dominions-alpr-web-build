@@ -40,7 +40,7 @@ async function loadAndRenderBestiary() {
         bestiaryMonsters = await window.loadMonstersConfig();
         renderBestiaryTable();
     } catch (e) {
-        document.getElementById('bestiary-table').innerHTML = '<tr><td colspan="6">Ошибка загрузки конфига монстров</td></tr>';
+        document.getElementById('bestiary-table').innerHTML = '<tr><td colspan="7">Ошибка загрузки конфига монстров</td></tr>';
     }
 }
 
@@ -57,8 +57,10 @@ function renderBestiaryTable() {
             <td class="icon-cell">${m.view || '❓'}</td>
             <td>${m.name}</td>
             <td>${m.id}</td>
+            <td>${m.type || ''}</td>
             <td>${m.hp}</td>
             <td>${m.damage}</td>
+            <td>${Number(m.targets || 1)}</td>
         `;
         table.appendChild(row);
     }

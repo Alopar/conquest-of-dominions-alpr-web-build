@@ -1,3 +1,71 @@
+/* Экран правил — использует те же контейнеры, что и бестиарий */
+#rules-screen {
+    height: 100vh;
+    background-color: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+}
+
+#rules-screen .settings-container { align-items: stretch; }
+#rules-screen .settings-content { height: calc(100vh - 140px); display: flex; flex-direction: column; }
+#rules-screen .bestiary-table-wrapper { flex: 1; max-height: none; overflow: auto; }
+
+.rules-markdown { padding: 16px; }
+
+/* Оформление заголовков и текста правил */
+#rules-screen .rules-markdown { text-align: left; }
+#rules-screen .settings-content h2 { text-align: left; }
+#rules-screen .settings-content > h2 { text-align: center; }
+#rules-screen .rules-markdown h1 {
+    font-size: 1.6em;
+    margin: 14px 0 10px 0;
+    color: #cd853f;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+#rules-screen .rules-markdown h2 {
+    font-size: 1.4em;
+    margin: 14px 0 8px 0;
+    color: #cd853f;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+#rules-screen .rules-markdown h3 {
+    font-size: 1.2em;
+    margin: 12px 0 6px 0;
+    color: #cd853f;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+#rules-screen .rules-markdown p {
+    margin: 10px 0;
+    line-height: 1.5;
+}
+#rules-screen .rules-markdown ul {
+    padding-left: 22px;
+    margin: 8px 0 12px 0;
+}
+
+/* Бестиарий во всю высоту */
+#bestiary-screen {
+    height: 100vh;
+    background-color: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+}
+
+#bestiary-screen .settings-container {
+    align-items: stretch;
+}
+
+#bestiary-screen .settings-content {
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+}
+
+#bestiary-screen .bestiary-table-wrapper {
+    flex: 1;
+    max-height: none;
+    overflow: auto;
+}
 /* Стили экранов - стартовый экран, экран боя, компоновка */
 
 /* Стартовый экран */
