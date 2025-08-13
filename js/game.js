@@ -10,37 +10,14 @@ let gameState = {
 
 // Делаем gameState доступным глобально
 window.gameState = gameState;
+if (window.setGameState) window.setGameState(gameState);
 
-// Функции для работы с кубиками
-function rollDice(sides) {
-    return Math.floor(Math.random() * sides) + 1;
+function getFirstSide(cfg) {
+    const safeCfg = cfg || (window.battleConfig && window.battleConfig.battleConfig) || {};
+    return (safeCfg.defendersStart === false) ? 'attackers' : 'defenders';
 }
 
-function parseDamage(damageStr) {
-    const match = damageStr.match(/(\d+)d(\d+)/);
-    if (match) {
-        const count = parseInt(match[1]);
-        const sides = parseInt(match[2]);
-        let total = 0;
-        for (let i = 0; i < count; i++) {
-            total += rollDice(sides);
-        }
-        return total;
-    }
-    return 1;
-}
-
-function getMaxDamageValue(damageStr) {
-    const match = damageStr && typeof damageStr === 'string' ? damageStr.match(/(\d+)d(\d+)/) : null;
-    if (match) {
-        const count = parseInt(match[1]);
-        const sides = parseInt(match[2]);
-        if (Number.isFinite(count) && Number.isFinite(sides) && count > 0 && sides > 0) {
-            return count * sides;
-        }
-    }
-    return 1;
-}
+// Функции работы с кубиками перенесены в js/core/dice.js
 
 // Создание юнита из конфигурации
 function createUnit(typeId, unitId) {
@@ -63,28 +40,7 @@ function createUnit(typeId, unitId) {
     };
 }
 
-function getUnitRole(unit) {
-    const types = (window.battleConfig && window.battleConfig.unitTypes) ? window.battleConfig.unitTypes : {};
-    const t = types[unit.typeId];
-    const v = t && t.type ? String(t.type).toLowerCase() : 'melee';
-    if (v === 'melee' || v === 'range' || v === 'support') return v;
-    return 'melee';
-}
-
-function selectTargetByRules(attacker, aliveEnemies) {
-    if (!attacker || !Array.isArray(aliveEnemies) || aliveEnemies.length === 0) return null;
-    const role = getUnitRole(attacker);
-    if (role === 'melee') {
-        const meleeEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'melee');
-        if (meleeEnemies.length > 0) return meleeEnemies[Math.floor(Math.random() * meleeEnemies.length)];
-        const rangeEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'range');
-        if (rangeEnemies.length > 0) return rangeEnemies[Math.floor(Math.random() * rangeEnemies.length)];
-        const supportEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'support');
-        if (supportEnemies.length > 0) return supportEnemies[Math.floor(Math.random() * supportEnemies.length)];
-        return null;
-    }
-    return aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-}
+// Роль и выбор цели перенесены в js/core/targeting.js
 
 function arrangeUnitsIntoFormation(units) {
     if (!Array.isArray(units) || units.length === 0) return units;
@@ -198,9 +154,7 @@ function initializeArmies() {
     window.gameState.currentTurn = 1;
 
     // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
-    const cfg = window.battleConfig && window.battleConfig.battleConfig ? window.battleConfig.battleConfig : {};
-    const firstSide = (cfg.defendersStart === false) ? 'attackers' : 'defenders';
-    window.gameState.activeSide = firstSide;
+    window.gameState.activeSide = getFirstSide(window.battleConfig && window.battleConfig.battleConfig);
 
     const logDiv = document.getElementById('battle-log');
     if (logDiv) {
@@ -324,50 +278,38 @@ function performAttack(attacker, target, army) {
     const attempts = Math.max(1, Number(attacker.targets || 1));
     const actedTargets = new Set();
     for (let i = 0; i < attempts; i++) {
+        if (window.queueAnimation && window.anim) window.queueAnimation(window.anim.attack(attacker.id, army));
         const enemies = army === 'attackers' ? window.gameState.defenders : window.gameState.attackers;
-        const aliveEnemies = enemies.filter(u => u.alive && !actedTargets.has(u.id));
-        if (aliveEnemies.length === 0) break;
-        const currentTarget = selectTargetByRules(attacker, aliveEnemies);
+        const currentTarget = selectNextTarget(attacker, enemies, actedTargets);
         if (!currentTarget) break;
         actedTargets.add(currentTarget.id);
 
         if (role === 'support') {
             const damage = parseDamage(attacker.damage);
             window.addToLog(`⚡ ${attacker.name} атакует ${currentTarget.name} (${damage} урона)`);
-            currentTarget.hp -= damage;
-            if (currentTarget.hp <= 0) {
-                currentTarget.hp = 0;
-                currentTarget.alive = false;
-                window.addToLog(`💀 ${currentTarget.name} погибает!`);
-            }
+            if (window.eventBus) window.eventBus.emit('combat:hit', { attacker, target: currentTarget, damage, crit: false, role, army });
+            applyDamageToTarget(currentTarget, damage, (window.HitColor ? window.HitColor.Yellow : 'yellow'), army === 'attackers' ? 'defenders' : 'attackers');
             continue;
         }
 
-        const attackRoll = rollDice(20);
-        if (attackRoll === 20) {
+        const hit = rollToHit(role, meleeHit, rangeHit);
+        if (hit.isCrit) {
             const damage = getMaxDamageValue(attacker.damage) * 2;
             window.addToLog(`🎯 ${attacker.name} наносит критический удар ${currentTarget.name} (${damage} урона)!`);
-            currentTarget.hp -= damage;
-            if (currentTarget.hp <= 0) {
-                currentTarget.hp = 0;
-                currentTarget.alive = false;
-                window.addToLog(`💀 ${currentTarget.name} погибает!`);
-            }
+            if (window.eventBus) window.eventBus.emit('combat:hit', { attacker, target: currentTarget, damage, crit: true, role, army });
+            applyDamageToTarget(currentTarget, damage, (role === 'support' ? (window.HitColor ? window.HitColor.Yellow : 'yellow') : (window.HitColor ? window.HitColor.Red : 'red')), army === 'attackers' ? 'defenders' : 'attackers');
             continue;
         }
 
-        const hitThreshold = (role === 'range') ? rangeHit : meleeHit;
-        if (attackRoll >= hitThreshold) {
+        if (hit.isHit) {
             const damage = parseDamage(attacker.damage);
             window.addToLog(`⚔️ ${attacker.name} атакует ${currentTarget.name} (${damage} урона)`);
-            currentTarget.hp -= damage;
-            if (currentTarget.hp <= 0) {
-                currentTarget.hp = 0;
-                currentTarget.alive = false;
-                window.addToLog(`💀 ${currentTarget.name} погибает!`);
-            }
+            if (window.eventBus) window.eventBus.emit('combat:hit', { attacker, target: currentTarget, damage, crit: false, role, army });
+            applyDamageToTarget(currentTarget, damage, (role === 'support' ? (window.HitColor ? window.HitColor.Yellow : 'yellow') : (window.HitColor ? window.HitColor.Red : 'red')), army === 'attackers' ? 'defenders' : 'attackers');
         } else {
             window.addToLog(`❌ ${attacker.name} промахивается по ${currentTarget.name}`);
+            if (window.queueAnimation && window.anim) window.queueAnimation(window.anim.dodge(currentTarget.id, army === 'attackers' ? 'defenders' : 'attackers'));
+            if (window.eventBus) window.eventBus.emit('combat:miss', { attacker, target: currentTarget, role, army });
         }
     }
 }
@@ -380,9 +322,7 @@ function nextTurn() {
     window.gameState.defenders.forEach(unit => unit.hasAttackedThisTurn = false);
     
     // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
-    const cfg = window.battleConfig && window.battleConfig.battleConfig ? window.battleConfig.battleConfig : {};
-    const firstSide = (cfg.defendersStart === false) ? 'attackers' : 'defenders';
-    window.gameState.activeSide = firstSide;
+    window.gameState.activeSide = getFirstSide(window.battleConfig && window.battleConfig.battleConfig);
 
     window.gameState.currentTurn++;
     

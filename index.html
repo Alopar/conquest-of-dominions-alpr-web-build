@@ -25,11 +25,11 @@
                 <tr>
                     <td colspan="2">
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 20px;">
-                            <button class="btn" onclick="showAdventureSetup()" style="width: 220px; font-size:1.1em;">🗺️ Приключение</button>
-                            <button class="btn" onclick="showFight()" style="width: 220px; font-size:1.1em;">⚔️ Схватка</button>
-                            <button class="btn" onclick="showBestiary()" style="width: 220px; font-size:1.1em;">🐉 Бестиарий</button>
-                            <button class="btn" onclick="showSettings()" style="width: 220px; font-size:1.1em;">⚙️ Настройки</button>
-                             <button class="btn" onclick="showRules()" style="width: 220px; font-size:1.1em;">📜 Правила</button>
+                            <button class="btn btn-w-220 fs-110em" onclick="showAdventureSetup()">🗺️ Приключение</button>
+                            <button class="btn btn-w-220 fs-110em" onclick="showFight()">⚔️ Схватка</button>
+                            <button class="btn btn-w-220 fs-110em" onclick="showBestiary()">🐉 Бестиарий</button>
+                            <button class="btn btn-w-220 fs-110em" onclick="showSettings()">⚙️ Настройки</button>
+                             <button class="btn btn-w-220 fs-110em" onclick="showRules()">📜 Правила</button>
                         </div>
                     </td>
                 </tr>
@@ -69,7 +69,7 @@
                 <h2>⚔️ Схватка</h2>
                 <div class="config-section">
                     <div class="config-info">
-                        <h3 style="color: #cd853f; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
+                        <h3 class="section-title">
                             ⚙️ Конфигурация боя
                         </h3>
                         <div id="file-status" class="file-status"></div>
@@ -83,7 +83,7 @@
                         </div>
 
                         <div class="action-group">
-                            <button class="btn secondary-btn" onclick="downloadSampleConfig()" style="width: 200px;">
+                            <button class="btn secondary-btn btn-w-200" onclick="downloadSampleConfig()">
                                 📥 ОБРАЗЕЦ
                             </button>
                         </div>
@@ -91,7 +91,7 @@
                 </div>
 
                 <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
-                    <button class="btn" id="battle-btn" onclick="startBattle()" disabled style="width: 250px; font-size:1.15em;">
+                    <button class="btn btn-w-250 fs-115em" id="battle-btn" onclick="startBattle()" disabled>
                         🚩 Начать бой! 🚩
                     </button>
                 </div>
@@ -111,7 +111,7 @@
                 <h2>🗺️ Приключение</h2>
                 <div class="config-section">
                     <div class="config-info">
-                        <h3 style="color: #cd853f; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
+                        <h3 class="section-title">
                             ⚙️ Конфигурация приключения
                         </h3>
                         <div id="adventure-file-status" class="file-status"></div>
@@ -123,14 +123,14 @@
                             <input type="file" id="adventure-file" accept=".json" class="file-input">
                         </div>
                         <div class="action-group">
-                            <button class="btn secondary-btn" onclick="downloadSampleAdventureConfig()" style="width: 200px;">
+                            <button class="btn secondary-btn btn-w-200" onclick="downloadSampleAdventureConfig()">
                                 📥 ОБРАЗЕЦ
                             </button>
                         </div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
-                    <button class="btn" id="adventure-begin-btn" onclick="beginAdventureFromSetup()" disabled style="width: 350px; font-size:1.15em;">
+                    <button class="btn btn-w-350 fs-115em" id="adventure-begin-btn" onclick="beginAdventureFromSetup()" disabled>
                         📯 Начать приключение! 📯
                     </button>
                 </div>
@@ -183,7 +183,7 @@
                         <h3>Следующая встреча</h3>
                         <div id="adventure-encounter"></div>
                         <div style="margin-top: 12px; display:flex; justify-content:center;">
-                            <button class="btn" id="adventure-start-btn" onclick="startAdventureBattle()" disabled style="width: 250px; font-size:1.05em;">🚩 Начать бой 🚩</button>
+                            <button class="btn btn-w-250 fs-105em" id="adventure-start-btn" onclick="startAdventureBattle()" disabled>🚩 Начать бой 🚩</button>
                         </div>
                     </div>
                 </div>
@@ -201,7 +201,7 @@
                 <h2>🧭 Итоги приключения</h2>
                 <div id="adventure-result-message" style="font-size:1.2em; margin: 16px 0 24px 0;"></div>
                 <div style="display:flex; justify-content:center;">
-                    <button class="btn" onclick="showIntro()" style="width: 220px; font-size:1.05em;">На главный</button>
+                    <button class="btn btn-w-220 fs-105em" onclick="showIntro()">На главный</button>
                 </div>
             </div>
         </div>
@@ -318,7 +318,7 @@
         </div>
     </div>
 
-        <!-- Экран Бестиарий -->
+    <!-- Экран Бестиарий -->
     <div id="bestiary-screen" class="screen" style="display: none !important;">
         <div class="menu-bar">
             <div class="menu-left">
@@ -357,13 +357,27 @@
     </div>
 
     <!-- Подключение JavaScript файлов -->
+    <!-- IO -->
+    <script src="js/io/download.js"></script>
+    <script src="js/io/validators.js"></script>
+    <!-- Core -->
+    <script src="js/core/dice.js"></script>
+    <script src="js/core/eventBus.js"></script>
+    <script src="js/core/targeting.js"></script>
+    <script src="js/core/combat.js"></script>
+    <!-- State -->
+    <script src="js/state/appState.js"></script>
+    <!-- Data/Config -->
     <script src="js/monsters.js"></script>
     <script src="js/bestiary.js"></script>
     <script src="js/config.js"></script>
     <script src="js/settings.js"></script>
+    <!-- Game/UI -->
     <script src="js/game.js"></script>
     <script src="js/adventure.js"></script>
     <script src="js/ui.js"></script>
+    <!-- Effects/App Bootstrap -->
+    <script src="js/animations.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -51,7 +51,7 @@ async function loadAdventureFile(file) {
     reader.onload = async function(e) {
         try {
             const cfg = JSON.parse(e.target.result);
-            validateAdventureConfig(cfg);
+            window.validateAdventureConfig(cfg);
             initAdventureState(cfg);
             const statusDiv = document.getElementById('adventure-file-status');
             const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
@@ -77,7 +77,7 @@ async function loadDefaultAdventure() {
         const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const cfg = await response.json();
-        validateAdventureConfig(cfg);
+        window.validateAdventureConfig(cfg);
         initAdventureState(cfg);
         const statusDiv = document.getElementById('adventure-file-status');
         const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
@@ -90,21 +90,12 @@ async function loadDefaultAdventure() {
     }
 }
 
-function downloadSampleAdventureConfig() {
-    const sample = {
-        "adventure": { "name": "Путь героя", "description": "Цепочка испытаний", "startingGold": 30 },
-        "startingArmy": [{"id": "warrior", "count": 2},{"id": "archer", "count": 1}],
-        "shop": { "mercenaries": [ {"id":"warrior","price":12}, {"id":"archer","price":10}, {"id":"orc","price":11} ] },
-        "encounters": [
-            { "name": "Столкновение у брода", "rewardGold": 10, "defenders": [{"id":"goblin","count":3},{"id":"orc","count":1}] },
-            { "name": "Логово тролля", "rewardGold": 20, "defenders": [{"id":"troll","count":1},{"id":"goblin","count":2}] }
-        ]
-    };
-    const blob = new Blob([JSON.stringify(sample, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'adventure_config_sample.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+async function downloadSampleAdventureConfig() {
+    try {
+        await window.downloadFile('assets/configs/samples/adventure_config_sample.json', 'adventure_config_sample.json');
+    } catch (e) {
+        console.error('Не удалось скачать образец приключения:', e);
+    }
 }
 
 function beginAdventureFromSetup() {

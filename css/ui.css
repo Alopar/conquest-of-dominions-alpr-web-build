@@ -302,3 +302,21 @@
     color: #cd853f;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
+
+/* Утилиты размеров кнопок */
+.btn-w-200 { width: 200px; }
+.btn-w-220 { width: 220px; }
+.btn-w-250 { width: 250px; }
+.btn-w-350 { width: 350px; }
+
+/* Утилиты размеров шрифта */
+.fs-105em { font-size: 1.05em; }
+.fs-110em { font-size: 1.10em; }
+.fs-115em { font-size: 1.15em; }
+
+/* Заголовки секций */
+.section-title {
+    color: #cd853f;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+}

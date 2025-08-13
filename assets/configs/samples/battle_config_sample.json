@@ -1,0 +1,27 @@
+{
+  "battleConfig": {
+    "name": "Образец конфигурации",
+    "description": "Пример настройки боя для создания собственной конфигурации",
+    "defendersStart": true
+  },
+  "armies": {
+    "attackers": {
+      "name": "Армия Света",
+      "description": "Благородные воины",
+      "units": [
+        {"id": "warrior", "count": 3},
+        {"id": "archer", "count": 2}
+      ]
+    },
+    "defenders": {
+      "name": "Армия Тьмы",
+      "description": "Жестокие монстры",
+      "units": [
+        {"id": "goblin", "count": 3},
+        {"id": "orc", "count": 1}
+      ]
+    }
+  }
+}
+
+

@@ -1,57 +1,57 @@
+// Универсальное переключение экранов
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('active');
+    el.style.display = (id === 'intro-screen' || id === 'battle-screen' || id === 'adventure-screen') ? 'flex' : 'block';
+}
+
 // Функции пользовательского интерфейса
+
+// Рендер одного юнита
+function renderUnit(unit, army) {
+    const unitDiv = document.createElement('div');
+    let className = 'unit';
+    if (!unit.alive) className += ' dead';
+    else if (unit.hasAttackedThisTurn) className += ' attacked';
+    unitDiv.className = className;
+    unitDiv.dataset.unitId = unit.id;
+    unitDiv.dataset.army = army;
+    const pending = (typeof window.isKillPending === 'function') && window.isKillPending(unit.id, army);
+    const displayIcon = (unit.alive || pending) ? unit.view : '💀';
+    const hpPct = Math.max(0, Math.min(100, (unit.hp / unit.maxHp) * 100));
+    unitDiv.innerHTML = `
+        ${displayIcon}
+        <div class="hp-bar"></div>
+    `;
+    unitDiv.style.setProperty('--hp', hpPct + '%');
+    unitDiv.title = `${unit.name} (${unit.hp}/${unit.maxHp} HP)`;
+    unitDiv.addEventListener('mouseenter', () => showUnitInfo(unit));
+    unitDiv.addEventListener('mouseleave', hideUnitInfo);
+    return unitDiv;
+}
+
+// Рендер линии одной армии
+function renderArmyLine(units, army, lineEl) {
+    lineEl.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    units.forEach((unit) => {
+        frag.appendChild(renderUnit(unit, army));
+    });
+    lineEl.appendChild(frag);
+}
 
 // Отображение армий
 function renderArmies() {
     const defendersLine = document.getElementById('defenders-line');
     const attackersLine = document.getElementById('attackers-line');
-    
-    defendersLine.innerHTML = '';
-    attackersLine.innerHTML = '';
-    
-    // Отображение защитников
-    window.gameState.defenders.forEach((unit, index) => {
-        const unitDiv = document.createElement('div');
-        let className = 'unit';
-        if (!unit.alive) className += ' dead';
-        else if (unit.hasAttackedThisTurn) className += ' attacked';
-        
-        unitDiv.className = className;
-        const displayIcon = unit.alive ? unit.view : '💀';
-        unitDiv.innerHTML = `
-            ${displayIcon}
-            <div class="hp-bar" style="width: ${(unit.hp / unit.maxHp) * 100}%"></div>
-        `;
-        unitDiv.title = `${unit.name} (${unit.hp}/${unit.maxHp} HP)`;
-        
-        // Добавляем обработчики событий для показа информации
-        unitDiv.addEventListener('mouseenter', () => showUnitInfo(unit));
-        unitDiv.addEventListener('mouseleave', hideUnitInfo);
-        
-        defendersLine.appendChild(unitDiv);
-    });
-    
-    // Отображение атакующих
-    window.gameState.attackers.forEach((unit, index) => {
-        const unitDiv = document.createElement('div');
-        let className = 'unit';
-        if (!unit.alive) className += ' dead';
-        else if (unit.hasAttackedThisTurn) className += ' attacked';
-        
-        unitDiv.className = className;
-        const displayIcon = unit.alive ? unit.view : '💀';
-        unitDiv.innerHTML = `
-            ${displayIcon}
-            <div class="hp-bar" style="width: ${(unit.hp / unit.maxHp) * 100}%"></div>
-        `;
-        unitDiv.title = `${unit.name} (${unit.hp}/${unit.maxHp} HP)`;
-        
-        // Добавляем обработчики событий для показа информации
-        unitDiv.addEventListener('mouseenter', () => showUnitInfo(unit));
-        unitDiv.addEventListener('mouseleave', hideUnitInfo);
-        
-        attackersLine.appendChild(unitDiv);
-    });
-    
+    renderArmyLine(window.gameState.defenders, 'defenders', defendersLine);
+    renderArmyLine(window.gameState.attackers, 'attackers', attackersLine);
+    if (window.applyPendingAnimations) window.applyPendingAnimations();
     updateButtonStates();
 }
 
@@ -166,13 +166,7 @@ function addToLog(message) {
 
 // Переключение экранов
 function showIntro() {
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    const introScreen = document.getElementById('intro-screen');
-    introScreen.classList.add('active');
-    introScreen.style.display = 'flex';
+    showScreen('intro-screen');
     // Сбрасываем источник конфига при возврате на главную, чтобы новый старт схватки подхватил свой конфиг
     try { window.battleConfigSource = undefined; } catch {}
     const logDiv = document.getElementById('battle-log');
@@ -180,43 +174,20 @@ function showIntro() {
 }
 
 function showBattle() {
-    // Скрываем все экраны и показываем только экран боя
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    const battleScreen = document.getElementById('battle-screen');
-    battleScreen.classList.add('active');
-    battleScreen.style.display = 'flex';
+    showScreen('battle-screen');
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
 
 // Экран "Схватка"
 function showFight() {
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    // Показываем экран схватки
-    const fightScreen = document.getElementById('fight-screen');
-    fightScreen.classList.add('active');
-    fightScreen.style.display = 'flex';
+    showScreen('fight-screen');
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
 
 function backToIntroFromFight() {
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    // Показываем главный экран
-    const introScreen = document.getElementById('intro-screen');
-    introScreen.classList.add('active');
-    introScreen.style.display = 'flex';
+    showScreen('intro-screen');
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
@@ -304,15 +275,7 @@ window.finishBattleToAdventure = finishBattleToAdventure;
 window.retryBattle = retryBattle;
 
 async function showRules() {
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    const screen = document.getElementById('rules-screen');
-    if (!screen) return;
-    screen.classList.add('active');
-    screen.style.display = 'flex';
+    showScreen('rules-screen');
 
     const container = document.getElementById('rules-content');
     if (!container) return;
