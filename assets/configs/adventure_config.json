@@ -30,4 +30,3 @@
     { "name": "Логово драконов", "rewardGold": 30, "defenders": [ {"id": "dragon", "count": 5} ] }
   ]
 }
-

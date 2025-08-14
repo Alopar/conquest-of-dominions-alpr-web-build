@@ -10,7 +10,9 @@ window.configLoaded = configLoaded;
 async function initBattleConfig(config, source) {
     // Обеспечиваем наличие unitTypes
     if (!config.unitTypes) {
-        const monsters = await window.loadMonstersConfig();
+        let monsters = null;
+        if (typeof window.getMonstersConfigCached === 'function') monsters = window.getMonstersConfigCached();
+        if (!monsters && typeof window.loadMonstersConfig === 'function') monsters = await window.loadMonstersConfig();
         config.unitTypes = monsters;
     }
 
@@ -23,15 +25,7 @@ async function initBattleConfig(config, source) {
         window.battleConfigSource = source || 'fight';
     }
 
-    // Обновление статуса UI, если доступен
-    const statusDiv = document.getElementById('file-status');
-    if (statusDiv && config && config.battleConfig) {
-        const description = config.battleConfig.description ? ` - ${config.battleConfig.description}` : '';
-        statusDiv.textContent = `✅ Загружена конфигурация: "${config.battleConfig.name}"${description}`;
-        statusDiv.className = 'file-status success';
-    }
-    const battleBtn = document.getElementById('battle-btn');
-    if (battleBtn) battleBtn.disabled = false;
+    if (typeof window.syncFightUI === 'function') window.syncFightUI();
 }
 
 // Загрузка и парсинг конфигурации
@@ -78,15 +72,17 @@ async function loadDefaultConfig() {
     } catch (error) {
         console.error('Ошибка при загрузке стандартной конфигурации:', error);
         const statusDiv = document.getElementById('file-status');
-        statusDiv.textContent = `❌ Ошибка загрузки стандартной конфигурации: ${error.message}`;
-        statusDiv.className = 'file-status error';
+        if (statusDiv) {
+            statusDiv.textContent = `❌ Ошибка загрузки стандартной конфигурации: ${error.message}`;
+            statusDiv.className = 'file-status error';
+        }
         battleConfig = null;
         configLoaded = false;
         window.battleConfig = battleConfig;
         window.configLoaded = configLoaded;
         window.battleConfigSource = undefined;
         const battleBtn = document.getElementById('battle-btn');
-        battleBtn.disabled = true;
+        if (battleBtn) battleBtn.disabled = true;
     }
 }
 
@@ -104,3 +100,20 @@ window.loadConfigFile = loadConfigFile;
 window.loadDefaultConfig = loadDefaultConfig;
 window.downloadSampleConfig = downloadSampleConfig;
 window.initBattleConfig = initBattleConfig;
+
+// Синхронизация UI экрана «Схватка» с текущим состоянием конфига
+function syncFightUI() {
+    try {
+        const statusDiv = document.getElementById('file-status');
+        const battleBtn = document.getElementById('battle-btn');
+        if (statusDiv && window.battleConfig && window.battleConfig.battleConfig) {
+            const cfg = window.battleConfig.battleConfig;
+            const description = cfg.description ? ` - ${cfg.description}` : '';
+            statusDiv.textContent = `✅ Загружена конфигурация: "${cfg.name}"${description}`;
+            statusDiv.className = 'file-status success';
+        }
+        if (battleBtn) battleBtn.disabled = !window.configLoaded;
+    } catch {}
+}
+
+window.syncFightUI = syncFightUI;

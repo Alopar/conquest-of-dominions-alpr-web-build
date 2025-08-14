@@ -12,5 +12,3 @@ function validateAdventureConfig(cfg) {
 
 window.validateBattleConfig = validateBattleConfig;
 window.validateAdventureConfig = validateAdventureConfig;
-
-

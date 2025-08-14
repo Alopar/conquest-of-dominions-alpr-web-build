@@ -83,5 +83,3 @@ function selectNextTarget(attacker, enemies, actedTargets) {
 window.rollToHit = rollToHit;
 window.applyDamageToTarget = applyDamageToTarget;
 window.selectNextTarget = selectNextTarget;
-
-

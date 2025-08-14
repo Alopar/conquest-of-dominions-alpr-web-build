@@ -9,27 +9,44 @@ let adventureState = {
 
 let adventureUserLoaded = false;
 
-function showAdventureSetup() {
+async function showAdventureSetup() {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('adventure-setup');
+        } else if (window.UI && typeof window.UI.ensureScreenLoaded === 'function') {
+            await window.UI.ensureScreenLoaded('adventure-setup-screen', 'fragments/adventure-setup.html');
+            if (window.UI.ensureMenuBar) window.UI.ensureMenuBar('adventure-setup-screen', { backLabel: 'Главная', back: window.backToIntroFromAdventure });
+        }
+    } catch {}
     document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
     const scr = document.getElementById('adventure-setup-screen');
     if (scr) { scr.classList.add('active'); scr.style.display = 'flex'; }
-    const input = document.getElementById('adventure-file');
-    const btn = document.getElementById('adventure-custom-file-btn');
-    if (input && btn && !input._bound) {
-        input.addEventListener('change', function() {
-            if (input.files && input.files[0]) {
-                btn.textContent = input.files[0].name;
-                loadAdventureFile(input.files[0]);
-            } else {
-                btn.textContent = '📁 ВЫБРАТЬ ФАЙЛ';
-            }
-        });
-        input._bound = true;
-    }
+    try {
+        const host = document.getElementById('adventure-config-panel');
+        if (host && window.UI && typeof window.UI.mountConfigPanel === 'function') {
+            host.innerHTML = '';
+            window.UI.mountConfigPanel(host, {
+                title: '⚙️ Конфигурация приключения',
+                fileLabelText: '',
+                statusId: 'adventure-file-status',
+                inputId: 'adventure-file',
+                onFile: function(file){ loadAdventureFile(file); },
+                onSample: function(){ downloadSampleAdventureConfig(); },
+                primaryText: '📯 Начать приключение! 📯',
+                primaryId: 'adventure-begin-btn',
+                primaryDisabled: true,
+                onPrimary: function(){ beginAdventureFromSetup(); },
+                getStatusText: function(){
+                    const s = document.getElementById('adventure-file-status');
+                    return s ? s.textContent : '';
+                }
+            });
+        }
+    } catch {}
     restoreAdventure();
     if (adventureState.config) {
         const cfg = adventureState.config;
-        const statusDiv = document.getElementById('adventure-file-status');
+        const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
         const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
         if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
         const beginBtn = document.getElementById('adventure-begin-btn');
@@ -53,7 +70,7 @@ async function loadAdventureFile(file) {
             const cfg = JSON.parse(e.target.result);
             window.validateAdventureConfig(cfg);
             initAdventureState(cfg);
-            const statusDiv = document.getElementById('adventure-file-status');
+            const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
             const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
             if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
             const beginBtn = document.getElementById('adventure-begin-btn');
@@ -65,7 +82,7 @@ async function loadAdventureFile(file) {
         }
     };
     reader.onerror = function() {
-        const statusDiv = document.getElementById('adventure-file-status');
+        const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
         if (statusDiv) { statusDiv.textContent = '❌ Ошибка чтения файла'; statusDiv.className = 'file-status error'; }
     };
     reader.readAsText(file);
@@ -79,7 +96,7 @@ async function loadDefaultAdventure() {
         const cfg = await response.json();
         window.validateAdventureConfig(cfg);
         initAdventureState(cfg);
-        const statusDiv = document.getElementById('adventure-file-status');
+        const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
         const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
         if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
         const beginBtn = document.getElementById('adventure-begin-btn');
@@ -126,26 +143,118 @@ function initAdventureState(cfg) {
     window.adventureState = adventureState;
 }
 
-function showAdventure() {
+async function showAdventure() {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('adventure');
+        } else if (window.UI && typeof window.UI.ensureScreenLoaded === 'function') {
+            await window.UI.ensureScreenLoaded('adventure-screen', 'fragments/adventure-main.html');
+            if (window.UI.ensureMenuBar) window.UI.ensureMenuBar('adventure-screen', { backLabel: 'Главная', back: window.backToIntroFromAdventure });
+        }
+    } catch {}
     document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
     const scr = document.getElementById('adventure-screen');
     if (scr) { scr.classList.add('active'); scr.style.display = 'flex'; }
+    ensureAdventureTabs();
+    if (!window.AppState || !window.AppState.subscreen) {
+        if (window.Router && window.Router.setSubscreen) window.Router.setSubscreen('map');
+        else window.AppState = Object.assign(window.AppState || {}, { subscreen: 'map' });
+    }
     renderAdventure();
 }
 
 function renderAdventure() {
     const goldEl = document.getElementById('adventure-gold');
     if (goldEl) goldEl.textContent = String(adventureState.gold);
-    const summary = document.getElementById('adventure-summary');
-    if (summary) {
-        const name = adventureState.config && adventureState.config.adventure ? adventureState.config.adventure.name : '';
-        summary.textContent = `${name}${adventureState.lastResult ? ' — ' + adventureState.lastResult : ''}`;
+    const nameEl = document.getElementById('adventure-name');
+    if (nameEl) {
+        const n = adventureState.config && adventureState.config.adventure ? adventureState.config.adventure.name : 'Приключение';
+        nameEl.innerHTML = '🧭 ' + n;
     }
-    renderPool();
-    renderShop();
-    renderEncounterPreview();
-    renderBeginButtonOnMain();
-    updateAdventureStartButton();
+    // Блок сводки скрыт/удален
+    ensureAdventureTabs();
+    try { const tabs = document.getElementById('adventure-tabs'); if (tabs) updateTabsActive(tabs); } catch {}
+    renderAdventureSubscreen();
+}
+
+function ensureAdventureTabs() {
+    const screen = document.getElementById('adventure-screen');
+    if (!screen) return;
+    let tabs = screen.querySelector('#adventure-tabs');
+    if (tabs) { updateTabsActive(tabs); return; }
+    const content = screen.querySelector('.settings-content');
+    if (!content) return;
+    tabs = document.createElement('div');
+    tabs.id = 'adventure-tabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.margin = '8px 0 12px 0';
+    tabs.style.justifyContent = 'center';
+    tabs.setAttribute('role', 'tablist');
+    const makeBtn = function(key, label){
+        const b = document.createElement('button');
+        b.className = 'btn secondary-btn';
+        b.dataset.subscreen = key;
+        b.textContent = label;
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', 'false');
+        b.addEventListener('keydown', function(e){
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                const all = Array.from(tabs.querySelectorAll('button[role="tab"]'));
+                const idx = all.indexOf(b);
+                const nextIdx = e.key === 'ArrowRight' ? (idx + 1) % all.length : (idx - 1 + all.length) % all.length;
+                const next = all[nextIdx];
+                if (next) { next.focus(); next.click(); }
+            }
+        });
+        b.addEventListener('click', async function(){ if (window.Router && window.Router.setSubscreen) window.Router.setSubscreen(key); else window.AppState = Object.assign(window.AppState||{}, { subscreen: key }); await renderAdventureSubscreen(); updateTabsActive(tabs); });
+        return b;
+    };
+    tabs.appendChild(makeBtn('map', '🗺️ Карта'));
+    tabs.appendChild(makeBtn('tavern', '🍻 Таверна'));
+    tabs.appendChild(makeBtn('shop', '🏪 Магазин'));
+    tabs.appendChild(makeBtn('army', '🛡️ Армия'));
+    content.insertBefore(tabs, content.firstElementChild || null);
+    updateTabsActive(tabs);
+}
+
+function updateTabsActive(tabs) {
+    const current = (window.AppState && window.AppState.subscreen) || 'map';
+    tabs.querySelectorAll('button[data-subscreen]').forEach(function(btn){
+        const isActive = btn.dataset.subscreen === current;
+        btn.className = isActive ? 'btn tab-selected' : 'btn secondary-btn';
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    // Заголовок экрана приключения убран
+}
+
+async function loadAdventureSubscreen(key) {
+    const cont = document.getElementById('adventure-subcontainer');
+    if (!cont) return;
+    const map = { map: 'fragments/adventure-sub-map.html', tavern: 'fragments/adventure-sub-tavern.html', shop: 'fragments/adventure-sub-shop.html', army: 'fragments/adventure-sub-army.html' };
+    const url = map[key] || map.map;
+    try {
+        const res = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const html = await res.text();
+        cont.innerHTML = html;
+    } catch { cont.innerHTML = '<div class="settings-section">Не удалось загрузить раздел</div>'; }
+}
+
+async function renderAdventureSubscreen() {
+    const subscreen = (window.AppState && window.AppState.subscreen) || 'map';
+    await loadAdventureSubscreen(subscreen);
+    if (subscreen === 'army') {
+        renderPool();
+    } else if (subscreen === 'shop') {
+        renderShop();
+    } else if (subscreen === 'map') {
+        renderEncounterPreview();
+        renderBeginButtonOnMain();
+        updateAdventureStartButton();
+    } else if (subscreen === 'tavern') {
+        // Пока без логики
+    }
 }
 
 function renderPool() {
@@ -165,6 +274,7 @@ function renderPool() {
     }
     html += '</tbody></table>';
     container.innerHTML = html;
+
 }
 
 function priceFor(typeId) {
@@ -209,7 +319,15 @@ function currentEncounter() {
     return enc[adventureState.currentEncounterIndex];
 }
 
-function showAdventureResult(message) {
+async function showAdventureResult(message) {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('adventure-result');
+        } else if (window.UI && typeof window.UI.ensureScreenLoaded === 'function') {
+            await window.UI.ensureScreenLoaded('adventure-result-screen', 'fragments/adventure-result.html');
+            if (window.UI.ensureMenuBar) window.UI.ensureMenuBar('adventure-result-screen', { backLabel: 'Главная', back: window.showIntro });
+        }
+    } catch {}
     document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
     const scr = document.getElementById('adventure-result-screen');
     const msg = document.getElementById('adventure-result-message');
@@ -232,6 +350,7 @@ function renderEncounterPreview() {
     html += '</tbody></table>';
     html += `<div style="margin-top:8px;">Награда: ${enc.rewardGold} 💰</div>`;
     box.innerHTML = html;
+
 }
 
 function updateAdventureStartButton() {
@@ -243,10 +362,7 @@ function updateAdventureStartButton() {
 }
 
 function renderBeginButtonOnMain() {
-    const cont = document.getElementById('adventure-summary');
-    if (!cont) return;
-    let btn = document.getElementById('adventure-begin-btn');
-    if (btn) btn.disabled = !adventureState.config;
+    // Контейнер сводки удалён; функция оставлена пустой для совместимости вызовов
 }
 
 function pickSquadForBattle() {
@@ -269,7 +385,7 @@ function pickSquadForBattle() {
     return result;
 }
 
-function startAdventureBattle() {
+async function startAdventureBattle() {
     const enc = currentEncounter();
     if (!enc) return;
     const attackers = pickSquadForBattle();
@@ -284,7 +400,7 @@ function startAdventureBattle() {
         unitTypes: window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : undefined
     };
     if (!cfg.unitTypes && window.loadMonstersConfig) {
-        window.loadMonstersConfig().then((types) => {
+        window.loadMonstersConfig().then(async (types) => {
             cfg.unitTypes = types;
             window.battleConfig = cfg;
             window.configLoaded = true;
@@ -295,11 +411,11 @@ function startAdventureBattle() {
             if (logDiv) logDiv.innerHTML = '';
             const btnHome = document.getElementById('battle-btn-home');
             if (btnHome) btnHome.style.display = 'none';
+            if (window.showBattle) await window.showBattle();
             window.initializeArmies();
             window.renderArmies();
-            window.showBattle();
             window.addToLog('🚩 Бой приключения начался!');
-        }).catch(() => {
+        }).catch(async () => {
             window.battleConfig = cfg;
             window.configLoaded = true;
             window.battleConfigSource = 'adventure';
@@ -309,9 +425,9 @@ function startAdventureBattle() {
             if (logDiv) logDiv.innerHTML = '';
             const btnHome = document.getElementById('battle-btn-home');
             if (btnHome) btnHome.style.display = 'none';
+            if (window.showBattle) await window.showBattle();
             window.initializeArmies();
             window.renderArmies();
-            window.showBattle();
             window.addToLog('🚩 Бой приключения начался!');
         });
         return;
@@ -326,9 +442,9 @@ function startAdventureBattle() {
     if (logDiv) logDiv.innerHTML = '';
     const btnHome = document.getElementById('battle-btn-home');
     if (btnHome) btnHome.style.display = 'none';
+    if (window.showBattle) await window.showBattle();
     window.initializeArmies();
     window.renderArmies();
-    window.showBattle();
     window.addToLog('🚩 Бой приключения начался!');
 }
 
@@ -384,4 +500,3 @@ window.beginAdventureFromSetup = beginAdventureFromSetup;
 window.startAdventureBattle = startAdventureBattle;
 window.renderAdventure = renderAdventure;
 window.showAdventureResult = showAdventureResult;
-

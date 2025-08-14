@@ -31,5 +31,3 @@ function getMaxDamageValue(damageStr) {
 window.rollDice = rollDice;
 window.parseDamage = parseDamage;
 window.getMaxDamageValue = getMaxDamageValue;
-
-

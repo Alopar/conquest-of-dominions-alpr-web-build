@@ -1,0 +1,48 @@
+<div id="settings-screen" class="screen" style="display: none !important;">
+    <div class="menu-bar">
+        <div class="menu-left">
+            <button class="btn" onclick="showIntro()">Главная</button>
+        </div>
+    </div>
+    <div class="settings-container">
+        <div class="settings-content">
+            <h2>⚙️ Настройки игры</h2>
+            <div class="settings-layout">
+                <div class="settings-section">
+                    <h3>Основные параметры</h3>
+                    <div class="setting-group">
+                        <input type="number" id="maxUnitsPerArmy" min="1" max="20" value="10">
+                        <label for="maxUnitsPerArmy">Максимум юнитов в армии</label>
+                    </div>
+                    <div class="setting-group">
+                        <input type="number" id="meleeHitThreshold" min="1" max="20" value="5">
+                        <label for="meleeHitThreshold">Порог попадания (melee)</label>
+                    </div>
+                    <div class="setting-group">
+                        <input type="number" id="rangeHitThreshold" min="1" max="20" value="11">
+                        <label for="rangeHitThreshold">Порог попадания (range)</label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Настройки интерфейса</h3>
+                    <div class="setting-group">
+                        <div class="custom-checkbox">
+                            <input type="checkbox" id="showDetailedLog" checked>
+                            <label for="showDetailedLog">Подробный лог</label>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <div class="custom-checkbox">
+                            <input type="checkbox" id="attackAlternate" checked>
+                            <label for="attackAlternate">Атака по очереди</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button class="btn" onclick="saveSettings()">💾 Сохранить</button>
+                <button class="btn secondary-btn" onclick="resetSettings()">🔄 Сбросить</button>
+            </div>
+        </div>
+    </div>
+</div>

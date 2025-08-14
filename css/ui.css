@@ -134,7 +134,7 @@
     transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 10px;
+    margin: 8px;
 }
 
 .custom-file-btn:hover {
@@ -157,6 +157,17 @@
 .secondary-btn:hover {
     background: linear-gradient(145deg, #a0845c, #b8956a, #a0845c) !important;
     border-color: #8b7355 !important;
+}
+
+/* Выбранная вкладка */
+.btn.tab-selected {
+    background: linear-gradient(145deg, #4b3826, #5a422e, #4b3826) !important; /* тёмная медь */
+    border-color: #5a3f28 !important;
+    color: #d7a96b !important;
+}
+.btn.tab-selected:hover {
+    background: linear-gradient(145deg, #57412d, #6a4d35, #57412d) !important;
+    border-color: #69472f !important;
 }
 
 .file-input {
@@ -225,22 +236,6 @@
     text-align: center;
 }
 
-.unit-info-panel {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(26, 26, 26, 0.95);
-    border: 2px solid #654321;
-    border-radius: 8px;
-    padding: 15px 25px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    display: none;
-    z-index: 1000;
-    width: 80%;
-    max-width: 1000px;
-}
-
 .unit-info-table {
     width: 100%;
     border-collapse: collapse;
@@ -253,21 +248,15 @@
     border-right: 1px solid #654321;
     background-color: transparent;
 }
+.unit-modal-table td { font-weight: 600; }
+.unit-modal-table tr:first-child td { border-bottom: 1px solid #654321; }
+.unit-modal-table td:last-child { border-right: none; }
 
 .unit-info-table td:last-child {
     border-right: none;
 }
 
-.unit-info-label {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85em;
-}
-
-.unit-info-value {
-    font-weight: 500;
-    color: #cd853f;
-}
+.unit-info-value { color: #cd853f; }
 
 .log-panel {
     width: 25vw;
@@ -320,3 +309,17 @@
     margin-bottom: 15px;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
 }
+
+/* Модальные окна */
+.modal-window {
+    background: #111;
+    border: 3px solid #555; /* толще рамка */
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    min-width: 280px;
+    max-width: 90vw;
+}
+.modal-title { font-size: 1.1em; margin-bottom: 12px; color: #cd853f; display:none; text-align: center; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #654321; padding-bottom: 8px; }
+.modal-body { margin: 8px 0 12px 0; }
+.modal-actions { display:flex; justify-content:center; gap:12px; border-top: 1px solid #654321; padding-top: 10px; }

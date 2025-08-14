@@ -23,5 +23,3 @@ function selectTargetByRules(attacker, aliveEnemies) {
 
 window.getUnitRole = getUnitRole;
 window.selectTargetByRules = selectTargetByRules;
-
-

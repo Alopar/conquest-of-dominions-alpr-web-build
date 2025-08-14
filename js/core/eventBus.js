@@ -21,5 +21,3 @@ const eventBus = (function() {
 })();
 
 window.eventBus = eventBus;
-
-

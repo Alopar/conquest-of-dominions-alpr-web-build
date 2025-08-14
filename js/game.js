@@ -103,28 +103,28 @@ function initializeArmies() {
         console.error('Конфигурация не загружена');
         return;
     }
-    
+
     window.gameState.attackers = [];
     window.gameState.defenders = [];
-    
+
     let unitIdCounter = 0;
     const currentSettings = window.getCurrentSettings();
     const maxUnits = currentSettings.maxUnitsPerArmy;
-    
+
     // Обновляем названия армий
     const attackersLabel = document.getElementById('attackers-label');
     const defendersLabel = document.getElementById('defenders-label');
-    
+
     if (attackersLabel && window.battleConfig.armies.attackers.name) {
         const description = window.battleConfig.armies.attackers.description ? ` - ${window.battleConfig.armies.attackers.description}` : '';
         attackersLabel.textContent = `${window.battleConfig.armies.attackers.name}${description}`;
     }
-    
+
     if (defendersLabel && window.battleConfig.armies.defenders.name) {
         const description = window.battleConfig.armies.defenders.description ? ` - ${window.battleConfig.armies.defenders.description}` : '';
         defendersLabel.textContent = `${window.battleConfig.armies.defenders.name}${description}`;
     }
-    
+
     // Создание атакующих из конфигурации
     for (const unitGroup of window.battleConfig.armies.attackers.units) {
         for (let i = 0; i < unitGroup.count && window.gameState.attackers.length < maxUnits; i++) {
@@ -136,7 +136,7 @@ function initializeArmies() {
     }
     // Формирование построения атакующих
     window.gameState.attackers = arrangeUnitsIntoFormation(window.gameState.attackers);
-    
+
     // Создание защитников из конфигурации
     for (const unitGroup of window.battleConfig.armies.defenders.units) {
         for (let i = 0; i < unitGroup.count && window.gameState.defenders.length < maxUnits; i++) {
@@ -148,7 +148,7 @@ function initializeArmies() {
     }
     // Формирование построения защитников
     window.gameState.defenders = arrangeUnitsIntoFormation(window.gameState.defenders);
-    
+
     window.gameState.battleEnded = false;
     window.gameState.battleLog = [];
     window.gameState.currentTurn = 1;
@@ -165,42 +165,42 @@ function initializeArmies() {
 // Логика боя
 function executeStep(army) {
     if (window.gameState.battleEnded) return;
-    
+
     const units = army === 'attackers' ? window.gameState.attackers : window.gameState.defenders;
     const enemies = army === 'attackers' ? window.gameState.defenders : window.gameState.attackers;
-    
+
     // Находим живых юнитов, которые еще не атаковали
     const availableUnits = units.filter(unit => unit.alive && !unit.hasAttackedThisTurn);
-    
+
     if (availableUnits.length === 0) {
         window.addToLog(`Все ${army === 'attackers' ? 'атакующие' : 'защитники'} уже атаковали в этом ходу`);
         return;
     }
-    
+
     // Выбираем случайного юнита для атаки
     const attacker = availableUnits[Math.floor(Math.random() * availableUnits.length)];
-    
+
     // Находим живых врагов
     const aliveEnemies = enemies.filter(unit => unit.alive);
-    
+
     if (aliveEnemies.length === 0) {
         window.addToLog(`Все ${army === 'attackers' ? 'защитники' : 'атакующие'} уже мертвы!`);
         endBattle(army);
         return;
     }
-    
+
     // Выбираем цель по правилам ролей
     const target = selectTargetByRules(attacker, aliveEnemies);
-    
+
     // Выполняем атаку
     performAttack(attacker, target, army);
-    
+
     // Отмечаем, что юнит атаковал
     attacker.hasAttackedThisTurn = true;
-    
+
     // Обновляем отображение
     renderArmies();
-    
+
     // Проверяем, закончился ли бой
     checkBattleEnd();
 }
@@ -316,22 +316,22 @@ function performAttack(attacker, target, army) {
 
 function nextTurn() {
     if (window.gameState.battleEnded) return;
-    
+
     // Сбрасываем флаги атаки для всех юнитов
     window.gameState.attackers.forEach(unit => unit.hasAttackedThisTurn = false);
     window.gameState.defenders.forEach(unit => unit.hasAttackedThisTurn = false);
-    
+
     // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
     window.gameState.activeSide = getFirstSide(window.battleConfig && window.battleConfig.battleConfig);
 
     window.gameState.currentTurn++;
-    
+
     // Обновляем счетчик ходов
     const turnCounter = document.getElementById('turn-counter');
     if (turnCounter) {
         turnCounter.textContent = `Ход: ${window.gameState.currentTurn}`;
     }
-    
+
     window.addToLog(`🔄 Начинается ход ${window.gameState.currentTurn}`);
     renderArmies();
 }
@@ -339,7 +339,7 @@ function nextTurn() {
 function checkBattleEnd() {
     const attackersAlive = window.gameState.attackers.some(unit => unit.alive);
     const defendersAlive = window.gameState.defenders.some(unit => unit.alive);
-    
+
     if (!attackersAlive) {
         endBattle('defenders');
     } else if (!defendersAlive) {
@@ -349,11 +349,11 @@ function checkBattleEnd() {
 
 function endBattle(winner) {
     window.gameState.battleEnded = true;
-    
+
     const winnerName = winner === 'attackers' ? 'Атакующие' : 'Защитники';
     window.addToLog(`🏆 ${winnerName} побеждают!`);
     window.addToLog(`Бой завершен за ${window.gameState.currentTurn} ходов`);
-    
+
     // Обновляем состояние кнопок
     updateButtonStates();
 }
@@ -361,19 +361,19 @@ function endBattle(winner) {
 function resetBattle() {
     initializeArmies();
     renderArmies();
-    
+
     // Обновляем счетчик ходов
     const turnCounter = document.getElementById('turn-counter');
     if (turnCounter) {
         turnCounter.textContent = 'Ход: 1';
     }
-    
+
     // Очищаем лог
     const logDiv = document.getElementById('battle-log');
     if (logDiv) {
         logDiv.innerHTML = '';
     }
-    
+
     window.addToLog('🔄 Бой сброшен');
 }
 

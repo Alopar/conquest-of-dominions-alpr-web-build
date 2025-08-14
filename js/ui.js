@@ -29,9 +29,85 @@ function renderUnit(unit, army) {
         <div class="hp-bar"></div>
     `;
     unitDiv.style.setProperty('--hp', hpPct + '%');
-    unitDiv.title = `${unit.name} (${unit.hp}/${unit.maxHp} HP)`;
-    unitDiv.addEventListener('mouseenter', () => showUnitInfo(unit));
-    unitDiv.addEventListener('mouseleave', hideUnitInfo);
+    // Панель устарела — убираем hover-логику
+    unitDiv.addEventListener('click', function(){
+        try {
+            if (!(window.UI && typeof window.UI.showModal === 'function')) return;
+            const tpl = document.getElementById('tpl-unit-modal-body');
+            const types = (window.battleConfig && window.battleConfig.unitTypes) ? window.battleConfig.unitTypes : {};
+            const t = types[unit.typeId];
+            const role = t && t.type ? String(t.type) : '';
+            const targets = Number(unit.targets || 1);
+            let body = null;
+            if (tpl) {
+                const frag = tpl.content.cloneNode(true);
+                body = document.createElement('div');
+                body.appendChild(frag);
+                const root = body.querySelector('table');
+                if (root) {
+                    const iconNameEl = body.querySelector('[data-role="iconName"]');
+                    const typeEl = body.querySelector('[data-role="type"]');
+                    const hpEl = body.querySelector('[data-role="hp"]');
+                    const damageEl = body.querySelector('[data-role="damage"]');
+                    const targetsEl = body.querySelector('[data-role="targets"]');
+
+                    if (iconNameEl) iconNameEl.textContent = `${String(unit.view || '')} ${String(unit.name || '')}`;
+                    if (typeEl) typeEl.textContent = `ТИП: ${String(role || '')}`;
+                    if (hpEl) hpEl.textContent = `НР: ${unit.hp}/${unit.maxHp} ❤️`;
+                    if (damageEl) damageEl.textContent = `УРОН: ${unit.damage} 💥`;
+                    if (targetsEl) targetsEl.textContent = `ЦЕЛИ: ${targets} 🎯`;
+
+                    try {
+                        root.querySelectorAll('td').forEach(function(td){ td.style.textTransform = 'uppercase'; });
+                    } catch {}
+                }
+            } else {
+                body = document.createElement('div');
+                const row1 = document.createElement('div');
+                row1.textContent = `${unit.view} ${unit.name}  |  ТИП: ${role}`;
+                const row2 = document.createElement('div');
+                row2.textContent = `НР: ${unit.hp}/${unit.maxHp} ❤️  |  УРОН: ${unit.damage} 💥  |  ЦЕЛИ: ${targets} 🎯`;
+                row1.style.textTransform = 'uppercase';
+                row2.style.textTransform = 'uppercase';
+                body.appendChild(row1);
+                body.appendChild(row2);
+            }
+            window.UI.showModal(body, { type: 'info', title: 'Описание существа' });
+        } catch {}
+    });
+	try {
+		if (window.UI && typeof window.UI.attachTooltip === 'function') {
+			window.UI.attachTooltip(unitDiv, function(){
+				const wrap = document.createElement('div');
+				wrap.style.display = 'flex';
+				wrap.style.alignItems = 'center';
+				const name = document.createElement('span');
+				name.textContent = String(unit.name || '');
+				const sep1 = document.createElement('span');
+				sep1.textContent = '|';
+				sep1.style.opacity = '0.6';
+				sep1.style.margin = '0 8px';
+				const hp = document.createElement('span');
+				hp.textContent = `${unit.hp}/${unit.maxHp} ❤️`;
+				const sep2 = document.createElement('span');
+				sep2.textContent = '|';
+				sep2.style.opacity = '0.6';
+				sep2.style.margin = '0 8px';
+				const status = document.createElement('span');
+				let statusText = '';
+				if (!unit.alive) statusText = '💀 Мертв';
+				else if (unit.hasAttackedThisTurn) statusText = '⚔️ Атаковал';
+				else statusText = '✅ Готов';
+				status.textContent = statusText;
+				wrap.appendChild(name);
+				wrap.appendChild(sep1);
+				wrap.appendChild(hp);
+				wrap.appendChild(sep2);
+				wrap.appendChild(status);
+				return wrap;
+			}, { delay: 500, hideDelay: 100 });
+		}
+	} catch {}
     return unitDiv;
 }
 
@@ -94,68 +170,25 @@ function updateButtonStates() {
     nextTurnBtn.disabled = (totalCanAttack > 0);
 }
 
-// Показать информацию о юните
-function showUnitInfo(unit) {
-    const panel = document.getElementById('unit-info-panel');
-    const nameSpan = document.getElementById('unit-name');
-    const typeSpan = document.getElementById('unit-type');
-    const hpSpan = document.getElementById('unit-hp');
-    const damageSpan = document.getElementById('unit-damage');
-    const targetsSpan = document.getElementById('unit-targets');
-    const statusSpan = document.getElementById('unit-status');
-    
-    if (panel && nameSpan && typeSpan && hpSpan && damageSpan && targetsSpan && statusSpan) {
-        // Имя с иконкой
-        nameSpan.innerHTML = `${unit.view} ${unit.name}`;
-        // Тип
-        const types = (window.battleConfig && window.battleConfig.unitTypes) ? window.battleConfig.unitTypes : {};
-        const t = types[unit.typeId];
-        const role = t && t.type ? String(t.type) : '';
-        typeSpan.textContent = role;
-        hpSpan.textContent = `${unit.hp}/${unit.maxHp}`;
-        damageSpan.textContent = `${unit.damage}`;
-        targetsSpan.textContent = `${Number(unit.targets || 1)}`;
-        
-        // Добавляем иконки статуса
-        let statusText = '';
-        if (!unit.alive) {
-            statusText = '💀 Мертв';
-        } else if (unit.hasAttackedThisTurn) {
-            statusText = '⚔️ Атаковал';
-        } else {
-            statusText = '✅ Готов';
-        }
-        statusSpan.innerHTML = statusText;
-        
-        panel.style.display = 'block';
-    }
-}
-
-// Скрыть информацию о юните
-function hideUnitInfo() {
-    const panel = document.getElementById('unit-info-panel');
-    if (panel) {
-        panel.style.display = 'none';
-    }
-}
+// Устаревшая панель информации о юните удалена
 
 // Добавить запись в лог
 function addToLog(message) {
     const currentSettings = window.getCurrentSettings();
-    
+
     // Проверяем, нужно ли показывать подробный лог
-    if (!currentSettings.battleSettings.showDetailedLog && 
+    if (!currentSettings.battleSettings.showDetailedLog &&
         (message.includes('промахивается') || message.includes('атакует'))) {
         return; // Пропускаем детальные сообщения об атаках
     }
-    
+
     const logDiv = document.getElementById('battle-log');
     if (!logDiv) return;
-    
+
     const entry = document.createElement('div');
     entry.className = 'log-entry';
     entry.textContent = message;
-    
+
     // Добавляем новую запись в начало
     if (logDiv.firstChild) {
         logDiv.insertBefore(entry, logDiv.firstChild);
@@ -166,36 +199,102 @@ function addToLog(message) {
 
 // Переключение экранов
 function showIntro() {
-    showScreen('intro-screen');
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            window.Router.setScreen('intro');
+        } else {
+            showScreen('intro-screen');
+        }
+    } catch { showScreen('intro-screen'); }
     // Сбрасываем источник конфига при возврате на главную, чтобы новый старт схватки подхватил свой конфиг
     try { window.battleConfigSource = undefined; } catch {}
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
 
-function showBattle() {
-    showScreen('battle-screen');
+async function showBattle() {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('battle');
+        } else {
+            showScreen('battle-screen');
+        }
+    } catch { showScreen('battle-screen'); }
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
 
 // Экран "Схватка"
-function showFight() {
-    showScreen('fight-screen');
+async function showFight() {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('fight');
+        } else {
+            showScreen('fight-screen');
+        }
+    } catch { showScreen('fight-screen'); }
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
+    try {
+        if (!window.configLoaded && typeof window.loadDefaultConfig === 'function') {
+            await window.loadDefaultConfig();
+        }
+    } catch {}
+    if (typeof window.syncFightUI === 'function') window.syncFightUI();
+
+    try {
+        const host = document.getElementById('fight-config-panel');
+        if (host && window.UI && typeof window.UI.mountConfigPanel === 'function') {
+            host.innerHTML = '';
+            window.UI.mountConfigPanel(host, {
+                title: '⚙️ Конфигурация боя',
+                fileLabelText: '',
+                statusId: 'file-status',
+                inputId: 'config-file',
+                onFile: function(file){ if (window.loadConfigFile) window.loadConfigFile(file); },
+                onSample: function(){ try { downloadSampleConfig(); } catch {} },
+                primaryText: '🚩 Начать бой! 🚩',
+                primaryId: 'battle-btn',
+                primaryDisabled: true,
+                onPrimary: function(){ try { startBattle(); } catch {} },
+                getStatusText: function(){
+                    try {
+                        if (window.configLoaded && window.battleConfig && window.battleConfig.battleConfig) {
+                            const cfg = window.battleConfig.battleConfig;
+                            const description = cfg.description ? ' - ' + cfg.description : '';
+                            return `✅ Загружена конфигурация: "${cfg.name}"${description}`;
+                        }
+                    } catch {}
+                    return '';
+                }
+            });
+            try { if (typeof window.syncFightUI === 'function') window.syncFightUI(); } catch {}
+        }
+    } catch {}
 }
 
 function backToIntroFromFight() {
-    showScreen('intro-screen');
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            window.Router.setScreen('intro');
+        } else {
+            showScreen('intro-screen');
+        }
+    } catch { showScreen('intro-screen'); }
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
 }
 
 // Запуск боя
-function startBattle() {
+async function startBattle() {
     if (!window.configLoaded) {
-        alert('Сначала загрузите конфигурацию!');
+        try {
+            if (window.UI && typeof window.UI.alert === 'function') {
+                await window.UI.alert('Сначала загрузите конфигурацию!');
+            } else {
+                alert('Сначала загрузите конфигурацию!');
+            }
+        } catch { try { alert('Сначала загрузите конфигурацию!'); } catch {} }
         return;
     }
     // Обеспечиваем, что используется конфиг схватки, а не приключения
@@ -203,28 +302,24 @@ function startBattle() {
         const warn = 'Конфигурация боя не из режима Схватка. Перезагружаю стандартную.';
         try { console.warn(warn); } catch {}
         if (window.loadDefaultConfig) {
-            // Перегружаем стандартный конфиг синхронно через then
-            window.loadDefaultConfig().then(() => {
-                proceedStartBattle();
-            }).catch(() => {
-                proceedStartBattle();
-            });
+            try { await window.loadDefaultConfig(); } catch {}
+            await proceedStartBattle();
             return;
         }
     }
-    proceedStartBattle();
+    await proceedStartBattle();
 }
 
-function proceedStartBattle() {
+async function proceedStartBattle() {
     const logDiv = document.getElementById('battle-log');
     if (logDiv) {
         logDiv.innerHTML = '';
     }
     const btnHome = document.getElementById('battle-btn-home');
     if (btnHome) btnHome.style.display = '';
+    await showBattle();
     initializeArmies();
     renderArmies();
-    showBattle();
 
     window.addToLog('🚩 Бой начался!');
     window.addToLog(`Атакующие: ${window.gameState.attackers.length} юнитов`);
@@ -239,8 +334,6 @@ window.showBattle = showBattle;
 window.showFight = showFight;
 window.backToIntroFromFight = backToIntroFromFight;
 window.addToLog = addToLog;
-window.showUnitInfo = showUnitInfo;
-window.hideUnitInfo = hideUnitInfo;
 window.renderArmies = renderArmies;
 window.updateButtonStates = updateButtonStates;
 
@@ -275,7 +368,13 @@ window.finishBattleToAdventure = finishBattleToAdventure;
 window.retryBattle = retryBattle;
 
 async function showRules() {
-    showScreen('rules-screen');
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('rules');
+        } else {
+            showScreen('rules-screen');
+        }
+    } catch { showScreen('rules-screen'); }
 
     const container = document.getElementById('rules-content');
     if (!container) return;
@@ -285,7 +384,6 @@ async function showRules() {
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const md = await res.text();
-        // Простая конвертация Markdown -> HTML (заголовки и списки)
         const html = md
             .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
             .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')

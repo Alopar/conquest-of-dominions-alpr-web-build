@@ -15,6 +15,36 @@ body {
     overflow: hidden;
 }
 
+.z-shell { z-index: 0; }
+.z-screens { z-index: 100; }
+.z-overlay { z-index: 700; }
+.z-toast { z-index: 800; }
+.z-modal { z-index: 900; }
+.z-tooltip { z-index: 1000; }
+
+#app-shell {
+    position: relative;
+}
+
+#screen-layer {
+    position: relative;
+}
+
+#modal-layer,
+#toast-layer,
+#tooltip-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+#toast-layer { pointer-events: none; }
+#tooltip-layer { pointer-events: none; }
+#modal-layer { pointer-events: none; }
+
 .screen {
     display: none;
     background-color: #0d0d0d;

@@ -57,7 +57,7 @@ function displaySettings() {
     const rangeEl = document.getElementById('rangeHitThreshold');
     if (meleeEl) meleeEl.value = gameSettings.meleeHitThreshold;
     if (rangeEl) rangeEl.value = gameSettings.rangeHitThreshold;
-    
+
     document.getElementById('showDetailedLog').checked = gameSettings.battleSettings.showDetailedLog;
     const altEl = document.getElementById('attackAlternate');
     if (altEl) altEl.checked = !!gameSettings.battleSettings.attackAlternate;
@@ -70,11 +70,11 @@ function saveSettingsFromScreen() {
     const rangeEl = document.getElementById('rangeHitThreshold');
     gameSettings.meleeHitThreshold = parseInt(meleeEl ? meleeEl.value : 5);
     gameSettings.rangeHitThreshold = parseInt(rangeEl ? rangeEl.value : 11);
-    
+
     gameSettings.battleSettings.showDetailedLog = document.getElementById('showDetailedLog').checked;
     const altEl = document.getElementById('attackAlternate');
     if (altEl) gameSettings.battleSettings.attackAlternate = altEl.checked;
-    
+
     saveGameSettings();
 }
 
@@ -94,30 +94,58 @@ function resetSettingsToDefault() {
 }
 
 // Показать экран настроек
-function showSettings() {
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    const settingsScreen = document.getElementById('settings-screen');
-    settingsScreen.classList.add('active');
-    settingsScreen.style.display = 'flex';
-
+async function showSettings() {
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('settings');
+        } else if (window.UI && typeof window.UI.ensureScreenLoaded === 'function') {
+            await window.UI.ensureScreenLoaded('settings-screen', 'fragments/settings.html');
+        }
+    } catch {}
+    if (typeof window.showScreen === 'function') window.showScreen('settings-screen');
     displaySettings();
 }
 
 // Сохранить настройки
 function saveSettings() {
     saveSettingsFromScreen();
-    alert('Настройки сохранены!');
+    try {
+        if (window.UI && typeof window.UI.showToast === 'function') {
+            window.UI.showToast('success', 'Настройки сохранены!', 2000);
+        } else if (window.UI && typeof window.UI.alert === 'function') {
+            window.UI.alert('Настройки сохранены!');
+        } else {
+            alert('Настройки сохранены!');
+        }
+    } catch { try { alert('Настройки сохранены!'); } catch {} }
 }
 
 // Сбросить настройки
 function resetSettings() {
-    if (confirm('Сбросить настройки к значениям по умолчанию?')) {
-        resetSettingsToDefault();
-        alert('Настройки сброшены!');
-    }
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const body = document.createElement('div');
+            body.textContent = 'Сбросить настройки к значениям по умолчанию?';
+            window.UI.showModal(body, {
+                type: 'dialog',
+                title: 'Подтверждение',
+                onAccept: function(){
+                    resetSettingsToDefault();
+                    try {
+                        if (window.UI && typeof window.UI.showToast === 'function') window.UI.showToast('info', 'Настройки сброшены!', 2000);
+                        else if (window.UI && typeof window.UI.alert === 'function') window.UI.alert('Настройки сброшены!');
+                        else alert('Настройки сброшены!');
+                    } catch { try { alert('Настройки сброшены!'); } catch {} }
+                }
+            });
+            return;
+        }
+        // Фолбэк на нативный confirm
+        if (confirm('Сбросить настройки к значениям по умолчанию?')) {
+            resetSettingsToDefault();
+            try { alert('Настройки сброшены!'); } catch {}
+        }
+    } catch {}
 }
 
 // Получить текущие настройки для использования в игре

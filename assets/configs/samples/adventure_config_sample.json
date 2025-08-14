@@ -7,5 +7,3 @@
     { "name": "Логово тролля", "rewardGold": 20, "defenders": [ {"id":"troll","count":1}, {"id":"goblin","count":2} ] }
   ]
 }
-
-
