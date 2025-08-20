@@ -2,18 +2,14 @@
   "adventure": {
     "name": "Путь героя",
     "description": "От крысиных бегов до драконьих сокровищ",
-    "startingGold": 20
+    "startingCurrencies": [ { "id": "gold", "amount": 20 }, { "id": "glory", "amount": 0 } ]
   },
-  "encounters": [
-    { "name": "Амбар с крысами", "rewardGold": 5, "defenders": [ {"id": "rat", "count": 3} ] },
-    { "name": "Двор фермы и проблема с курями", "rewardGold": 6, "defenders": [ {"id": "chicken", "count": 6} ] },
-    { "name": "Болото с лягушками", "rewardGold": 7, "defenders": [ {"id": "frog", "count": 8} ] },
-    { "name": "Змеиное гнездо", "rewardGold": 8, "defenders": [ {"id": "giant_snake", "count": 4}, {"id": "frog", "count": 5} ] },
-    { "name": "Лагерь гоблиноидов: разведка", "rewardGold": 10, "defenders": [ {"id": "goblin", "count": 5} ] },
-    { "name": "Лагерь гоблиноидов: рейд", "rewardGold": 12, "defenders": [ {"id": "goblin", "count": 8}, {"id": "orc", "count": 3}, {"id": "troll", "count": 1} ] },
-    { "name": "Пещеры: звериный дозор", "rewardGold": 18, "defenders": [ {"id": "wolf", "count": 10}, {"id": "bear", "count": 3} ] },
-    { "name": "Склеп: стражи из костей", "rewardGold": 14, "defenders": [ {"id": "skeleton", "count": 5}, {"id": "spider", "count": 2} ] },
-    { "name": "Склеп: вампир-хозяин", "rewardGold": 16, "defenders": [ {"id": "skeleton", "count": 8}, {"id": "bat", "count": 10}, {"id": "vampire", "count": 1} ] },
-    { "name": "Логово драконов", "rewardGold": 30, "defenders": [ {"id": "dragon", "count": 5} ] }
+  "stages": [
+    { "id": "stage_1", "name": "Деревня", "encounterIds": ["barn_rats", "farm_chickens"] },
+    { "id": "stage_2", "name": "Окрестности", "encounterIds": ["swamp_frogs", "snake_nest"] },
+    { "id": "stage_3", "name": "Орды", "encounterIds": ["goblin_scout", "goblin_raid"] },
+    { "id": "stage_4", "name": "Пещеры", "encounterIds": ["caves_patrol"] },
+    { "id": "stage_5", "name": "Склеп", "encounterIds": ["crypt_bones", "crypt_vampire"] },
+    { "id": "stage_6", "name": "Горы", "encounterIds": ["dragon_lair"] }
   ]
 }

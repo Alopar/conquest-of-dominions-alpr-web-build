@@ -1,3 +1,19 @@
+.encounter-board { display:flex; justify-content:center; align-items:flex-start; }
+.encounter-column { display:flex; flex-direction:column; gap:12px; align-items:center; position:relative; padding:0 12px; }
+.encounter-column::after { content:""; position:absolute; right:0; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, transparent, #444, transparent); opacity:0.6; }
+.encounter-column:last-child::after { display:none; }
+.encounter-item { width:84px; height:84px; border:1px solid #444; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
+.encounter-item.locked { opacity:0.45; cursor:not-allowed; filter:grayscale(0.6); }
+.encounter-item.done { opacity:0.7; border-color:#2f6; }
+.encounter-item .encounter-icon { font-size:1.6em; }
+.encounter-item .encounter-name { font-size:0.85em; text-align:center; max-width:90%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.rewards-list { display:flex; justify-content:center; }
+.rewards-items { display:flex; gap:12px; align-items:center; justify-content:center; }
+.reward-item { width:100px; min-height:90px; border:1px solid #444; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); text-align:center; }
+.reward-item.clickable { cursor:pointer; }
+.reward-icon { font-size:1.6em; }
+.reward-name { font-size:0.9em; max-width:95px; text-align:center; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; white-space:normal; }
 .bestiary-table thead tr {
     background: linear-gradient(90deg, #2d1a0b 0%, #654321 100%);
     color: #cd853f;
@@ -40,7 +56,6 @@
     background: linear-gradient(145deg, #cd853f, #a0845c);
 }
 .bestiary-table-wrapper {
-    max-height: 340px; /* 10 строк по 34px */
     overflow-y: auto;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -321,7 +336,7 @@
     border-radius: 8px;
     padding: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-    min-width: 280px;
+    min-width: 600px;
     max-width: 90vw;
 }
 .modal-title { font-size: 1.1em; margin-bottom: 12px; color: #cd853f; display:none; text-align: center; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #654321; padding-bottom: 8px; }

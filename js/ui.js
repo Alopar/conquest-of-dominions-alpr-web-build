@@ -4,6 +4,7 @@ function showScreen(id) {
         s.classList.remove('active');
         try { s.style.setProperty('display', 'none', 'important'); } catch { s.style.display = 'none'; }
     });
+    try { if (window.UI && typeof window.UI.clearTooltips === 'function') window.UI.clearTooltips(); } catch {}
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.add('active');
@@ -334,24 +335,105 @@ window.updateButtonStates = updateButtonStates;
 
 function finishBattleToAdventure() {
     if (!window.adventureState || !window.adventureState.config) return;
-    // Возврат на экран приключения
+    // Возврат на экран приключения с модалкой наград
     const hasAnyUnits = Object.values(window.adventureState.pool || {}).some(v => v > 0);
     const encLeft = (function(){
         try {
-            const idx = window.adventureState.currentEncounterIndex;
-            const encs = (window.adventureState.config && window.adventureState.config.encounters) || [];
-            return idx < encs.length;
+            const stages = (window.adventureState.config && Array.isArray(window.adventureState.config.stages)) ? window.adventureState.config.stages : [];
+            return window.adventureState.currentStageIndex < stages.length;
         } catch { return false; }
     })();
     if (!hasAnyUnits) {
         window.showAdventureResult('💀💀💀 Поражение! Вся армия потеряна! 💀💀💀');
         return;
     }
-    if (!encLeft) {
-        window.showAdventureResult('✨🏆✨ Победа! Все испытания пройдены! ✨🏆✨');
+    function resolveRewards() {
+        try {
+            const last = window._lastEncounterData;
+            if (!last) return [];
+            const list = Array.isArray(last.rewards) ? last.rewards : [];
+            return list.filter(function(r){ return r && (r.type === 'currency' || r.type === 'monster'); });
+        } catch { return []; }
+    }
+
+    const rewards = resolveRewards();
+    const body = document.createElement('div');
+    const tpl = document.getElementById('tpl-rewards-list');
+    const wrap = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+    const itemsEl = wrap.querySelector('[data-role="items"]') || wrap;
+    rewards.forEach(function(r){
+        let el = null;
+        if (r.type === 'currency') {
+            const tplItem = document.getElementById('tpl-reward-currency');
+            el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tplItem) el.className = 'reward-item';
+            const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+            const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+            const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+            const cd = curById[r.id] || { name: r.id, icon: '' };
+            const iconEl = el.querySelector('.reward-icon') || el;
+            const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = cd.icon || '💠';
+            if (nameEl) nameEl.textContent = `${cd.name} +${r.amount}`;
+        } else if (r.type === 'monster') {
+            const tplItem = document.getElementById('tpl-reward-unit');
+            el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tplItem) el.className = 'reward-item';
+            const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+            const m = monsters[r.id] || { name: r.id, view: '👤' };
+            const iconEl = el.querySelector('.reward-icon') || el;
+            const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = `${m.name || r.id} x${r.amount}`;
+        } else {
+            el = document.createElement('div'); el.className = 'reward-item'; el.textContent = r.name || r.id;
+        }
+        itemsEl.appendChild(el);
+    });
+    body.appendChild(wrap);
+
+    async function applyRewards() {
+        try {
+            const rs = rewards;
+            if (!rs || rs.length === 0) return;
+            rs.forEach(function(r){
+                if (r.type === 'currency') {
+                    if (!window.adventureState.currencies) window.adventureState.currencies = {};
+                    const add = Math.max(0, Number(r.amount || 0));
+                    window.adventureState.currencies[r.id] = (window.adventureState.currencies[r.id] || 0) + add;
+                    try {
+                        const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+                        const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+                        const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+                        const cd = curById[r.id] || { name: r.id, icon: '' };
+                        if (window.UI && window.UI.showToast) window.UI.showToast('success', `${cd.name}: +${add} ${cd.icon || ''}`);
+                    } catch {}
+                } else if (r.type === 'monster') {
+                    if (!window.adventureState.pool) window.adventureState.pool = {};
+                    window.adventureState.pool[r.id] = (window.adventureState.pool[r.id] || 0) + Math.max(0, Number(r.amount || 0));
+                    try {
+                        const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+                        const m = monsters[r.id] || { name: r.id };
+                        if (window.UI && window.UI.showToast) window.UI.showToast('success', `Союзник: ${m.name || r.id} x${r.amount}`);
+                    } catch {}
+                }
+            });
+            try { window.persistAdventure && window.persistAdventure(); } catch {}
+        } catch {}
+    }
+
+    async function proceed() {
+        await applyRewards();
+        if (!encLeft) { window.showAdventureResult('✨🏆✨ Победа! Все испытания пройдены! ✨🏆✨'); return; }
+        window.showAdventure();
+    }
+
+    if (rewards.length > 0 && window.UI && typeof window.UI.showModal === 'function') {
+        const h = window.UI.showModal(body, { type: 'confirm', title: 'НАГРАДЫ' });
+        h.closed.then(function(){ proceed(); });
         return;
     }
-    window.showAdventure();
+    proceed();
 }
 
 function retryBattle() {

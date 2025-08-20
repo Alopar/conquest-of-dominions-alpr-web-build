@@ -5,6 +5,9 @@
     "maxUnitsPerArmy": 10,
     "meleeHitThreshold": 5,
     "rangeHitThreshold": 11,
+    "adventureSettings": {
+      "stageProgressionMode": 1
+    },
     "battleSettings": {
       "showDetailedLog": true,
       "attackAlternate": true

@@ -231,6 +231,8 @@
         } else if (type === 'dialog') {
             const yesBtn = win.querySelector('[data-action="yes"]');
             const noBtn = win.querySelector('[data-action="no"]');
+            if (yesBtn && opts && typeof opts.yesText === 'string') yesBtn.textContent = opts.yesText;
+            if (noBtn && opts && typeof opts.noText === 'string') noBtn.textContent = opts.noText;
             if (yesBtn) yesBtn.addEventListener('click', function(){ close(true); });
             if (noBtn) noBtn.addEventListener('click', function(){ close(false); });
         }
@@ -490,5 +492,13 @@
         };
     }
 
-    window.UI = { ensureScreenLoaded, ensureMenuBar, mountTemplate, cloneTemplate, applyTableHead, mountFileInput, mountConfigPanel, showModal, confirm: confirmModal, alert: alertModal, showToast, attachTooltip, closeTopModal };
+    function clearTooltips() {
+        try {
+            let layer = document.getElementById('tooltip-layer');
+            if (!layer) return;
+            while (layer.firstChild) { layer.removeChild(layer.firstChild); }
+        } catch {}
+    }
+
+    window.UI = { ensureScreenLoaded, ensureMenuBar, mountTemplate, cloneTemplate, applyTableHead, mountFileInput, mountConfigPanel, showModal, confirm: confirmModal, alert: alertModal, showToast, attachTooltip, clearTooltips, closeTopModal };
 })();

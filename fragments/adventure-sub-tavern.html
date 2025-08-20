@@ -1,21 +1,15 @@
 <div class="settings-layout">
     <div class="settings-section">
         <h3>Таверна</h3>
-        <div class="bestiary-table-wrapper">
-            <table class="bestiary-table unit-info-table">
-                <thead>
-                    <tr>
-                        <th class="icon-cell">👤</th>
-                        <th>Имя</th>
-                        <th>ID</th>
-                        <th>Цена</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="adventure-tavern-table">
-                    <tr><td colspan="5">Загрузка...</td></tr>
-                </tbody>
-            </table>
+        <div id="tavern-available">
+            <div style="margin:6px 0; color:#cd853f; text-align:center;">Доступные наёмники</div>
+            <div id="tavern-available-list" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:flex-start;"></div>
+        </div>
+        <div style="height:1px; background:linear-gradient(to right, transparent, #444, transparent); opacity:0.6; margin:12px 0;"></div>
+        <div id="tavern-army">
+            <div style="margin:6px 0; color:#cd853f; text-align:center;">Ваша армия</div>
+            <div id="tavern-army-list" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:flex-start;"></div>
         </div>
     </div>
+    
 </div>

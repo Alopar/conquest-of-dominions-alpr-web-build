@@ -9,6 +9,8 @@
     "archer": { "id": "archer", "name": "Лучник", "hp": 8, "damage": "1d6", "targets": 1, "view": "🏹", "type": "range" },
     "knight": { "id": "knight", "name": "Рыцарь", "hp": 20, "damage": "1d8", "targets": 1, "view": "🛡️", "type": "melee" },
     "mage": { "id": "mage", "name": "Маг", "hp": 6, "damage": "1d3", "targets": 3, "view": "🔮", "type": "support" },
+    "dog": { "id": "dog", "name": "Собака", "hp": 4, "damage": "1d3", "targets": 1, "view": "🐶", "type": "melee" },
+    "fox": { "id": "fox", "name": "Лиса", "hp": 4, "damage": "1d3", "targets": 1, "view": "🦊", "type": "melee" },
     "orc": { "id": "orc", "name": "Орк", "hp": 10, "damage": "1d6", "targets": 1, "view": "👹", "type": "melee" },
     "goblin": { "id": "goblin", "name": "Гоблин", "hp": 4, "damage": "1d3", "targets": 1, "view": "👺", "type": "range" },
     "troll": { "id": "troll", "name": "Тролль", "hp": 25, "damage": "2d6", "targets": 1, "view": "👿", "type": "melee" },

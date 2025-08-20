@@ -27,6 +27,15 @@
     </thead>
 </template>
 
+<template id="tpl-encounter-item">
+    <div class="encounter-item" data-id="" title="">
+        <div class="encounter-icon">❗</div>
+        <div class="encounter-name"></div>
+    </div>
+    <!-- Описание и состав выводятся в модалке -->
+    <!-- Состояния задаются классами: .locked / .done / .available -->
+</template>
+
 <template id="tpl-button-row">
     <div style="display:flex; gap:12px; justify-content:center;"></div>
 </template>
@@ -85,6 +94,32 @@
             <button class="btn secondary-btn" data-action="no">Нет</button>
         </div>
     </div>
+</template>
+
+<template id="tpl-rewards-list">
+    <div class="rewards-list">
+        <div class="rewards-items" data-role="items" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px;"></div>
+    </div>
+    <!-- Элемент списка создаётся динамически -->
+</template>
+
+<template id="tpl-reward-currency">
+    <div class="reward-item" data-id="">
+        <div class="reward-icon">💠</div>
+        <div class="reward-name">Награда</div>
+    </div>
+    <!-- Карточка валюты -->
+    <!-- .reward-item используется общая стилизация -->
+    <!-- Внутри: .reward-icon, .reward-name -->
+    
+</template>
+
+<template id="tpl-reward-unit">
+    <div class="reward-item" data-id="">
+        <div class="reward-icon">👤</div>
+        <div class="reward-name">Союзник</div>
+    </div>
+    <!-- Карточка юнита-союзника -->
 </template>
 
 <!-- Тело модалки описания юнита -->

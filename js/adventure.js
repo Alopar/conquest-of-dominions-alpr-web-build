@@ -1,9 +1,10 @@
 let adventureState = {
     config: null,
-    gold: 0,
+    currencies: {},
     pool: {},
     selectedClassId: null,
-    currentEncounterIndex: 0,
+    currentStageIndex: 0,
+    completedEncounterIds: [],
     inBattle: false,
     lastResult: ''
 };
@@ -110,17 +111,22 @@ function beginAdventureFromSetup() {
 }
 
 function validateAdventureConfig(cfg) {
-    if (!cfg || !cfg.adventure || !Array.isArray(cfg.encounters)) {
+    if (!cfg || !cfg.adventure || !Array.isArray(cfg.stages)) {
         throw new Error('Неверная структура adventure_config');
     }
 }
 
 function initAdventureState(cfg) {
     adventureState.config = cfg;
-    adventureState.gold = Math.max(0, Number(cfg.adventure.startingGold || 0));
+    adventureState.currencies = {};
+    try {
+        const arr = (cfg && cfg.adventure && Array.isArray(cfg.adventure.startingCurrencies)) ? cfg.adventure.startingCurrencies : [];
+        for (const c of arr) { if (c && c.id) adventureState.currencies[c.id] = Math.max(0, Number(c.amount || 0)); }
+    } catch {}
     adventureState.pool = {};
     adventureState.selectedClassId = adventureState.selectedClassId || null;
-    adventureState.currentEncounterIndex = 0;
+    adventureState.currentStageIndex = 0;
+    adventureState.completedEncounterIds = [];
     adventureState.inBattle = false;
     adventureState.lastResult = '';
     persistAdventure();
@@ -148,8 +154,26 @@ async function showAdventure() {
 }
 
 function renderAdventure() {
-    const goldEl = document.getElementById('adventure-gold');
-    if (goldEl) goldEl.textContent = String(adventureState.gold);
+    const curWrap = document.getElementById('adventure-currencies');
+    if (curWrap) {
+        curWrap.innerHTML = '';
+        const defs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+        const list = defs && Array.isArray(defs.currencies) ? defs.currencies : [];
+        const byId = {}; list.forEach(function(c){ byId[c.id] = c; });
+        const ids = Object.keys(adventureState.currencies || {});
+        if (ids.length === 0) {
+            const d = document.createElement('div'); d.textContent = '—'; curWrap.appendChild(d);
+        } else {
+            ids.forEach(function(id){
+                const def = byId[id] || { name: id, icon: '' };
+                const v = adventureState.currencies[id] || 0;
+                const el = document.createElement('div');
+                el.style.fontSize = '1.05em';
+                el.textContent = `${def.name}: ${v} ${def.icon || ''}`;
+                curWrap.appendChild(el);
+            });
+        }
+    }
     const nameEl = document.getElementById('adventure-name');
     if (nameEl) {
         const n = adventureState.config && adventureState.config.adventure ? adventureState.config.adventure.name : 'Приключение';
@@ -221,6 +245,7 @@ async function loadAdventureSubscreen(key) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const html = await res.text();
         cont.innerHTML = html;
+        try { if (window.UI && typeof window.UI.clearTooltips === 'function') window.UI.clearTooltips(); } catch {}
     } catch { cont.innerHTML = '<div class="settings-section">Не удалось загрузить раздел</div>'; }
 }
 
@@ -230,9 +255,7 @@ async function renderAdventureSubscreen() {
     if (subscreen === 'army') {
         renderPool();
     } else if (subscreen === 'map') {
-        renderEncounterPreview();
-        renderBeginButtonOnMain();
-        updateAdventureStartButton();
+        renderMapBoard();
     } else if (subscreen === 'tavern') {
         renderTavern();
     }
@@ -259,53 +282,107 @@ function renderPool() {
 }
 
 function priceFor(typeId) {
-    const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
-    const base = monsters[typeId] && typeof monsters[typeId].price === 'number' ? monsters[typeId].price : 10;
     let list = null;
     try {
         const m = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('mercenaries') : null;
         list = Array.isArray(m) ? m : (m && Array.isArray(m.mercenaries) ? m.mercenaries : null);
     } catch {}
-    if (!list) return base;
+    if (!list) return [{ id: 'gold', amount: 10 }];
     const found = list.find(m => m.id === typeId);
-    if (!found) return base;
-    return typeof found.price === 'number' ? found.price : base;
+    const arr = (found && Array.isArray(found.price)) ? found.price : [{ id: 'gold', amount: 10 }];
+    return arr;
 }
 
 function renderTavern() {
-    const tbody = document.getElementById('adventure-tavern-table');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+    const hostAvail = document.getElementById('tavern-available-list');
+    const hostArmy = document.getElementById('tavern-army-list');
+    if (hostAvail) hostAvail.innerHTML = '';
+    if (hostArmy) hostArmy.innerHTML = '';
     const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
     let list = [];
     try {
         const m = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('mercenaries') : null;
         list = Array.isArray(m) ? m : (m && Array.isArray(m.mercenaries) ? m.mercenaries : []);
     } catch { list = []; }
-    if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Пусто</td></tr>'; return; }
-    for (const item of list) {
-        const m = monsters[item.id] || { id: item.id, name: item.id, view: '❓' };
-        const price = priceFor(item.id);
-        const canBuy = adventureState.gold >= price;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="icon-cell">${m.view || '❓'}</td><td>${m.name || item.id}</td><td>${item.id}</td><td>${price} 💰</td><td><button class="btn" ${canBuy ? '' : 'disabled'} onclick="buyUnit('${item.id}')">Нанять</button></td>`;
-        tbody.appendChild(tr);
+    if (hostAvail) {
+        const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+        const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+        const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+        for (const item of list) {
+            const m = monsters[item.id] || { id: item.id, name: item.id, view: '❓' };
+            const price = priceFor(item.id);
+            const canBuy = price.every(function(p){ return (adventureState.currencies[p.id] || 0) >= p.amount; });
+            const card = document.createElement('div');
+            card.style.display = 'flex'; card.style.flexDirection = 'column'; card.style.alignItems = 'center'; card.style.gap = '6px';
+            const tplItem = document.getElementById('tpl-reward-unit');
+            const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tplItem) el.className = 'reward-item';
+            const iconEl = el.querySelector('.reward-icon') || el; const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = m.name || item.id;
+            el.classList.add('clickable');
+            el.addEventListener('click', function(){ showUnitInfoModal(item.id); });
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.disabled = !canBuy;
+            btn.textContent = price.map(function(p){ const cd = curById[p.id] || { icon: '', name: p.id }; return `${p.amount} ${cd.icon || ''}`; }).join(' ');
+            btn.addEventListener('click', function(){ buyUnit(item.id); });
+            card.appendChild(el);
+            card.appendChild(btn);
+            hostAvail.appendChild(card);
+        }
+    }
+    if (hostArmy) {
+        const ids = Object.keys(adventureState.pool).filter(function(k){ return adventureState.pool[k] > 0; });
+        for (const id of ids) {
+            const tplItem = document.getElementById('tpl-reward-unit');
+            const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tplItem) el.className = 'reward-item';
+            const m = monsters[id] || { name: id, view: '👤' };
+            const iconEl = el.querySelector('.reward-icon') || el; const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = `${m.name || id} x${adventureState.pool[id]}`;
+            el.classList.add('clickable');
+            el.addEventListener('click', function(){ showUnitInfoModal(id); });
+            hostArmy.appendChild(el);
+        }
     }
 }
 
 function buyUnit(typeId) {
     const price = priceFor(typeId);
-    if (adventureState.gold < price) return;
-    adventureState.gold -= price;
+    const canBuy = price.every(function(p){ return (adventureState.currencies[p.id] || 0) >= p.amount; });
+    if (!canBuy) return;
+    for (const p of price) { adventureState.currencies[p.id] = (adventureState.currencies[p.id] || 0) - p.amount; }
     adventureState.pool[typeId] = (adventureState.pool[typeId] || 0) + 1;
     persistAdventure();
     renderAdventure();
 }
 
-function currentEncounter() {
-    const enc = adventureState.config && Array.isArray(adventureState.config.encounters) ? adventureState.config.encounters : [];
-    if (adventureState.currentEncounterIndex >= enc.length) return null;
-    return enc[adventureState.currentEncounterIndex];
+function getEncountersIndex() {
+    const encCfg = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('encounters') : null;
+    const list = encCfg && Array.isArray(encCfg.encounters) ? encCfg.encounters : [];
+    const map = {};
+    for (const e of list) map[e.id] = e;
+    return map;
+}
+
+function getCurrentStage() {
+    const stages = (adventureState.config && Array.isArray(adventureState.config.stages)) ? adventureState.config.stages : [];
+    if (adventureState.currentStageIndex >= stages.length) return null;
+    return stages[adventureState.currentStageIndex];
+}
+
+function isEncounterDone(id) {
+    return adventureState.completedEncounterIds.includes(id);
+}
+
+function getAvailableEncountersForCurrentStage() {
+    const stage = getCurrentStage();
+    if (!stage) return [];
+    const ids = Array.isArray(stage.encounterIds) ? stage.encounterIds : [];
+    const all = getEncountersIndex();
+    return ids.map(id => all[id]).filter(Boolean);
 }
 
 async function showAdventureResult(message) {
@@ -324,22 +401,43 @@ async function showAdventureResult(message) {
     if (scr) { scr.classList.add('active'); scr.style.display = 'flex'; }
 }
 
-function renderEncounterPreview() {
-    const box = document.getElementById('adventure-encounter');
-    if (!box) return;
-    const enc = currentEncounter();
-    if (!enc) { box.innerHTML = '<div>Приключение завершено</div>'; return; }
-    let html = `<div style="margin-bottom:6px;">${enc.name}</div>`;
-    html += '<table class="bestiary-table unit-info-table"><thead><tr><th class="icon-cell">👤</th><th>Имя</th><th>ID</th><th>Кол-во</th></tr></thead><tbody>';
-    const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
-    for (const g of enc.defenders) {
-        const m = monsters[g.id] || { name: g.id, view: '❓' };
-        html += `<tr><td class="icon-cell">${m.view || '❓'}</td><td>${m.name || g.id}</td><td>${g.id}</td><td>${g.count}</td></tr>`;
-    }
-    html += '</tbody></table>';
-    html += `<div style="margin-top:8px;">Награда: ${enc.rewardGold} 💰</div>`;
-    box.innerHTML = html;
-
+function renderMapBoard() {
+    const board = document.getElementById('adventure-map-board');
+    if (!board) return;
+    const stages = (adventureState.config && Array.isArray(adventureState.config.stages)) ? adventureState.config.stages : [];
+    const encIdx = getEncountersIndex();
+    board.innerHTML = '';
+    stages.forEach(function(stage, sIdx){
+        const col = document.createElement('div');
+        col.className = 'encounter-column';
+        const title = document.createElement('div');
+        title.textContent = stage.name || stage.id;
+        title.style.color = '#cd853f';
+        title.style.marginBottom = '6px';
+        col.appendChild(title);
+        const ids = Array.isArray(stage.encounterIds) ? stage.encounterIds : [];
+        ids.forEach(function(id){
+            const data = encIdx[id];
+            if (!data) return;
+            const tpl = document.getElementById('tpl-encounter-item');
+            let el = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tpl) el.className = 'encounter-item';
+            el.dataset.id = data.id;
+            const iconEl = el.querySelector('.encounter-icon') || el;
+            const nameEl = el.querySelector('.encounter-name');
+            if (iconEl) iconEl.textContent = '❗';
+            if (nameEl) nameEl.textContent = data.shortName || data.id;
+            try { if (window.UI && typeof window.UI.attachTooltip === 'function') window.UI.attachTooltip(el, function(){ return data.shortName || data.description || data.id; }); } catch {}
+            const isCurrentStage = sIdx === adventureState.currentStageIndex;
+            const done = isEncounterDone(data.id);
+            const available = isCurrentStage && !done;
+            if (done) el.classList.add('done');
+            if (!available && !done) el.classList.add('locked');
+            el.addEventListener('click', function(){ onEncounterClick(data, available); });
+            col.appendChild(el);
+        });
+        board.appendChild(col);
+    });
 }
 
 function renderHeroClassSelectionSetup() {
@@ -379,25 +477,41 @@ function renderHeroClassSelectionSetup() {
 
 async function onHeroClassClick(c) {
     const body = document.createElement('div');
-    body.innerHTML = `<div style="margin-bottom:8px; font-size:1.05em; color:#cd853f;">${c.icon || ''} ${c.name}</div><div style="margin-bottom:8px;">${c.description || ''}</div>`;
+    // Описание
+    const desc = document.createElement('div');
+    desc.style.marginBottom = '8px';
+    desc.style.textAlign = 'center';
+    desc.textContent = c.description || '';
+    body.appendChild(desc);
+    // Разделитель
+    (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+    // Начальная армия
+    const armyTitle = document.createElement('div'); armyTitle.style.margin = '6px 0'; armyTitle.style.color = '#cd853f'; armyTitle.style.textAlign = 'center'; armyTitle.textContent = 'Начальная армия'; body.appendChild(armyTitle);
     if (Array.isArray(c.startingArmy) && c.startingArmy.length > 0) {
         const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
-        const tbl = document.createElement('table');
-        tbl.className = 'bestiary-table unit-info-table';
-        tbl.innerHTML = '<thead><tr><th class="icon-cell">👤</th><th>Имя</th><th>ID</th><th>Кол-во</th></tr></thead><tbody></tbody>';
-        const tbody = tbl.querySelector('tbody');
+        const listTpl = document.getElementById('tpl-rewards-list');
+        const wrap = listTpl ? listTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        const items = wrap.querySelector('[data-role="items"]') || wrap;
         for (const g of c.startingArmy) {
-            const m = monsters[g.id] || { name: g.id, view: '❓' };
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td class="icon-cell">${m.view || '❓'}</td><td>${m.name || g.id}</td><td>${g.id}</td><td>${g.count}</td>`;
-            tbody.appendChild(tr);
+            const tplItem = document.getElementById('tpl-reward-unit');
+            const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!tplItem) el.className = 'reward-item';
+            el.classList.add('clickable');
+            const m = monsters[g.id] || { name: g.id, view: '👤' };
+            const iconEl = el.querySelector('.reward-icon') || el;
+            const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = `${m.name || g.id} x${g.count}`;
+            el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(g.id); });
+            items.appendChild(el);
         }
-        body.appendChild(tbl);
+        body.appendChild(wrap);
     }
     let accepted = false;
     try {
         if (window.UI && typeof window.UI.showModal === 'function') {
-            const h = window.UI.showModal(body, { type: 'dialog', title: 'Выбор класса' });
+            const title = `${c.icon || ''} ${c.name || c.id}`.trim();
+            const h = window.UI.showModal(body, { type: 'dialog', title, yesText: 'Выбрать', noText: 'Закрыть' });
             accepted = await h.closed;
         } else { accepted = confirm('Выбрать класс ' + (c.name || c.id) + '?'); }
     } catch {}
@@ -416,13 +530,84 @@ async function onHeroClassClick(c) {
     });
 }
 
-function updateAdventureStartButton() {
-    const btn = document.getElementById('adventure-start-btn');
-    if (!btn) return;
-    const hasUnits = Object.values(adventureState.pool).some(v => v > 0);
-    const hasClass = !!adventureState.selectedClassId;
-    const hasEncounter = !!currentEncounter();
-    btn.disabled = !(hasUnits && hasEncounter && hasClass && !adventureState.inBattle);
+async function onEncounterClick(encData, available) {
+    const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+    const body = document.createElement('div');
+    const desc = document.createElement('div');
+    desc.style.marginBottom = '8px';
+    desc.style.textAlign = 'center';
+    desc.textContent = encData.description || '';
+    body.appendChild(desc);
+    (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+    // Возможные противники
+    const enemiesTitle = document.createElement('div'); enemiesTitle.style.margin = '6px 0'; enemiesTitle.style.color = '#cd853f'; enemiesTitle.style.textAlign = 'center'; enemiesTitle.textContent = 'Возможные противники'; body.appendChild(enemiesTitle);
+    const enemiesWrapTpl = document.getElementById('tpl-rewards-list');
+    const enemiesWrap = enemiesWrapTpl ? enemiesWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+    const enemiesItems = enemiesWrap.querySelector('[data-role="items"]') || enemiesWrap;
+    const uniqEnemyIds = Array.from(new Set((encData.monsters || []).map(function(g){ return g && g.id; }).filter(Boolean)));
+    uniqEnemyIds.forEach(function(id){
+        const itemTpl = document.getElementById('tpl-reward-unit');
+        const el = itemTpl ? itemTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        if (!itemTpl) el.className = 'reward-item';
+        el.classList.add('clickable');
+        const m = monsters[id] || { name: id, view: '👤' };
+        const iconEl = el.querySelector('.reward-icon') || el;
+        const nameEl = el.querySelector('.reward-name');
+        if (iconEl) iconEl.textContent = m.view || '👤';
+        if (nameEl) nameEl.textContent = m.name || id;
+        el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(id); });
+        enemiesItems.appendChild(el);
+    });
+    body.appendChild(enemiesWrap);
+    (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '10px 0 8px 0'; body.appendChild(sep); })();
+    // Возможные награды
+    const rewards = Array.isArray(encData.rewards) ? encData.rewards : [];
+    if (rewards.length > 0) {
+        const rewardsTitle = document.createElement('div'); rewardsTitle.style.margin = '10px 0 6px 0'; rewardsTitle.style.color = '#cd853f'; rewardsTitle.style.textAlign = 'center'; rewardsTitle.textContent = 'Возможные награды'; body.appendChild(rewardsTitle);
+        const rewardsWrapTpl = document.getElementById('tpl-rewards-list');
+        const rewardsWrap = rewardsWrapTpl ? rewardsWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        const rewardsItems = rewardsWrap.querySelector('[data-role="items"]') || rewardsWrap;
+        const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+        const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+        const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+        rewards.forEach(function(r){
+            if (r && r.type === 'currency') {
+                const tplItem = document.getElementById('tpl-reward-currency');
+                const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                if (!tplItem) el.className = 'reward-item';
+                const cd = curById[r.id] || { name: r.id, icon: '💠' };
+                const iconEl = el.querySelector('.reward-icon') || el; const nameEl = el.querySelector('.reward-name');
+                if (iconEl) iconEl.textContent = cd.icon || '💠';
+                if (nameEl) nameEl.textContent = cd.name || r.id;
+                rewardsItems.appendChild(el);
+            } else if (r && r.type === 'monster') {
+                const tplItem = document.getElementById('tpl-reward-unit');
+                const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                if (!tplItem) el.className = 'reward-item';
+                el.classList.add('clickable');
+                const m = monsters[r.id] || { name: r.id, view: '👤' };
+                const iconEl = el.querySelector('.reward-icon') || el; const nameEl = el.querySelector('.reward-name');
+                if (iconEl) iconEl.textContent = m.view || '👤';
+                if (nameEl) nameEl.textContent = m.name || r.id;
+                el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(r.id); });
+                rewardsItems.appendChild(el);
+            }
+        });
+        body.appendChild(rewardsWrap);
+    }
+    if (!available) {
+        try { if (window.UI && window.UI.showModal) window.UI.showModal(body, { type: 'info', title: encData.shortName || encData.id }); else alert('Встреча недоступна'); } catch {}
+        return;
+    }
+    let accepted = false;
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal(body, { type: 'dialog', title: encData.shortName || encData.id, yesText: 'Бой', noText: 'Отмена' });
+            accepted = await h.closed;
+        } else { accepted = confirm('Начать встречу?'); }
+    } catch {}
+    if (!accepted) return;
+    startEncounterBattle(encData);
 }
 
 function updateBeginAdventureButtonState() {
@@ -431,8 +616,29 @@ function updateBeginAdventureButtonState() {
     btn.disabled = !adventureState.selectedClassId;
 }
 
-function renderBeginButtonOnMain() {
-    // Контейнер сводки удалён; функция оставлена пустой для совместимости вызовов
+function renderBeginButtonOnMain() {}
+
+function showUnitInfoModal(unitTypeId) {
+    try {
+        const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+        const t = monsters[unitTypeId] || { id: unitTypeId, name: unitTypeId, view: '👤', type: '', hp: 0, damage: 0, targets: 1 };
+        const body = document.createElement('div');
+        const tbl = document.createElement('table');
+        tbl.className = 'unit-info-table unit-modal-table';
+        tbl.innerHTML = '<thead></thead><tbody></tbody>';
+        const tr1 = document.createElement('tr');
+        const c11 = document.createElement('td'); c11.className = 'unit-info-value'; c11.colSpan = 2; c11.textContent = `${t.view || '👤'} ${t.name || unitTypeId}`;
+        const c12 = document.createElement('td'); c12.className = 'unit-info-value'; c12.textContent = `ТИП: ${String(t.type || '')}`;
+        tr1.appendChild(c11); tr1.appendChild(c12);
+        const tr2 = document.createElement('tr');
+        const c21 = document.createElement('td'); c21.className = 'unit-info-value'; c21.textContent = `НР: ${t.hp}❤️`;
+        const c22 = document.createElement('td'); c22.className = 'unit-info-value'; c22.textContent = `УРОН: ${t.damage}💥`;
+        const c23 = document.createElement('td'); c23.className = 'unit-info-value'; c23.textContent = `ЦЕЛИ: ${Number(t.targets || 1)}🎯`;
+        tr2.appendChild(c21); tr2.appendChild(c22); tr2.appendChild(c23);
+        const tbody = tbl.querySelector('tbody'); tbody.appendChild(tr1); tbody.appendChild(tr2);
+        body.appendChild(tbl);
+        if (window.UI && typeof window.UI.showModal === 'function') window.UI.showModal(body, { type: 'info', title: 'Описание существа' });
+    } catch {}
 }
 
 function pickSquadForBattle() {
@@ -455,8 +661,8 @@ function pickSquadForBattle() {
     return result;
 }
 
-async function startAdventureBattle() {
-    const enc = currentEncounter();
+async function startEncounterBattle(encData) {
+    const enc = encData;
     if (!enc) return;
     if (!adventureState.selectedClassId) return;
     // Гарантируем, что стартовая армия применена перед первым боем
@@ -465,16 +671,17 @@ async function startAdventureBattle() {
     if (attackers.length === 0) return;
     for (const g of attackers) { adventureState.pool[g.id] -= g.count; if (adventureState.pool[g.id] < 0) adventureState.pool[g.id] = 0; }
     const cfg = {
-        battleConfig: { name: adventureState.config.adventure.name, description: enc.name, defendersStart: true },
+        battleConfig: { name: adventureState.config.adventure.name, description: enc.description || enc.shortName, defendersStart: true },
         armies: {
             attackers: { name: 'Отряд игрока', units: attackers },
-            defenders: { name: enc.name, units: enc.defenders }
+            defenders: { name: enc.shortName || enc.id, units: enc.monsters }
         },
         unitTypes: (window.StaticData && typeof window.StaticData.getConfig === 'function') ? (function(){
             const m = window.StaticData.getConfig('monsters');
             return (m && m.unitTypes) ? m.unitTypes : m;
         })() : (window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : undefined)
     };
+    window._lastEncounterData = enc;
     // Больше не ждём loadMonstersConfig — монстры берутся из StaticData
     window.battleConfig = cfg;
     window.configLoaded = true;
@@ -517,13 +724,19 @@ function ensureEndBattleHook() {
 ensureEndBattleHook();
 
 function finishAdventureBattle(winner) {
-    const enc = currentEncounter();
+    // Победителей возвращаем в пул
     const attackersAlive = (window.gameState.attackers || []).filter(u => u.alive);
     for (const u of attackersAlive) { adventureState.pool[u.typeId] = (adventureState.pool[u.typeId] || 0) + 1; }
-    if (winner === 'attackers' && enc) {
-        adventureState.gold += Math.max(0, Number(enc.rewardGold || 0));
-        adventureState.currentEncounterIndex += 1;
-        adventureState.lastResult = `Победа! +${enc.rewardGold} 💰`;
+    const last = window._lastEncounterData;
+    if (winner === 'attackers' && last) {
+        if (!isEncounterDone(last.id)) adventureState.completedEncounterIds.push(last.id);
+        const stage = getCurrentStage();
+        const allDone = stage && Array.isArray(stage.encounterIds) && stage.encounterIds.every(id => isEncounterDone(id));
+        const settings = window.getCurrentSettings ? window.getCurrentSettings() : {};
+        const mode = Number(settings?.adventureSettings?.stageProgressionMode || 1);
+        const passOnFirst = mode === 1;
+        if (passOnFirst || allDone) adventureState.currentStageIndex += 1;
+        adventureState.lastResult = `Победа!`;
     } else {
         adventureState.lastResult = 'Поражение';
     }
@@ -558,6 +771,7 @@ window.loadAdventureFile = loadAdventureFile;
 window.loadDefaultAdventure = loadDefaultAdventure;
 window.downloadSampleAdventureConfig = downloadSampleAdventureConfig;
 window.beginAdventureFromSetup = beginAdventureFromSetup;
-window.startAdventureBattle = startAdventureBattle;
+window.startEncounterBattle = startEncounterBattle;
 window.renderAdventure = renderAdventure;
 window.showAdventureResult = showAdventureResult;
+window.showUnitInfoModal = showUnitInfoModal;

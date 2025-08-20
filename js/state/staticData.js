@@ -4,6 +4,8 @@
     const CONFIG_DEFS = [
         { id: 'monsters', title: 'Монстры', assets: ['assets/configs/monsters_config.json'], validatorName: 'validateMonstersConfig' },
         { id: 'adventure', title: 'Приключение', assets: ['assets/configs/adventure_config.json'], validatorName: 'validateAdventureConfig' },
+        { id: 'encounters', title: 'Встречи', assets: ['assets/configs/encounters_config.json'], validatorName: 'validateEncountersConfig' },
+        { id: 'currencies', title: 'Валюты', assets: ['assets/configs/currencies_config.json'], validatorName: 'validateCurrenciesConfig' },
         { id: 'mercenaries', title: 'Наёмники', assets: ['assets/configs/mercenaries_config.json'], validatorName: 'validateMercenariesConfig' },
         { id: 'heroClasses', title: 'Классы героев', assets: ['assets/configs/hero_classes.json'], validatorName: 'validateHeroClassesConfig' },
         // Порядок: сначала новое имя, затем старое — теперь основной файл переименован

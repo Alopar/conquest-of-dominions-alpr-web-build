@@ -1,0 +1,277 @@
+{
+  "encounters": [
+    {
+      "id": "barn_rats",
+      "shortName": "Амбар",
+      "description": "Амбар с крысами",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 5
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 10
+        },
+        {
+          "type": "monster",
+          "id": "dog",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "rat",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "farm_chickens",
+      "shortName": "Ферма",
+      "description": "Двор фермы и проблема с курями",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 6
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 10
+        },
+        {
+          "type": "monster",
+          "id": "fox",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "chicken",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "id": "swamp_frogs",
+      "shortName": "Болото",
+      "description": "Болото с лягушками",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 7
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "frog",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "id": "snake_nest",
+      "shortName": "Змеи",
+      "description": "Змеиное гнездо",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 8
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "giant_snake",
+          "count": 4
+        },
+        {
+          "id": "frog",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "id": "goblin_scout",
+      "shortName": "Разведка",
+      "description": "Лагерь гоблиноидов: разведка",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 10
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "goblin",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "id": "goblin_raid",
+      "shortName": "Рейд",
+      "description": "Лагерь гоблиноидов: рейд",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 12
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "goblin",
+          "count": 8
+        },
+        {
+          "id": "orc",
+          "count": 3
+        },
+        {
+          "id": "troll",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "caves_patrol",
+      "shortName": "Пещеры",
+      "description": "Пещеры: звериный дозор",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 18
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        },
+        {
+          "type": "monster",
+          "id": "wolf",
+          "amount": 3
+        }
+      ],
+      "monsters": [
+        {
+          "id": "wolf",
+          "count": 10
+        },
+        {
+          "id": "bear",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "crypt_bones",
+      "shortName": "Склеп I",
+      "description": "Склеп: стражи из костей",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 14
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "skeleton",
+          "count": 5
+        },
+        {
+          "id": "spider",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "crypt_vampire",
+      "shortName": "Склеп II",
+      "description": "Склеп: вампир-хозяин",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 16
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "skeleton",
+          "count": 8
+        },
+        {
+          "id": "bat",
+          "count": 10
+        },
+        {
+          "id": "vampire",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "dragon_lair",
+      "shortName": "Драконы",
+      "description": "Логово драконов",
+      "rewards": [
+        {
+          "type": "currency",
+          "id": "gold",
+          "amount": 30
+        },
+        {
+          "type": "currency",
+          "id": "glory",
+          "amount": 1
+        }
+      ],
+      "monsters": [
+        {
+          "id": "dragon",
+          "count": 5
+        }
+      ]
+    }
+  ]
+}
