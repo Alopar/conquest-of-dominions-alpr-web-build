@@ -25,6 +25,11 @@
     "frog": { "id": "frog", "name": "Лягушка", "hp": 3, "damage": "1d2", "targets": 1, "view": "🐸", "type": "melee" },
     "bat": { "id": "bat", "name": "Летучая мышь", "hp": 3, "damage": "1d2", "targets": 1, "view": "🦇", "type": "range" },
     "rabbit": { "id": "rabbit", "name": "Кролик", "hp": 2, "damage": "1d1", "targets": 1, "view": "🐰", "type": "melee" },
-    "dragon": { "id": "dragon", "name": "Дракон", "hp": 40, "damage": "2d8", "targets": 5, "view": "🐉", "type": "range" }
+    "dragon": { "id": "dragon", "name": "Дракон", "hp": 40, "damage": "2d8", "targets": 5, "view": "🐉", "type": "range" },
+    "fireElemental": { "id": "fireElemental", "name": "Огненный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🔥", "type": "melee" },
+    "waterElemental": { "id": "waterElemental", "name": "Водный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "💧", "type": "melee" },
+    "airElemental": { "id": "airElemental", "name": "Воздушный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🌪️", "type": "melee" },
+    "earthElemental": { "id": "earthElemental", "name": "Земляной элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🌍", "type": "melee" },
+    "golem": { "id": "golem", "name": "Голем", "hp": 10, "damage": "1d6", "targets": 1, "view": "🗿", "type": "melee" }
   }
 }

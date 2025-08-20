@@ -14,14 +14,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     } catch {}
 
-    // Загружаем базовый конфиг монстров при старте (игнорируем localStorage)
-    try {
-        if (typeof window.loadMonstersConfig === 'function') {
-            await window.loadMonstersConfig({ forceBase: true });
-        }
-    } catch {}
+    // Инициализация слоя статических данных
+    try { if (window.StaticData && typeof window.StaticData.init === 'function') await window.StaticData.init(); } catch {}
+    // Инициализация игровых настроек
+    try { if (window.GameSettings && typeof window.GameSettings.init === 'function') await window.GameSettings.init(); } catch {}
 
-    // Инициализируем настройки
+    // Инициализируем экран настроек (UI-обвязка), теперь использует GameSettings.get()
     await initializeSettings();
 
     // Обеспечиваем стартовый экран
@@ -34,10 +32,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     } catch {}
 
-    // Автоматически загружаем стандартную конфигурацию
-    loadDefaultConfig().then(() => {
-        if (typeof window.syncFightUI === 'function') window.syncFightUI();
-    });
+    // Автоматически инициализируем сетап боя из StaticData, если есть
+    try {
+        if (window.StaticData && window.initBattleConfig) {
+            const battleSetup = window.StaticData.getConfig && window.StaticData.getConfig('battleSetup');
+            if (battleSetup) await window.initBattleConfig(battleSetup, 'static');
+        }
+    } catch {}
 
     try {
         window.addEventListener('keydown', function(e){

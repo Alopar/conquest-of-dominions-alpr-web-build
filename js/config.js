@@ -28,7 +28,7 @@ async function initBattleConfig(config, source) {
     if (typeof window.syncFightUI === 'function') window.syncFightUI();
 }
 
-// Загрузка и парсинг конфигурации
+// Загрузка и парсинг конфигурации (локальная подмена сетапа для экрана «Схватка»)
 async function loadConfigFile(file) {
     const reader = new FileReader();
     reader.onload = async function(e) {
@@ -58,42 +58,20 @@ async function loadConfigFile(file) {
     reader.readAsText(file);
 }
 
-// Загрузка стандартной конфигурации
+// Загрузка стандартной конфигурации (устар.) — оставлено для совместимости, теперь инициируется через StaticData в app.js
 async function loadDefaultConfig() {
     try {
-        const url = 'assets/configs/battle_config.json?_=' + Date.now();
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (window.StaticData && window.initBattleConfig) {
+            const cfg = window.StaticData.getConfig && window.StaticData.getConfig('battleSetup');
+            if (cfg) await window.initBattleConfig(cfg, 'static');
         }
-        const config = await response.json();
-        window.validateBattleConfig(config);
-        await initBattleConfig(config, 'fight');
     } catch (error) {
-        console.error('Ошибка при загрузке стандартной конфигурации:', error);
-        const statusDiv = document.getElementById('file-status');
-        if (statusDiv) {
-            statusDiv.textContent = `❌ Ошибка загрузки стандартной конфигурации: ${error.message}`;
-            statusDiv.className = 'file-status error';
-        }
-        battleConfig = null;
-        configLoaded = false;
-        window.battleConfig = battleConfig;
-        window.configLoaded = configLoaded;
-        window.battleConfigSource = undefined;
-        const battleBtn = document.getElementById('battle-btn');
-        if (battleBtn) battleBtn.disabled = true;
+        console.error('Ошибка при инициализации конфигурации боя из StaticData:', error);
     }
 }
 
-// Скачивание образца конфигурации
-async function downloadSampleConfig() {
-    try {
-        await window.downloadFile('assets/configs/samples/battle_config_sample.json', 'battle_config_sample.json');
-    } catch (e) {
-        console.error('Не удалось скачать образец боя:', e);
-    }
-}
+// Скачивание образца конфигурации — удалено по требованиям (примеры не используются)
+async function downloadSampleConfig() { try {} catch {} }
 
 // Делаем функции доступными глобально
 window.loadConfigFile = loadConfigFile;

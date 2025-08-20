@@ -1,0 +1,33 @@
+{
+  "battleConfig": {
+    "name": "Стандартное сражение",
+    "description": "Базовая конфигурация боя между людьми и орками",
+    "defendersStart": true
+  },
+  "armies": {
+    "attackers": {
+      "name": "Армия Света",
+      "description": "Благородные воины и их союзники",
+      "units": [
+        {"id": "warrior", "count": 3},
+        {"id": "archer", "count": 2},
+        {"id": "knight", "count": 1},
+        {"id": "mage", "count": 1}
+      ]
+    },
+    "defenders": {
+      "name": "Орда Тьмы",
+      "description": "Жестокие монстры и их прислужники",
+      "units": [
+        {"id": "orc", "count": 3},
+        {"id": "goblin", "count": 3},
+        {"id": "troll", "count": 1},
+        {"id": "wolf", "count": 2},
+        {"id": "bear", "count": 1},
+        {"id": "giant_snake", "count": 1},
+        {"id": "boar", "count": 1},
+        {"id": "spider", "count": 1}
+      ]
+    }
+  }
+}

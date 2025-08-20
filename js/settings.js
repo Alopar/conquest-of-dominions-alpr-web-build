@@ -13,42 +13,19 @@ let gameSettings = {
 // Загрузка настроек из файла
 async function loadGameSettings() {
     try {
-        const response = await fetch('assets/configs/game_settings.json');
-        if (!response.ok) {
-            throw new Error('Не удалось загрузить настройки');
+        if (window.GameSettings && typeof window.GameSettings.get === 'function') {
+            gameSettings = window.GameSettings.get();
         }
-        const data = await response.json();
-        gameSettings = data.gameSettings;
-        console.log('Настройки загружены:', gameSettings);
-    } catch (error) {
-        console.error('Ошибка загрузки настроек:', error);
-        // Используем настройки по умолчанию
-    }
+    } catch {}
 }
 
 // Сохранение настроек в localStorage
 function saveGameSettings() {
-    try {
-        localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
-        console.log('Настройки сохранены в localStorage');
-    } catch (error) {
-        console.error('Ошибка сохранения настроек:', error);
-    }
+    try { if (window.GameSettings && typeof window.GameSettings.set === 'function') window.GameSettings.set(gameSettings); } catch {}
 }
 
 // Загрузка настроек из localStorage
-function loadGameSettingsFromStorage() {
-    try {
-        const saved = localStorage.getItem('gameSettings');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            gameSettings = { ...gameSettings, ...parsed };
-            console.log('Настройки загружены из localStorage:', gameSettings);
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки настроек из localStorage:', error);
-    }
-}
+function loadGameSettingsFromStorage() { /* Логика перенесена в GameSettings; оставлено для совместимости */ }
 
 // Отображение настроек на экране
 function displaySettings() {
@@ -156,7 +133,6 @@ function getCurrentSettings() {
 // Инициализация настроек при загрузке страницы
 async function initializeSettings() {
     await loadGameSettings();
-    loadGameSettingsFromStorage();
 }
 
 // Делаем функции доступными глобально

@@ -2,6 +2,7 @@ let adventureState = {
     config: null,
     gold: 0,
     pool: {},
+    selectedClassId: null,
     currentEncounterIndex: 0,
     inBattle: false,
     lastResult: ''
@@ -23,25 +24,9 @@ async function showAdventureSetup() {
     if (scr) { scr.classList.add('active'); scr.style.display = 'flex'; }
     try {
         const host = document.getElementById('adventure-config-panel');
-        if (host && window.UI && typeof window.UI.mountConfigPanel === 'function') {
-            host.innerHTML = '';
-            window.UI.mountConfigPanel(host, {
-                title: '⚙️ Конфигурация приключения',
-                fileLabelText: '',
-                statusId: 'adventure-file-status',
-                inputId: 'adventure-file',
-                onFile: function(file){ loadAdventureFile(file); },
-                onSample: function(){ downloadSampleAdventureConfig(); },
-                primaryText: '📯 Начать приключение! 📯',
-                primaryId: 'adventure-begin-btn',
-                primaryDisabled: true,
-                onPrimary: function(){ beginAdventureFromSetup(); },
-                getStatusText: function(){
-                    const s = document.getElementById('adventure-file-status');
-                    return s ? s.textContent : '';
-                }
-            });
-        }
+        if (host) { host.innerHTML = ''; host.style.display = 'none'; }
+        // Сбрасываем выбранный класс при входе на экран подготовки
+        adventureState.selectedClassId = null;
     } catch {}
     restoreAdventure();
     if (adventureState.config) {
@@ -49,8 +34,8 @@ async function showAdventureSetup() {
         const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
         const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
         if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
-        const beginBtn = document.getElementById('adventure-begin-btn');
-        if (beginBtn) beginBtn.disabled = false;
+        renderHeroClassSelectionSetup();
+        const btn = document.getElementById('adventure-begin-btn'); if (btn) btn.disabled = true;
     }
     if (!adventureUserLoaded) {
         loadDefaultAdventure();
@@ -69,12 +54,18 @@ async function loadAdventureFile(file) {
         try {
             const cfg = JSON.parse(e.target.result);
             window.validateAdventureConfig(cfg);
+            try {
+                if (window.StaticData && typeof window.StaticData.setUserConfig === 'function') {
+                    window.StaticData.setUserConfig('adventure', cfg);
+                    if (typeof window.StaticData.setUseUser === 'function') window.StaticData.setUseUser('adventure', true);
+                }
+            } catch {}
             initAdventureState(cfg);
             const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
             const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
             if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
-            const beginBtn = document.getElementById('adventure-begin-btn');
-            if (beginBtn) beginBtn.disabled = false;
+            renderHeroClassSelectionSetup();
+            updateBeginAdventureButtonState();
             adventureUserLoaded = true;
         } catch (err) {
             const statusDiv = document.getElementById('adventure-file-status');
@@ -90,43 +81,36 @@ async function loadAdventureFile(file) {
 
 async function loadDefaultAdventure() {
     try {
-        const url = 'assets/configs/adventure_config.json?_=' + Date.now();
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const cfg = await response.json();
+        const cfg = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('adventure') : null;
         window.validateAdventureConfig(cfg);
         initAdventureState(cfg);
         const statusDiv = document.getElementById('adventure-file-status') || (document.querySelector('#adventure-config-panel [data-role="status"]'));
         const d = cfg.adventure && cfg.adventure.description ? ` - ${cfg.adventure.description}` : '';
         if (statusDiv) { statusDiv.textContent = `✅ Загружено приключение: "${cfg.adventure.name}"${d}`; statusDiv.className = 'file-status success'; }
-        const beginBtn = document.getElementById('adventure-begin-btn');
-        if (beginBtn) beginBtn.disabled = false;
+        renderHeroClassSelectionSetup();
+        const btn = document.getElementById('adventure-begin-btn'); if (btn) btn.disabled = true;
     } catch (err) {
         const statusDiv = document.getElementById('adventure-file-status');
         if (statusDiv) { statusDiv.textContent = `❌ Ошибка загрузки стандартного приключения: ${err.message}`; statusDiv.className = 'file-status error'; }
     }
 }
 
-async function downloadSampleAdventureConfig() {
-    try {
-        await window.downloadFile('assets/configs/samples/adventure_config_sample.json', 'adventure_config_sample.json');
-    } catch (e) {
-        console.error('Не удалось скачать образец приключения:', e);
-    }
-}
+async function downloadSampleAdventureConfig() { try {} catch {} }
 
 function beginAdventureFromSetup() {
     try { localStorage.removeItem('adventureState'); } catch {}
+    if (!adventureState.selectedClassId) return;
     if (adventureState.config) {
         initAdventureState(adventureState.config);
+        applySelectedClassStartingArmy();
         showAdventure();
         return;
     }
-    loadDefaultAdventure().then(() => { showAdventure(); });
+    loadDefaultAdventure().then(() => { applySelectedClassStartingArmy(); showAdventure(); });
 }
 
 function validateAdventureConfig(cfg) {
-    if (!cfg || !cfg.adventure || !Array.isArray(cfg.startingArmy) || !cfg.shop || !Array.isArray(cfg.shop.mercenaries) || !Array.isArray(cfg.encounters)) {
+    if (!cfg || !cfg.adventure || !Array.isArray(cfg.encounters)) {
         throw new Error('Неверная структура adventure_config');
     }
 }
@@ -135,7 +119,7 @@ function initAdventureState(cfg) {
     adventureState.config = cfg;
     adventureState.gold = Math.max(0, Number(cfg.adventure.startingGold || 0));
     adventureState.pool = {};
-    for (const g of cfg.startingArmy) { if (g && g.id && g.count > 0) adventureState.pool[g.id] = (adventureState.pool[g.id] || 0) + g.count; }
+    adventureState.selectedClassId = adventureState.selectedClassId || null;
     adventureState.currentEncounterIndex = 0;
     adventureState.inBattle = false;
     adventureState.lastResult = '';
@@ -212,7 +196,6 @@ function ensureAdventureTabs() {
     };
     tabs.appendChild(makeBtn('map', '🗺️ Карта'));
     tabs.appendChild(makeBtn('tavern', '🍻 Таверна'));
-    tabs.appendChild(makeBtn('shop', '🏪 Магазин'));
     tabs.appendChild(makeBtn('army', '🛡️ Армия'));
     content.insertBefore(tabs, content.firstElementChild || null);
     updateTabsActive(tabs);
@@ -231,7 +214,7 @@ function updateTabsActive(tabs) {
 async function loadAdventureSubscreen(key) {
     const cont = document.getElementById('adventure-subcontainer');
     if (!cont) return;
-    const map = { map: 'fragments/adventure-sub-map.html', tavern: 'fragments/adventure-sub-tavern.html', shop: 'fragments/adventure-sub-shop.html', army: 'fragments/adventure-sub-army.html' };
+    const map = { map: 'fragments/adventure-sub-map.html', tavern: 'fragments/adventure-sub-tavern.html', army: 'fragments/adventure-sub-army.html' };
     const url = map[key] || map.map;
     try {
         const res = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
@@ -246,14 +229,12 @@ async function renderAdventureSubscreen() {
     await loadAdventureSubscreen(subscreen);
     if (subscreen === 'army') {
         renderPool();
-    } else if (subscreen === 'shop') {
-        renderShop();
     } else if (subscreen === 'map') {
         renderEncounterPreview();
         renderBeginButtonOnMain();
         updateAdventureStartButton();
     } else if (subscreen === 'tavern') {
-        // Пока без логики
+        renderTavern();
     }
 }
 
@@ -280,26 +261,34 @@ function renderPool() {
 function priceFor(typeId) {
     const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
     const base = monsters[typeId] && typeof monsters[typeId].price === 'number' ? monsters[typeId].price : 10;
-    const shop = adventureState.config && adventureState.config.shop ? adventureState.config.shop : null;
-    if (!shop || !Array.isArray(shop.mercenaries)) return base;
-    const found = shop.mercenaries.find(m => m.id === typeId);
+    let list = null;
+    try {
+        const m = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('mercenaries') : null;
+        list = Array.isArray(m) ? m : (m && Array.isArray(m.mercenaries) ? m.mercenaries : null);
+    } catch {}
+    if (!list) return base;
+    const found = list.find(m => m.id === typeId);
     if (!found) return base;
     return typeof found.price === 'number' ? found.price : base;
 }
 
-function renderShop() {
-    const tbody = document.getElementById('adventure-shop-table');
+function renderTavern() {
+    const tbody = document.getElementById('adventure-tavern-table');
     if (!tbody) return;
     tbody.innerHTML = '';
     const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
-    const list = (adventureState.config && adventureState.config.shop && Array.isArray(adventureState.config.shop.mercenaries)) ? adventureState.config.shop.mercenaries : [];
+    let list = [];
+    try {
+        const m = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('mercenaries') : null;
+        list = Array.isArray(m) ? m : (m && Array.isArray(m.mercenaries) ? m.mercenaries : []);
+    } catch { list = []; }
     if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Пусто</td></tr>'; return; }
     for (const item of list) {
         const m = monsters[item.id] || { id: item.id, name: item.id, view: '❓' };
         const price = priceFor(item.id);
         const canBuy = adventureState.gold >= price;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="icon-cell">${m.view || '❓'}</td><td>${m.name || item.id}</td><td>${item.id}</td><td>${price} 💰</td><td><button class="btn" ${canBuy ? '' : 'disabled'} onclick="buyUnit('${item.id}')">Купить</button></td>`;
+        tr.innerHTML = `<td class="icon-cell">${m.view || '❓'}</td><td>${m.name || item.id}</td><td>${item.id}</td><td>${price} 💰</td><td><button class="btn" ${canBuy ? '' : 'disabled'} onclick="buyUnit('${item.id}')">Нанять</button></td>`;
         tbody.appendChild(tr);
     }
 }
@@ -353,12 +342,93 @@ function renderEncounterPreview() {
 
 }
 
+function renderHeroClassSelectionSetup() {
+    const cont = document.getElementById('hero-class-select');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'hero-class-list';
+    let classesCfg = null;
+    try {
+        classesCfg = (window.StaticData && typeof window.StaticData.getConfig === 'function') ? window.StaticData.getConfig('heroClasses') : null;
+    } catch {}
+    const list = classesCfg && Array.isArray(classesCfg.classes) ? classesCfg.classes : (Array.isArray(classesCfg) ? classesCfg : []);
+    const frag = window.UI && typeof window.UI.cloneTemplate === 'function' ? window.UI.cloneTemplate('tpl-hero-class-item') : null;
+    const items = [];
+    for (const c of list) {
+        let el;
+        if (frag) {
+            el = frag.cloneNode(true).firstElementChild;
+        } else {
+            el = document.createElement('div'); el.className = 'hero-class-item';
+            const i = document.createElement('div'); i.className = 'hero-class-icon'; el.appendChild(i);
+            const n = document.createElement('div'); n.className = 'hero-class-name'; el.appendChild(n);
+        }
+        el.dataset.id = c.id;
+        const iconEl = el.querySelector('[data-role="icon"]') || el.querySelector('.hero-class-icon');
+        const nameEl = el.querySelector('[data-role="name"]') || el.querySelector('.hero-class-name');
+        if (iconEl) iconEl.textContent = c.icon || '❓';
+        if (nameEl) nameEl.textContent = c.name || c.id;
+        el.addEventListener('click', function(){ onHeroClassClick(c); });
+        if (adventureState.selectedClassId === c.id) el.classList.add('selected');
+        wrapper.appendChild(el);
+        items.push(el);
+    }
+    cont.appendChild(wrapper);
+}
+
+async function onHeroClassClick(c) {
+    const body = document.createElement('div');
+    body.innerHTML = `<div style="margin-bottom:8px; font-size:1.05em; color:#cd853f;">${c.icon || ''} ${c.name}</div><div style="margin-bottom:8px;">${c.description || ''}</div>`;
+    if (Array.isArray(c.startingArmy) && c.startingArmy.length > 0) {
+        const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+        const tbl = document.createElement('table');
+        tbl.className = 'bestiary-table unit-info-table';
+        tbl.innerHTML = '<thead><tr><th class="icon-cell">👤</th><th>Имя</th><th>ID</th><th>Кол-во</th></tr></thead><tbody></tbody>';
+        const tbody = tbl.querySelector('tbody');
+        for (const g of c.startingArmy) {
+            const m = monsters[g.id] || { name: g.id, view: '❓' };
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="icon-cell">${m.view || '❓'}</td><td>${m.name || g.id}</td><td>${g.id}</td><td>${g.count}</td>`;
+            tbody.appendChild(tr);
+        }
+        body.appendChild(tbl);
+    }
+    let accepted = false;
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal(body, { type: 'dialog', title: 'Выбор класса' });
+            accepted = await h.closed;
+        } else { accepted = confirm('Выбрать класс ' + (c.name || c.id) + '?'); }
+    } catch {}
+    if (!accepted) return;
+    // Применяем класс: сбрасываем пул и наполняем стартовой армией
+    adventureState.selectedClassId = c.id;
+    adventureState.pool = {};
+    for (const g of c.startingArmy) {
+        if (g && g.id && g.count > 0) adventureState.pool[g.id] = (adventureState.pool[g.id] || 0) + g.count;
+    }
+    persistAdventure();
+    const btn = document.getElementById('adventure-begin-btn'); if (btn) btn.disabled = false;
+    const listRoot = document.getElementById('hero-class-select');
+    if (listRoot) listRoot.querySelectorAll('.hero-class-item').forEach(function(node){
+        node.classList.toggle('selected', node.dataset.id === c.id);
+    });
+}
+
 function updateAdventureStartButton() {
     const btn = document.getElementById('adventure-start-btn');
     if (!btn) return;
     const hasUnits = Object.values(adventureState.pool).some(v => v > 0);
+    const hasClass = !!adventureState.selectedClassId;
     const hasEncounter = !!currentEncounter();
-    btn.disabled = !(hasUnits && hasEncounter && !adventureState.inBattle);
+    btn.disabled = !(hasUnits && hasEncounter && hasClass && !adventureState.inBattle);
+}
+
+function updateBeginAdventureButtonState() {
+    const btn = document.getElementById('adventure-begin-btn');
+    if (!btn) return;
+    btn.disabled = !adventureState.selectedClassId;
 }
 
 function renderBeginButtonOnMain() {
@@ -388,6 +458,9 @@ function pickSquadForBattle() {
 async function startAdventureBattle() {
     const enc = currentEncounter();
     if (!enc) return;
+    if (!adventureState.selectedClassId) return;
+    // Гарантируем, что стартовая армия применена перед первым боем
+    if (Object.values(adventureState.pool).every(v => v <= 0)) applySelectedClassStartingArmy();
     const attackers = pickSquadForBattle();
     if (attackers.length === 0) return;
     for (const g of attackers) { adventureState.pool[g.id] -= g.count; if (adventureState.pool[g.id] < 0) adventureState.pool[g.id] = 0; }
@@ -397,41 +470,12 @@ async function startAdventureBattle() {
             attackers: { name: 'Отряд игрока', units: attackers },
             defenders: { name: enc.name, units: enc.defenders }
         },
-        unitTypes: window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : undefined
+        unitTypes: (window.StaticData && typeof window.StaticData.getConfig === 'function') ? (function(){
+            const m = window.StaticData.getConfig('monsters');
+            return (m && m.unitTypes) ? m.unitTypes : m;
+        })() : (window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : undefined)
     };
-    if (!cfg.unitTypes && window.loadMonstersConfig) {
-        window.loadMonstersConfig().then(async (types) => {
-            cfg.unitTypes = types;
-            window.battleConfig = cfg;
-            window.configLoaded = true;
-            window.battleConfigSource = 'adventure';
-            adventureState.inBattle = true;
-            persistAdventure();
-            const logDiv = document.getElementById('battle-log');
-            if (logDiv) logDiv.innerHTML = '';
-            const btnHome = document.getElementById('battle-btn-home');
-            if (btnHome) btnHome.style.display = 'none';
-            if (window.showBattle) await window.showBattle();
-            window.initializeArmies();
-            window.renderArmies();
-            window.addToLog('🚩 Бой приключения начался!');
-        }).catch(async () => {
-            window.battleConfig = cfg;
-            window.configLoaded = true;
-            window.battleConfigSource = 'adventure';
-            adventureState.inBattle = true;
-            persistAdventure();
-            const logDiv = document.getElementById('battle-log');
-            if (logDiv) logDiv.innerHTML = '';
-            const btnHome = document.getElementById('battle-btn-home');
-            if (btnHome) btnHome.style.display = 'none';
-            if (window.showBattle) await window.showBattle();
-            window.initializeArmies();
-            window.renderArmies();
-            window.addToLog('🚩 Бой приключения начался!');
-        });
-        return;
-    }
+    // Больше не ждём loadMonstersConfig — монстры берутся из StaticData
     window.battleConfig = cfg;
     window.configLoaded = true;
     window.battleConfigSource = 'adventure';
@@ -446,6 +490,19 @@ async function startAdventureBattle() {
     window.initializeArmies();
     window.renderArmies();
     window.addToLog('🚩 Бой приключения начался!');
+}
+
+function applySelectedClassStartingArmy() {
+    let classesCfg = null;
+    try { classesCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('heroClasses') : null; } catch {}
+    const list = classesCfg && Array.isArray(classesCfg.classes) ? classesCfg.classes : (Array.isArray(classesCfg) ? classesCfg : []);
+    const selected = list.find(x => x.id === adventureState.selectedClassId);
+    if (!selected) return;
+    adventureState.pool = {};
+    for (const g of selected.startingArmy) {
+        if (g && g.id && g.count > 0) adventureState.pool[g.id] = (adventureState.pool[g.id] || 0) + g.count;
+    }
+    persistAdventure();
 }
 
 let originalEndBattle = null;
@@ -479,7 +536,11 @@ function finishAdventureBattle(winner) {
 }
 
 function persistAdventure() {
-    try { localStorage.setItem('adventureState', JSON.stringify(adventureState)); } catch {}
+    try {
+        const toSave = { ...adventureState };
+        delete toSave.selectedClassId;
+        localStorage.setItem('adventureState', JSON.stringify(toSave));
+    } catch {}
 }
 
 function restoreAdventure() {
@@ -487,7 +548,7 @@ function restoreAdventure() {
         const raw = localStorage.getItem('adventureState');
         if (!raw) return;
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') adventureState = { ...adventureState, ...parsed };
+        if (parsed && typeof parsed === 'object') adventureState = { ...adventureState, ...parsed, selectedClassId: null };
     } catch {}
 }
 

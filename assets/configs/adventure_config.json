@@ -4,19 +4,6 @@
     "description": "От крысиных бегов до драконьих сокровищ",
     "startingGold": 20
   },
-  "startingArmy": [
-    {"id": "warrior", "count": 1}
-  ],
-  "shop": {
-    "mercenaries": [
-      {"id": "rogue", "price": 8},
-      {"id": "warrior", "price": 12},
-      {"id": "archer", "price": 10},
-      {"id": "mage", "price": 18},
-      {"id": "knight", "price": 20},
-      {"id": "wizard", "price": 35}
-    ]
-  },
   "encounters": [
     { "name": "Амбар с крысами", "rewardGold": 5, "defenders": [ {"id": "rat", "count": 3} ] },
     { "name": "Двор фермы и проблема с курями", "rewardGold": 6, "defenders": [ {"id": "chicken", "count": 6} ] },

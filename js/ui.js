@@ -2,12 +2,13 @@
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active');
-        s.style.display = 'none';
+        try { s.style.setProperty('display', 'none', 'important'); } catch { s.style.display = 'none'; }
     });
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.add('active');
-    el.style.display = (id === 'intro-screen' || id === 'battle-screen' || id === 'adventure-screen') ? 'flex' : 'block';
+    const mode = (id === 'intro-screen' || id === 'battle-screen' || id === 'adventure-screen') ? 'flex' : 'block';
+    try { el.style.setProperty('display', mode, 'important'); } catch { el.style.display = mode; }
 }
 
 // Функции пользовательского интерфейса
@@ -236,9 +237,7 @@ async function showFight() {
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
     try {
-        if (!window.configLoaded && typeof window.loadDefaultConfig === 'function') {
-            await window.loadDefaultConfig();
-        }
+        // Инициализация сетапа боя теперь централизована в app.js через StaticData
     } catch {}
     if (typeof window.syncFightUI === 'function') window.syncFightUI();
 
@@ -297,14 +296,10 @@ async function startBattle() {
         } catch { try { alert('Сначала загрузите конфигурацию!'); } catch {} }
         return;
     }
-    // Обеспечиваем, что используется конфиг схватки, а не приключения
-    if (window.battleConfigSource !== 'fight') {
-        const warn = 'Конфигурация боя не из режима Схватка. Перезагружаю стандартную.';
-        try { console.warn(warn); } catch {}
+    // Разрешаем сетап из StaticData ('static') или локальную загрузку ('fight')
+    if (window.battleConfigSource !== 'fight' && window.battleConfigSource !== 'static') {
         if (window.loadDefaultConfig) {
             try { await window.loadDefaultConfig(); } catch {}
-            await proceedStartBattle();
-            return;
         }
     }
     await proceedStartBattle();
@@ -366,6 +361,20 @@ function retryBattle() {
 
 window.finishBattleToAdventure = finishBattleToAdventure;
 window.retryBattle = retryBattle;
+
+// Временный роут на экран «Конфигурация» (экран будет добавлен в задаче 3)
+async function showConfigScreen() {
+    try { if (typeof window.showConfig === 'function') { await window.showConfig(); return; } } catch {}
+    try {
+        if (window.Router && typeof window.Router.setScreen === 'function') {
+            await window.Router.setScreen('config');
+        } else {
+            window.showScreen('config-screen');
+        }
+    } catch { window.showScreen('config-screen'); }
+}
+
+window.showConfigScreen = showConfigScreen;
 
 async function showRules() {
     try {
