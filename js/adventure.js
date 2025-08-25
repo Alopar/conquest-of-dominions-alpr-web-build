@@ -467,7 +467,16 @@ function renderHeroClassSelectionSetup() {
         const nameEl = el.querySelector('[data-role="name"]') || el.querySelector('.hero-class-name');
         if (iconEl) iconEl.textContent = c.icon || '❓';
         if (nameEl) nameEl.textContent = c.name || c.id;
-        el.addEventListener('click', function(){ onHeroClassClick(c); });
+        const requiredAchId = c.requiresAchievementId;
+        let isLocked = false;
+        if (requiredAchId) {
+            try {
+                const a = (window.Achievements && typeof window.Achievements.getById === 'function') ? window.Achievements.getById(requiredAchId) : null;
+                isLocked = !(a && a.achieved);
+            } catch { isLocked = true; }
+        }
+        if (isLocked) el.classList.add('locked');
+        el.addEventListener('click', function(){ onHeroClassClick(c, isLocked); });
         if (adventureState.selectedClassId === c.id) el.classList.add('selected');
         wrapper.appendChild(el);
         items.push(el);
@@ -475,7 +484,7 @@ function renderHeroClassSelectionSetup() {
     cont.appendChild(wrapper);
 }
 
-async function onHeroClassClick(c) {
+async function onHeroClassClick(c, isLocked) {
     const body = document.createElement('div');
     // Описание
     const desc = document.createElement('div');
@@ -506,6 +515,25 @@ async function onHeroClassClick(c) {
             items.appendChild(el);
         }
         body.appendChild(wrap);
+    }
+    if (isLocked) {
+        (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+        const reqTitle = document.createElement('div'); reqTitle.style.margin = '6px 0'; reqTitle.style.color = '#cd853f'; reqTitle.style.textAlign = 'center'; reqTitle.textContent = 'Требуется достижение'; body.appendChild(reqTitle);
+        const row = document.createElement('div'); row.style.display = 'flex'; row.style.justifyContent = 'center'; row.style.gap = '8px'; row.style.alignItems = 'center';
+        try {
+            const ach = (window.Achievements && typeof window.Achievements.getById === 'function') ? window.Achievements.getById(c.requiresAchievementId) : null;
+            const icon = document.createElement('span'); icon.textContent = ach && ach.icon ? ach.icon : '🏆';
+            const name = document.createElement('span'); name.textContent = ach && ach.name ? ach.name : (c.requiresAchievementId || ''); name.style.fontWeight = '600';
+            row.appendChild(icon); row.appendChild(name);
+        } catch {}
+        body.appendChild(row);
+        try {
+            if (window.UI && typeof window.UI.showModal === 'function') {
+                const title = `${c.icon || ''} ${c.name || c.id}`.trim();
+                await window.UI.showModal(body, { type: 'info', title }).closed;
+            } else { alert('Класс недоступен'); }
+        } catch {}
+        return;
     }
     let accepted = false;
     try {

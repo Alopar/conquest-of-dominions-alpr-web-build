@@ -29,6 +29,17 @@
         { "id": "fireElemental", "count": 1 },
         { "id": "waterElemental", "count": 1 }
       ]
+    },
+    {
+      "id": "ranger",
+      "name": "Рейнджер",
+      "description": "Мастер дальнего боя и дикой охоты.",
+      "icon": "🏹",
+      "startingArmy": [
+        { "id": "archer", "count": 1 },
+        { "id": "wolf", "count": 3 }
+      ],
+      "requiresAchievementId": "kill_10_wolf"
     }
   ]
 }

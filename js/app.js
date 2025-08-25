@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     try { if (window.StaticData && typeof window.StaticData.init === 'function') await window.StaticData.init(); } catch {}
     // Инициализация игровых настроек
     try { if (window.GameSettings && typeof window.GameSettings.init === 'function') await window.GameSettings.init(); } catch {}
+    // Инициализация ачивок
+    try { if (window.Achievements && typeof window.Achievements.init === 'function') await window.Achievements.init(); } catch {}
 
     // Инициализируем экран настроек (UI-обвязка), теперь использует GameSettings.get()
     await initializeSettings();

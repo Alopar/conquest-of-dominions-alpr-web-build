@@ -14,6 +14,14 @@
 .reward-item.clickable { cursor:pointer; }
 .reward-icon { font-size:1.6em; }
 .reward-name { font-size:0.9em; max-width:95px; text-align:center; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; white-space:normal; }
+/* Ачивки */
+.achievement-card { width:100%; min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); border:1px solid #c0c0c0; border-radius:8px; text-align:center; padding:12px; }
+.achievement-card.clickable { cursor:pointer; }
+.achievement-card.achieved { border:2px solid #d4af37; }
+.achievement-icon { font-size:2em; }
+.achievement-name { font-size:0.95em; font-weight:600; }
+.achievement-progress { font-size:0.9em; opacity:0.9; }
+.achievement-status { color:#d4af37; font-weight:600; font-size:0.9em; }
 .bestiary-table thead tr {
     background: linear-gradient(90deg, #2d1a0b 0%, #654321 100%);
     color: #cd853f;
@@ -348,5 +356,6 @@
 .hero-class-item { display:flex; flex-direction:column; align-items:center; justify-content:center; width:96px; min-width:96px; padding:10px; border:2px solid #654321; border-radius:10px; background: rgba(26,26,26,0.7); box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.05); cursor:pointer; }
 .hero-class-item:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.08); border-color:#8b7355; }
 .hero-class-item.selected { border-color:#cd853f; box-shadow: 0 6px 18px rgba(205,133,63,0.45), inset 0 1px 3px rgba(255,255,255,0.12); background: rgba(77,52,30,0.6); }
+.hero-class-item.locked { border-color:#777 !important; opacity:0.6; filter:grayscale(0.5); }
 .hero-class-icon { font-size: 2em; margin-bottom: 6px; }
 .hero-class-name { color: #cd853f; font-size: 0.95em; text-align:center; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }

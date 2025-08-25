@@ -122,6 +122,16 @@
     <!-- Карточка юнита-союзника -->
 </template>
 
+<template id="tpl-achievement-item">
+    <div class="achievement-card clickable" data-id="">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-name">Достижение</div>
+        <div class="achievement-progress">0 / 0</div>
+        <div class="achievement-status" style="display:none;">Достигнуто</div>
+    </div>
+    <!-- Используются классы: .achievement-card(.achieved) с .achievement-icon, .achievement-name, .achievement-progress, .achievement-status -->
+</template>
+
 <!-- Тело модалки описания юнита -->
 <template id="tpl-unit-modal-body">
     <table class="unit-info-table unit-modal-table">

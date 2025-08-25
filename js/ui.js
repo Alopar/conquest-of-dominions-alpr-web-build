@@ -137,14 +137,22 @@ function renderArmies() {
 function updateButtonStates() {
     const stepBtn = document.getElementById('step-btn');
     const nextTurnBtn = document.getElementById('next-turn-btn');
+    const autoBtn = document.getElementById('auto-play-btn');
     const finishBtn = document.getElementById('battle-finish-btn');
     const retryBtn = document.getElementById('battle-retry-btn');
 
     if (!stepBtn || !nextTurnBtn) return;
 
+    const settings = (typeof window.getCurrentSettings === 'function') ? window.getCurrentSettings() : { battleSettings: { autoPlay: false } };
+    const autoEnabled = !!(settings && settings.battleSettings && settings.battleSettings.autoPlay);
+
     if (window.gameState.battleEnded) {
         stepBtn.disabled = true;
         nextTurnBtn.disabled = true;
+        if (autoBtn) {
+            autoBtn.style.display = 'none';
+            try { if (window._autoPlayActive) window._stopAutoPlay && window._stopAutoPlay(); } catch {}
+        }
         const isAdventureBattle = (typeof window.battleConfigSource !== 'undefined' && window.battleConfigSource === 'adventure');
         if (finishBtn) finishBtn.style.display = isAdventureBattle ? '' : 'none';
         if (retryBtn) retryBtn.style.display = isAdventureBattle ? 'none' : '';
@@ -152,6 +160,19 @@ function updateButtonStates() {
     } else {
         if (finishBtn) finishBtn.style.display = 'none';
         if (retryBtn) retryBtn.style.display = 'none';
+    }
+
+    if (autoEnabled) {
+        if (stepBtn) stepBtn.style.display = 'none';
+        if (nextTurnBtn) nextTurnBtn.style.display = 'none';
+        if (autoBtn) {
+            autoBtn.style.display = '';
+            autoBtn.textContent = (window._autoPlayActive ? '🟦 Пауза' : '🎦 Продолжить');
+        }
+    } else {
+        if (stepBtn) stepBtn.style.display = '';
+        if (nextTurnBtn) nextTurnBtn.style.display = '';
+        if (autoBtn) autoBtn.style.display = 'none';
     }
 
     let totalCanAttack = 0;
@@ -170,6 +191,14 @@ function updateButtonStates() {
 
     stepBtn.disabled = (totalCanAttack === 0);
     nextTurnBtn.disabled = (totalCanAttack > 0);
+
+    try {
+        const settingsNow = (typeof window.getCurrentSettings === 'function') ? window.getCurrentSettings() : { battleSettings: { autoPlay: false } };
+        const autoNow = !!(settingsNow && settingsNow.battleSettings && settingsNow.battleSettings.autoPlay);
+        if (autoNow && !window.gameState.battleEnded && !window._autoPlayActive && !window._autoPlayUserPaused) {
+            if (typeof window.toggleAutoPlay === 'function') window.toggleAutoPlay();
+        }
+    } catch {}
 }
 
 // Устаревшая панель информации о юните удалена
@@ -320,10 +349,94 @@ async function proceedStartBattle() {
     window.addToLog('🚩 Бой начался!');
     window.addToLog(`Атакующие: ${window.gameState.attackers.length} юнитов`);
     window.addToLog(`Защитники: ${window.gameState.defenders.length} юнитов`);
+    try {
+        try { if (window._stopAutoPlay) window._stopAutoPlay(); } catch {}
+        let autoEnabled = false;
+        try {
+            const s = (window.GameSettings && typeof window.GameSettings.get === 'function') ? window.GameSettings.get() : (typeof window.getCurrentSettings === 'function' ? window.getCurrentSettings() : null);
+            autoEnabled = !!(s && s.battleSettings && s.battleSettings.autoPlay);
+        } catch {}
+        if (autoEnabled && typeof window.toggleAutoPlay === 'function' && !window._autoPlayActive) {
+            window.toggleAutoPlay();
+        }
+    } catch {}
 }
 
 // Делаем функции доступными глобально
 window.startBattle = startBattle;
+window.proceedStartBattle = proceedStartBattle;
+window.showIntro = showIntro;
+window.showBattle = showBattle;
+window.showFight = showFight;
+window.backToIntroFromFight = backToIntroFromFight;
+window.addToLog = addToLog;
+window.renderArmies = renderArmies;
+window.updateButtonStates = updateButtonStates;
+
+// Автовоспроизведение шагов/ходов
+(function(){
+    const STEP_DELAY_MS = 1000;
+    let timerId = null;
+
+    function canDoAnyStep(){
+        try {
+            const a = window.gameState.attackers.some(function(u){ return u.alive && !u.hasAttackedThisTurn; });
+            const d = window.gameState.defenders.some(function(u){ return u.alive && !u.hasAttackedThisTurn; });
+            return a || d;
+        } catch { return false; }
+    }
+
+    function tick(){
+        if (!window._autoPlayActive) return;
+        if (!window.gameState || window.gameState.battleEnded) {
+            stop('system');
+            updateButtonStates();
+            return;
+        }
+        try {
+            if (canDoAnyStep()) {
+                if (typeof window.step === 'function') window.step();
+            } else {
+                if (typeof window.nextTurn === 'function') window.nextTurn();
+            }
+        } catch {}
+        if (!window.gameState.battleEnded && window._autoPlayActive) {
+            timerId = setTimeout(tick, STEP_DELAY_MS);
+        } else {
+            stop('system');
+            updateButtonStates();
+        }
+    }
+
+    function start(){
+        if (window._autoPlayActive) return;
+        window._autoPlayActive = true;
+        window._autoPlayUserPaused = false;
+        const btn = document.getElementById('auto-play-btn');
+        if (btn) btn.textContent = '🟦 Пауза';
+        clearTimeout(timerId);
+        timerId = setTimeout(tick, STEP_DELAY_MS);
+    }
+
+    function stop(reason){
+        window._autoPlayActive = false;
+        clearTimeout(timerId);
+        timerId = null;
+        if (reason === 'user') window._autoPlayUserPaused = true; else window._autoPlayUserPaused = false;
+        const btn = document.getElementById('auto-play-btn');
+        if (btn) btn.textContent = '🎦 Играть';
+    }
+
+    window.toggleAutoPlay = function(){
+        try {
+            const settings = (typeof window.getCurrentSettings === 'function') ? window.getCurrentSettings() : { battleSettings: { autoPlay: false } };
+            if (!(settings && settings.battleSettings && settings.battleSettings.autoPlay)) return;
+        } catch {}
+        if (window._autoPlayActive) stop('user'); else start();
+        updateButtonStates();
+    };
+    window._stopAutoPlay = function(){ stop('system'); };
+})();
 window.proceedStartBattle = proceedStartBattle;
 window.showIntro = showIntro;
 window.showBattle = showBattle;
@@ -401,6 +514,7 @@ function finishBattleToAdventure() {
                     if (!window.adventureState.currencies) window.adventureState.currencies = {};
                     const add = Math.max(0, Number(r.amount || 0));
                     window.adventureState.currencies[r.id] = (window.adventureState.currencies[r.id] || 0) + add;
+                    try { if (window.Achievements && typeof window.Achievements.onCurrencyEarned === 'function') window.Achievements.onCurrencyEarned(r.id, add); } catch {}
                     try {
                         const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
                         const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
@@ -489,3 +603,94 @@ async function showRules() {
 }
 
 window.showRules = showRules;
+
+// Экран «Достижения»
+async function showAchievements() {
+    try {
+        if (window.UI && typeof window.UI.ensureScreenLoaded === 'function') {
+            await window.UI.ensureScreenLoaded('achievements-screen', 'fragments/achievements.html');
+        }
+    } catch {}
+    try { showScreen('achievements-screen'); } catch {}
+    try { renderAchievementsGrid(); } catch {}
+}
+
+function renderAchievementsGrid(){
+    const host = document.getElementById('achievements-grid');
+    if (!host) return;
+    host.innerHTML = '';
+    let items = [];
+    try { items = (window.Achievements && typeof window.Achievements.getAll === 'function') ? window.Achievements.getAll() : []; } catch { items = []; }
+    items.forEach(function(a){
+        const tpl = document.getElementById('tpl-achievement-item');
+        const el = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        if (!tpl) el.className = 'achievement-card clickable';
+        if (a.achieved) el.classList.add('achieved');
+        const iconEl = el.querySelector('.achievement-icon') || el;
+        const nameEl = el.querySelector('.achievement-name');
+        const progEl = el.querySelector('.achievement-progress');
+        const statusEl = el.querySelector('.achievement-status');
+        if (iconEl) iconEl.textContent = a.icon || '🏆';
+        if (nameEl) nameEl.textContent = a.name;
+        if (progEl) progEl.textContent = (a.current || 0) + ' / ' + a.amount;
+        if (statusEl) statusEl.style.display = a.achieved ? '' : 'none';
+
+        try {
+            if (window.UI && typeof window.UI.attachTooltip === 'function') {
+                window.UI.attachTooltip(el, function(){
+                    const wrap = document.createElement('div');
+                    wrap.textContent = a.description;
+                    return wrap;
+                }, { delay: 400, hideDelay: 100 });
+            }
+        } catch {}
+
+        el.addEventListener('click', function(){
+            try {
+                if (!(window.UI && typeof window.UI.showModal === 'function')) return;
+                const body = document.createElement('div');
+                body.style.display = 'grid';
+                body.style.gridTemplateColumns = '1fr';
+                body.style.gap = '10px';
+                const row1 = document.createElement('div');
+                row1.textContent = a.description;
+                const row2 = document.createElement('div');
+                const what = (a.type === 'monster') ? 'Убийства: ' : 'Валюта: ';
+                row2.textContent = what + a.id_entity;
+                const row3 = document.createElement('div');
+                row3.textContent = 'Прогресс: ' + (a.current || 0) + ' / ' + a.amount;
+                const row4 = document.createElement('div');
+                row4.textContent = a.achieved ? 'Статус: Достигнуто' : 'Статус: Не достигнуто';
+                body.appendChild(row1);
+                body.appendChild(row2);
+                body.appendChild(row3);
+                body.appendChild(row4);
+                window.UI.showModal(body, { type: 'info', title: a.name });
+            } catch {}
+        });
+
+        host.appendChild(el);
+    });
+}
+
+window.showAchievements = showAchievements;
+
+function resetAchievementsProgress(){
+    try {
+        let accepted = true;
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal('Сбросить прогресс всех достижений? Это действие необратимо.', { type: 'dialog', title: 'Подтверждение' });
+            h.closed.then(function(ok){
+                if (!ok) return;
+                try { if (window.Achievements && typeof window.Achievements.clearAll === 'function') window.Achievements.clearAll(); } catch {}
+                try { renderAchievementsGrid(); } catch {}
+                try { if (window.UI && typeof window.UI.showToast === 'function') window.UI.showToast('success', 'Прогресс достижений сброшен'); } catch {}
+            });
+            return;
+        }
+        if (!accepted) return;
+        if (window.Achievements && typeof window.Achievements.clearAll === 'function') window.Achievements.clearAll();
+        renderAchievementsGrid();
+    } catch {}
+}
+window.resetAchievementsProgress = resetAchievementsProgress;

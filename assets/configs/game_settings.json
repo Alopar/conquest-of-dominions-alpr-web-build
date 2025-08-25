@@ -10,7 +10,8 @@
     },
     "battleSettings": {
       "showDetailedLog": true,
-      "attackAlternate": true
+      "attackAlternate": true,
+      "autoPlay": true
     }
   }
 }

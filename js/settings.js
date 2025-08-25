@@ -9,7 +9,8 @@ let gameSettings = {
     },
     battleSettings: {
         showDetailedLog: true,
-        attackAlternate: true
+        attackAlternate: true,
+        autoPlay: true
     }
 };
 
@@ -41,6 +42,8 @@ function displaySettings() {
     document.getElementById('showDetailedLog').checked = gameSettings.battleSettings.showDetailedLog;
     const altEl = document.getElementById('attackAlternate');
     if (altEl) altEl.checked = !!gameSettings.battleSettings.attackAlternate;
+    const autoEl = document.getElementById('autoPlay');
+    if (autoEl) autoEl.checked = !!gameSettings.battleSettings.autoPlay;
 
     const modeEl1 = document.getElementById('stageProgressionMode1');
     const modeEl2 = document.getElementById('stageProgressionMode2');
@@ -62,6 +65,8 @@ function saveSettingsFromScreen() {
     gameSettings.battleSettings.showDetailedLog = document.getElementById('showDetailedLog').checked;
     const altEl = document.getElementById('attackAlternate');
     if (altEl) gameSettings.battleSettings.attackAlternate = altEl.checked;
+    const autoEl = document.getElementById('autoPlay');
+    if (autoEl) gameSettings.battleSettings.autoPlay = autoEl.checked;
 
     const modeEl1 = document.getElementById('stageProgressionMode1');
     const modeEl2 = document.getElementById('stageProgressionMode2');
@@ -83,7 +88,8 @@ function resetSettingsToDefault() {
         },
         battleSettings: {
             showDetailedLog: true,
-            attackAlternate: true
+            attackAlternate: true,
+            autoPlay: true
         }
     };
     displaySettings();

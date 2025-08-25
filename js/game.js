@@ -359,8 +359,19 @@ function endBattle(winner) {
 }
 
 function resetBattle() {
+    try { if (window._stopAutoPlay) window._stopAutoPlay(); } catch {}
     initializeArmies();
     renderArmies();
+
+    try {
+        const s = (window.GameSettings && typeof window.GameSettings.get === 'function')
+            ? window.GameSettings.get()
+            : (typeof window.getCurrentSettings === 'function' ? window.getCurrentSettings() : null);
+        const autoEnabled = !!(s && s.battleSettings && s.battleSettings.autoPlay);
+        if (autoEnabled && typeof window.toggleAutoPlay === 'function' && !window._autoPlayActive) {
+            window.toggleAutoPlay();
+        }
+    } catch {}
 
     // Обновляем счетчик ходов
     const turnCounter = document.getElementById('turn-counter');

@@ -1,0 +1,16 @@
+{
+  "achievements": [
+    { "id": "kill_20_chicken", "name": "Птичий кошмар", "description": "Убить 20 кур.", "icon": "🐔", "type": "monster", "id_entity": "chicken", "amount": 20 },
+    { "id": "kill_10_rat", "name": "Крысолов", "description": "Убить 10 крыс.", "icon": "🐭", "type": "monster", "id_entity": "rat", "amount": 10 },
+    { "id": "kill_10_wolf", "name": "Охотник на волков", "description": "Убить 10 волков.", "icon": "🐺", "type": "monster", "id_entity": "wolf", "amount": 10 },
+    { "id": "kill_1_vampire", "name": "Истребитель кровососов", "description": "Убить 1 вампира.", "icon": "🧛", "type": "monster", "id_entity": "vampire", "amount": 1 },
+
+    { "id": "gold_100", "name": "Кладовщик", "description": "Накопить 100 золота.", "icon": "💰", "type": "currency", "id_entity": "gold", "amount": 100 },
+    { "id": "gold_1000", "name": "Меняла", "description": "Накопить 1000 золота.", "icon": "💰", "type": "currency", "id_entity": "gold", "amount": 1000 },
+    { "id": "gold_5000", "name": "Ростовщик", "description": "Накопить 5000 золота.", "icon": "💰", "type": "currency", "id_entity": "gold", "amount": 5000 },
+
+    { "id": "glory_500", "name": "Слава королю!", "description": "Накопить 500 славы.", "icon": "📯", "type": "currency", "id_entity": "glory", "amount": 500 }
+  ]
+}
+
+

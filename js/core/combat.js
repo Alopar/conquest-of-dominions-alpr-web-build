@@ -70,6 +70,7 @@ function applyDamageToTarget(target, damage, color, defenderArmy) {
         target.hp = 0;
         target.alive = false;
         if (window.addToLog) window.addToLog(`💀 ${target.name} погибает!`);
+        try { if (window.Achievements && typeof window.Achievements.onUnitKilled === 'function') window.Achievements.onUnitKilled(target.typeId); } catch {}
         if (window.queueAnimation) window.queueAnimation({ type: 'kill', unitId: target.id, army: defenderArmy });
     }
 }
