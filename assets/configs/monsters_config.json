@@ -5,9 +5,10 @@
   },
   "unitTypes": {
     "warrior": { "id": "warrior", "name": "Воин", "hp": 12, "damage": "1d6", "targets": 1, "view": "⚔️", "type": "melee" },
-    "rogue": { "id": "rogue", "name": "Вор", "hp": 8, "damage": "1d3", "targets": 2, "view": "🔪", "type": "melee" },
+    "rogue": { "id": "rogue", "name": "Вор", "hp": 8, "damage": "1d3", "targets": 1, "view": "🔪", "type": "melee" },
     "archer": { "id": "archer", "name": "Лучник", "hp": 8, "damage": "1d6", "targets": 1, "view": "🏹", "type": "range" },
-    "knight": { "id": "knight", "name": "Рыцарь", "hp": 20, "damage": "1d8", "targets": 1, "view": "🛡️", "type": "melee" },
+    "knight": { "id": "knight", "name": "Рыцарь", "hp": 30, "damage": "1d8", "targets": 1, "view": "🛡️", "type": "melee" },
+    "elf": { "id": "elf", "name": "Эльф", "hp": 10, "damage": "1d6", "targets": 2, "view": "🧝‍♂️", "type": "range" },
     "mage": { "id": "mage", "name": "Маг", "hp": 6, "damage": "1d3", "targets": 3, "view": "🔮", "type": "support" },
     "dog": { "id": "dog", "name": "Собака", "hp": 4, "damage": "1d3", "targets": 1, "view": "🐶", "type": "melee" },
     "fox": { "id": "fox", "name": "Лиса", "hp": 4, "damage": "1d3", "targets": 1, "view": "🦊", "type": "melee" },

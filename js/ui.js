@@ -77,49 +77,112 @@ function renderUnit(unit, army) {
             window.UI.showModal(body, { type: 'info', title: 'Описание существа' });
         } catch {}
     });
-	try {
-		if (window.UI && typeof window.UI.attachTooltip === 'function') {
-			window.UI.attachTooltip(unitDiv, function(){
-				const wrap = document.createElement('div');
-				wrap.style.display = 'flex';
-				wrap.style.alignItems = 'center';
-				const name = document.createElement('span');
-				name.textContent = String(unit.name || '');
-				const sep1 = document.createElement('span');
-				sep1.textContent = '|';
-				sep1.style.opacity = '0.6';
-				sep1.style.margin = '0 8px';
-				const hp = document.createElement('span');
-				hp.textContent = `${unit.hp}/${unit.maxHp} ❤️`;
-				const sep2 = document.createElement('span');
-				sep2.textContent = '|';
-				sep2.style.opacity = '0.6';
-				sep2.style.margin = '0 8px';
-				const status = document.createElement('span');
-				let statusText = '';
-				if (!unit.alive) statusText = '💀 Мертв';
-				else if (unit.hasAttackedThisTurn) statusText = '⚔️ Атаковал';
-				else statusText = '✅ Готов';
-				status.textContent = statusText;
-				wrap.appendChild(name);
-				wrap.appendChild(sep1);
-				wrap.appendChild(hp);
-				wrap.appendChild(sep2);
-				wrap.appendChild(status);
-				return wrap;
-			}, { delay: 500, hideDelay: 100 });
-		}
-	} catch {}
+    try {
+        if (window.UI && typeof window.UI.attachTooltip === 'function') {
+            window.UI.attachTooltip(unitDiv, function(){
+                const wrap = document.createElement('div');
+                wrap.style.display = 'flex';
+                wrap.style.alignItems = 'center';
+                const name = document.createElement('span');
+                name.textContent = String(unit.name || '');
+                const sep1 = document.createElement('span');
+                sep1.textContent = '|';
+                sep1.style.opacity = '0.6';
+                sep1.style.margin = '0 8px';
+                const hp = document.createElement('span');
+                hp.textContent = `${unit.hp}/${unit.maxHp} ❤️`;
+                const sep2 = document.createElement('span');
+                sep2.textContent = '|';
+                sep2.style.opacity = '0.6';
+                sep2.style.margin = '0 8px';
+                const status = document.createElement('span');
+                let statusText = '';
+                if (!unit.alive) statusText = '💀 Мертв';
+                else if (unit.hasAttackedThisTurn) statusText = '⚔️ Атаковал';
+                else statusText = '✅ Готов';
+                status.textContent = statusText;
+                wrap.appendChild(name);
+                wrap.appendChild(sep1);
+                wrap.appendChild(hp);
+                wrap.appendChild(sep2);
+                wrap.appendChild(status);
+                return wrap;
+            }, { delay: 500, hideDelay: 100 });
+        }
+    } catch {}
     return unitDiv;
 }
 
 // Рендер линии одной армии
 function renderArmyLine(units, army, lineEl) {
     lineEl.innerHTML = '';
+    const s = (typeof window.getCurrentSettings === 'function') ? window.getCurrentSettings() : null;
+    const perRow = Math.max(1, Number((s && s.unitsPerRow) || 10));
+    const remaining = units.slice();
+    const rows = [];
+
+    function strength(u){
+        const hp = Number(u.maxHp || u.hp || 0);
+        const dmg = (typeof u.damage === 'number') ? u.damage : 0;
+        return { hp, dmg };
+    }
+
+    function sortByStrengthDesc(a, b){
+        const sa = strength(a); const sb = strength(b);
+        if (sb.hp !== sa.hp) return sb.hp - sa.hp;
+        return sb.dmg - sa.dmg;
+    }
+
+    function takeNextRow(){
+        const melee = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'melee'; }).sort(sortByStrengthDesc);
+        const range = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'range'; }).sort(sortByStrengthDesc);
+        const support = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'support'; }).sort(sortByStrengthDesc);
+        const row = [];
+        function pull(from){
+            while (from.length > 0 && row.length < perRow) row.push(from.shift());
+        }
+        pull(melee); if (row.length < perRow) pull(range); if (row.length < perRow) pull(support);
+        // Переупорядочиваем внутри строки: самые сильные в центре, далее по убыванию симметрично
+        const rolePriorityOrder = row.slice();
+        // Уже удовлетворяет приоритетам ролей: melee -> range -> support, и отсортирован по силе в каждой группе
+        const n = rolePriorityOrder.length;
+        const positions = (function(){
+            const order = [];
+            let left = Math.floor((n - 1) / 2);
+            let right = left + 1;
+            if (n % 2 === 1) { order.push(left); left--; }
+            while (order.length < n) {
+                if (left >= 0) { order.push(left); left--; }
+                if (right < n) { order.push(right); right++; }
+            }
+            return order;
+        })();
+        const arranged = new Array(n);
+        for (let i = 0; i < n; i++) arranged[positions[i]] = rolePriorityOrder[i];
+        row.length = 0; Array.prototype.push.apply(row, arranged);
+        const used = new Set(row.map(function(u){ return u.id; }));
+        for (let i = remaining.length - 1; i >= 0; i--) { if (used.has(remaining[i].id)) remaining.splice(i, 1); }
+        return row;
+    }
+
+    while (remaining.length > 0) { rows.push(takeNextRow()); }
+
     const frag = document.createDocumentFragment();
-    units.forEach((unit) => {
-        frag.appendChild(renderUnit(unit, army));
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '20px';
+
+    const ordered = (army === 'defenders') ? rows.slice().reverse() : rows;
+    ordered.forEach(function(rowUnits){
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'center';
+        row.style.gap = '12px';
+        rowUnits.forEach(function(u){ row.appendChild(renderUnit(u, army)); });
+        container.appendChild(row);
     });
+    frag.appendChild(container);
     lineEl.appendChild(frag);
 }
 
@@ -129,6 +192,7 @@ function renderArmies() {
     const attackersLine = document.getElementById('attackers-line');
     renderArmyLine(window.gameState.defenders, 'defenders', defendersLine);
     renderArmyLine(window.gameState.attackers, 'attackers', attackersLine);
+    try { updateBattleStats(); } catch {}
     if (window.applyPendingAnimations) window.applyPendingAnimations();
     updateButtonStates();
 }
@@ -138,6 +202,7 @@ function updateButtonStates() {
     const stepBtn = document.getElementById('step-btn');
     const nextTurnBtn = document.getElementById('next-turn-btn');
     const autoBtn = document.getElementById('auto-play-btn');
+    const autoSpeedBtn = document.getElementById('auto-speed-btn');
     const finishBtn = document.getElementById('battle-finish-btn');
     const retryBtn = document.getElementById('battle-retry-btn');
 
@@ -153,6 +218,7 @@ function updateButtonStates() {
             autoBtn.style.display = 'none';
             try { if (window._autoPlayActive) window._stopAutoPlay && window._stopAutoPlay(); } catch {}
         }
+        if (autoSpeedBtn) autoSpeedBtn.style.display = 'none';
         const isAdventureBattle = (typeof window.battleConfigSource !== 'undefined' && window.battleConfigSource === 'adventure');
         if (finishBtn) finishBtn.style.display = isAdventureBattle ? '' : 'none';
         if (retryBtn) retryBtn.style.display = isAdventureBattle ? 'none' : '';
@@ -169,10 +235,16 @@ function updateButtonStates() {
             autoBtn.style.display = '';
             autoBtn.textContent = (window._autoPlayActive ? '🟦 Пауза' : '🎦 Продолжить');
         }
+        if (autoSpeedBtn) {
+            autoSpeedBtn.style.display = '';
+            const sp = Math.max(1, Number(window._autoPlaySpeed || 1));
+            autoSpeedBtn.textContent = '⏩ x' + sp;
+        }
     } else {
         if (stepBtn) stepBtn.style.display = '';
         if (nextTurnBtn) nextTurnBtn.style.display = '';
         if (autoBtn) autoBtn.style.display = 'none';
+        if (autoSpeedBtn) autoSpeedBtn.style.display = 'none';
     }
 
     let totalCanAttack = 0;
@@ -199,6 +271,7 @@ function updateButtonStates() {
             if (typeof window.toggleAutoPlay === 'function') window.toggleAutoPlay();
         }
     } catch {}
+    try { updateBattleStats(); } catch {}
 }
 
 // Устаревшая панель информации о юните удалена
@@ -251,8 +324,20 @@ async function showBattle() {
             showScreen('battle-screen');
         }
     } catch { showScreen('battle-screen'); }
+    try { if (window.Modifiers && typeof window.Modifiers.resetAndRecompute === 'function') window.Modifiers.resetAndRecompute(); } catch {}
     const logDiv = document.getElementById('battle-log');
     if (logDiv) logDiv.innerHTML = '';
+}
+
+function updateBattleStats(){
+    const el = document.getElementById('battle-stats');
+    if (!el) return;
+    const aAll = window.gameState.attackers.length;
+    const dAll = window.gameState.defenders.length;
+    const aAlive = window.gameState.attackers.filter(function(u){ return u.alive; }).length;
+    const dAlive = window.gameState.defenders.filter(function(u){ return u.alive; }).length;
+    const turn = window.gameState.currentTurn || 1;
+    el.textContent = `⚔️ Атакующие ${aAlive}/${aAll} · 🛡️ Защитники ${dAlive}/${dAll} · ⏳ Ход ${turn}`;
 }
 
 // Экран "Схватка"
@@ -349,6 +434,12 @@ async function proceedStartBattle() {
     window.addToLog('🚩 Бой начался!');
     window.addToLog(`Атакующие: ${window.gameState.attackers.length} юнитов`);
     window.addToLog(`Защитники: ${window.gameState.defenders.length} юнитов`);
+    try { window._autoPlaySpeed = 1; } catch {}
+    try {
+        const spBtn = document.getElementById('auto-speed-btn');
+        if (spBtn) spBtn.textContent = '⏩ x1';
+    } catch {}
+    try { if (typeof window._rescheduleAutoPlayTick === 'function') window._rescheduleAutoPlayTick(); } catch {}
     try {
         try { if (window._stopAutoPlay) window._stopAutoPlay(); } catch {}
         let autoEnabled = false;
@@ -372,11 +463,30 @@ window.backToIntroFromFight = backToIntroFromFight;
 window.addToLog = addToLog;
 window.renderArmies = renderArmies;
 window.updateButtonStates = updateButtonStates;
+window.updateBattleStats = updateBattleStats;
+
+window.cycleAutoSpeed = function(){
+    try {
+        const options = [1, 2, 5, 10];
+        const current = Math.max(1, Number(window._autoPlaySpeed || 1));
+        const idx = options.indexOf(current);
+        const next = options[(idx >= 0 ? (idx + 1) % options.length : 0)];
+        window._autoPlaySpeed = next;
+        const spBtn = document.getElementById('auto-speed-btn');
+        if (spBtn) spBtn.textContent = '⏩ x' + next;
+        if (typeof window._rescheduleAutoPlayTick === 'function') window._rescheduleAutoPlayTick();
+    } catch {}
+};
 
 // Автовоспроизведение шагов/ходов
 (function(){
     const STEP_DELAY_MS = 1000;
     let timerId = null;
+
+    function getStepDelay(){
+        const sp = Math.max(1, Number(window._autoPlaySpeed || 1));
+        return Math.max(0, Math.round(STEP_DELAY_MS / sp));
+    }
 
     function canDoAnyStep(){
         try {
@@ -401,7 +511,7 @@ window.updateButtonStates = updateButtonStates;
             }
         } catch {}
         if (!window.gameState.battleEnded && window._autoPlayActive) {
-            timerId = setTimeout(tick, STEP_DELAY_MS);
+            timerId = setTimeout(tick, getStepDelay());
         } else {
             stop('system');
             updateButtonStates();
@@ -415,7 +525,7 @@ window.updateButtonStates = updateButtonStates;
         const btn = document.getElementById('auto-play-btn');
         if (btn) btn.textContent = '🟦 Пауза';
         clearTimeout(timerId);
-        timerId = setTimeout(tick, STEP_DELAY_MS);
+        timerId = setTimeout(tick, getStepDelay());
     }
 
     function stop(reason){
@@ -436,6 +546,11 @@ window.updateButtonStates = updateButtonStates;
         updateButtonStates();
     };
     window._stopAutoPlay = function(){ stop('system'); };
+    window._rescheduleAutoPlayTick = function(){
+        if (!window._autoPlayActive) return;
+        clearTimeout(timerId);
+        timerId = setTimeout(tick, getStepDelay());
+    };
 })();
 window.proceedStartBattle = proceedStartBattle;
 window.showIntro = showIntro;
@@ -486,8 +601,11 @@ function finishBattleToAdventure() {
             const cd = curById[r.id] || { name: r.id, icon: '' };
             const iconEl = el.querySelector('.reward-icon') || el;
             const nameEl = el.querySelector('.reward-name');
+            let mult = 1;
+            try { if (window.Modifiers && typeof window.Modifiers.getRewardMultiplier === 'function') mult = Number(window.Modifiers.getRewardMultiplier(r.id) || 1); } catch {}
+            const shown = Math.max(0, Math.floor(Number(r.amount || 0) * (mult > 0 ? mult : 1)));
             if (iconEl) iconEl.textContent = cd.icon || '💠';
-            if (nameEl) nameEl.textContent = `${cd.name} +${r.amount}`;
+            if (nameEl) nameEl.textContent = `${cd.name} +${shown}`;
         } else if (r.type === 'monster') {
             const tplItem = document.getElementById('tpl-reward-unit');
             el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
@@ -512,7 +630,9 @@ function finishBattleToAdventure() {
             rs.forEach(function(r){
                 if (r.type === 'currency') {
                     if (!window.adventureState.currencies) window.adventureState.currencies = {};
-                    const add = Math.max(0, Number(r.amount || 0));
+                    let mult = 1;
+                    try { if (window.Modifiers && typeof window.Modifiers.getRewardMultiplier === 'function') mult = Number(window.Modifiers.getRewardMultiplier(r.id) || 1); } catch {}
+                    const add = Math.max(0, Math.floor(Number(r.amount || 0) * (mult > 0 ? mult : 1)));
                     window.adventureState.currencies[r.id] = (window.adventureState.currencies[r.id] || 0) + add;
                     try { if (window.Achievements && typeof window.Achievements.onCurrencyEarned === 'function') window.Achievements.onCurrencyEarned(r.id, add); } catch {}
                     try {
@@ -520,15 +640,16 @@ function finishBattleToAdventure() {
                         const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
                         const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
                         const cd = curById[r.id] || { name: r.id, icon: '' };
-                        if (window.UI && window.UI.showToast) window.UI.showToast('success', `${cd.name}: +${add} ${cd.icon || ''}`);
+                        if (window.UI && window.UI.showToast) window.UI.showToast('copper', `${cd.name}: +${add} ${cd.icon || ''}`);
                     } catch {}
                 } else if (r.type === 'monster') {
                     if (!window.adventureState.pool) window.adventureState.pool = {};
                     window.adventureState.pool[r.id] = (window.adventureState.pool[r.id] || 0) + Math.max(0, Number(r.amount || 0));
+                    try { if (window.Hero && typeof window.Hero.setArmyCurrent === 'function') window.Hero.setArmyCurrent(((window.Hero.getArmyCurrent && window.Hero.getArmyCurrent()) || 0) + Math.max(0, Number(r.amount || 0))); } catch {}
                     try {
                         const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
                         const m = monsters[r.id] || { name: r.id };
-                        if (window.UI && window.UI.showToast) window.UI.showToast('success', `Союзник: ${m.name || r.id} x${r.amount}`);
+                        if (window.UI && window.UI.showToast) window.UI.showToast('copper', `Союзник: ${m.name || r.id} x${r.amount}`);
                     } catch {}
                 }
             });

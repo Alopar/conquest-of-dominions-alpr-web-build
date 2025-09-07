@@ -1,11 +1,11 @@
 // Управление настройками игры
 
 let gameSettings = {
-    maxUnitsPerArmy: 10,
+    unitsPerRow: 10,
     meleeHitThreshold: 5,
     rangeHitThreshold: 11,
     adventureSettings: {
-        stageProgressionMode: 1
+        stageProgressionMode: 2
     },
     battleSettings: {
         showDetailedLog: true,
@@ -33,7 +33,8 @@ function loadGameSettingsFromStorage() { /* Логика перенесена в
 
 // Отображение настроек на экране
 function displaySettings() {
-    document.getElementById('maxUnitsPerArmy').value = gameSettings.maxUnitsPerArmy;
+    const uprEl = document.getElementById('unitsPerRow');
+    if (uprEl) uprEl.value = Number(gameSettings.unitsPerRow || 10);
     const meleeEl = document.getElementById('meleeHitThreshold');
     const rangeEl = document.getElementById('rangeHitThreshold');
     if (meleeEl) meleeEl.value = gameSettings.meleeHitThreshold;
@@ -56,7 +57,8 @@ function displaySettings() {
 
 // Сохранение настроек с экрана
 function saveSettingsFromScreen() {
-    gameSettings.maxUnitsPerArmy = parseInt(document.getElementById('maxUnitsPerArmy').value);
+    const uprEl = document.getElementById('unitsPerRow');
+    gameSettings.unitsPerRow = parseInt(uprEl ? uprEl.value : 10);
     const meleeEl = document.getElementById('meleeHitThreshold');
     const rangeEl = document.getElementById('rangeHitThreshold');
     gameSettings.meleeHitThreshold = parseInt(meleeEl ? meleeEl.value : 5);
@@ -80,11 +82,11 @@ function saveSettingsFromScreen() {
 // Сброс настроек к значениям по умолчанию
 function resetSettingsToDefault() {
     gameSettings = {
-        maxUnitsPerArmy: 10,
+        unitsPerRow: 10,
         meleeHitThreshold: 5,
         rangeHitThreshold: 11,
         adventureSettings: {
-            stageProgressionMode: 1
+            stageProgressionMode: 2
         },
         battleSettings: {
             showDetailedLog: true,

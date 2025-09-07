@@ -81,6 +81,15 @@
         const done = (next >= need);
         progressById[id] = { current: next, achieved: !!done };
         writeProgress();
+        if (done) {
+            try {
+                if (window.UI && typeof window.UI.showToast === 'function') {
+                    const icon = a.icon || '';
+                    const name = a.name || a.id;
+                    window.UI.showToast('gold', `Достижение "${name}" получено! ${icon}`);
+                }
+            } catch {}
+        }
     }
 
     function onUnitKilled(monsterTypeId){

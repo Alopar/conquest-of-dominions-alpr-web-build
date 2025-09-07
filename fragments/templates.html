@@ -132,6 +132,22 @@
     <!-- Используются классы: .achievement-card(.achieved) с .achievement-icon, .achievement-name, .achievement-progress, .achievement-status -->
 </template>
 
+<template id="tpl-perk-item">
+    <div class="achievement-card clickable perk-card" data-id="">
+        <div class="achievement-icon">🥈</div>
+        <div class="achievement-name">Перк</div>
+        <div class="achievement-progress" style="display:none;"></div>
+        <div class="achievement-status" style="display:none;"></div>
+    </div>
+</template>
+
+<template id="tpl-perk-modal-body">
+    <div class="upgrade-modal-body">
+        <div class="upgrade-desc" data-role="desc"></div>
+    </div>
+    
+</template>
+
 <!-- Тело модалки описания юнита -->
 <template id="tpl-unit-modal-body">
     <table class="unit-info-table unit-modal-table">
@@ -145,5 +161,49 @@
             <td class="unit-info-value" data-role="targets"></td>
         </tr>
     </table>
+</template>
+
+<!-- Герой: развитие -->
+<template id="tpl-hero-dev-screen">
+    <div class="hero-dev-root">
+        <div id="hero-dev-header" class="hero-dev-header"></div>
+        <div id="hero-dev-list" class="hero-dev-list"></div>
+    </div>
+    <!-- Внутреннее наполнение см. tpl-hero-dev-header и tpl-hero-dev-row -->
+    
+</template>
+
+<template id="tpl-hero-dev-header">
+    <div class="hero-dev-header">
+        <div class="hero-dev-title" data-role="title"></div>
+        <div class="hero-dev-level" data-role="level"></div>
+    </div>
+</template>
+
+<template id="tpl-hero-dev-row">
+    <div class="hero-dev-row">
+        <div class="hero-dev-free" data-role="free"></div>
+        <div class="hero-dev-sep" aria-hidden="true"></div>
+        <div class="hero-dev-paid" data-role="paid"></div>
+        <div class="hero-dev-action" data-role="action">
+            <div class="hero-dev-level-title" data-role="levelTitle"></div>
+            <button class="btn" data-role="buyBtn"></button>
+        </div>
+    </div>
+</template>
+
+<template id="tpl-upgrade-item">
+    <div class="reward-item upgrade-item" data-id="">
+        <div class="reward-icon" data-role="icon">💠</div>
+        <div class="reward-name" data-role="name">Улучшение</div>
+        <div class="upgrade-price" data-role="price"></div>
+    </div>
+</template>
+
+<template id="tpl-upgrade-modal-body">
+    <div class="upgrade-modal-body">
+        <div class="upgrade-desc" data-role="desc"></div>
+        <div class="upgrade-price-line" data-role="priceLine"></div>
+    </div>
 </template>
 

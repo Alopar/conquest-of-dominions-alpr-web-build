@@ -54,6 +54,22 @@
     box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
 }
 
+.battle-stats {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    color: #cd853f;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.army-separator {
+    height: 2px;
+    margin: 10px 0 20px 0;
+    background: linear-gradient(to right, rgba(128,128,128,0), rgba(160,160,160,0.6), rgba(128,128,128,0));
+}
+
 .hp-bar {
     position: absolute;
     bottom: -18px;

@@ -10,6 +10,13 @@ const GAP = {
     impactToDeath: 200
 };
 
+function scaleTime(ms){
+    try {
+        const sp = Math.max(1, Number(window._autoPlaySpeed || 1));
+        return Math.max(0, Math.round(ms / sp));
+    } catch { return ms; }
+}
+
 const keyOf = (unitId, army) => `${army}::${unitId}`;
 const AnimEvt = { Attack: 'attack', Hit: 'hit', Kill: 'kill', Dodge: 'dodge' };
 const HitColor = { Red: 'red', Yellow: 'yellow' };
@@ -50,7 +57,7 @@ function applyEvt(evt) {
         setTimeout(() => {
             const elLater = selectNode(evt.unitId, evt.army);
             if (elLater) elLater.classList.remove(cls);
-        }, DURATION.attack);
+        }, scaleTime(DURATION.attack));
         return;
     }
 
@@ -62,13 +69,13 @@ function applyEvt(evt) {
             setTimeout(() => {
                 const elEnd = selectNode(evt.unitId, evt.army);
                 if (elEnd) elEnd.classList.remove(color);
-            }, DURATION.hit);
-        }, GAP.attackToImpact);
+            }, scaleTime(DURATION.hit));
+        }, scaleTime(GAP.attackToImpact));
         return;
     }
 
     if (evt.type === 'kill') {
-        const delay = GAP.attackToImpact + DURATION.hit + GAP.impactToDeath;
+        const delay = scaleTime(GAP.attackToImpact + DURATION.hit + GAP.impactToDeath);
         setTimeout(() => {
             const elNode = selectNode(evt.unitId, evt.army);
             if (!elNode) {
@@ -85,7 +92,7 @@ function applyEvt(evt) {
             setTimeout(() => {
                 const endNode = selectNode(evt.unitId, evt.army);
                 if (endNode) endNode.classList.remove('anim-kill');
-            }, DURATION.kill);
+            }, scaleTime(DURATION.kill));
         }, delay);
         return;
     }
@@ -98,8 +105,8 @@ function applyEvt(evt) {
             setTimeout(() => {
                 const elEnd = selectNode(evt.unitId, evt.army);
                 if (elEnd) elEnd.classList.remove(cls);
-            }, DURATION.dodge);
-        }, GAP.attackToImpact);
+            }, scaleTime(DURATION.dodge));
+        }, scaleTime(GAP.attackToImpact));
         return;
     }
 }

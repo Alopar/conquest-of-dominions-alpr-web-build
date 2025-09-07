@@ -8,12 +8,12 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 5
+          "amount": 20
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 10
+          "amount": 200
         },
         {
           "type": "monster",
@@ -24,7 +24,7 @@
       "monsters": [
         {
           "id": "rat",
-          "count": 3
+          "count": 5
         }
       ]
     },
@@ -36,12 +36,12 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 6
+          "amount": 30
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 10
+          "amount": 250
         },
         {
           "type": "monster",
@@ -52,7 +52,7 @@
       "monsters": [
         {
           "id": "chicken",
-          "count": 6
+          "count": 8
         }
       ]
     },
@@ -64,18 +64,18 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 7
+          "amount": 50
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 350
         }
       ],
       "monsters": [
         {
           "id": "frog",
-          "count": 8
+          "count": 12
         }
       ]
     },
@@ -87,22 +87,22 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 8
+          "amount": 80
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 450
         }
       ],
       "monsters": [
         {
           "id": "giant_snake",
-          "count": 4
+          "count": 6
         },
         {
           "id": "frog",
-          "count": 5
+          "count": 10
         }
       ]
     },
@@ -114,18 +114,18 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 10
+          "amount": 100
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 600
         }
       ],
       "monsters": [
         {
           "id": "goblin",
-          "count": 5
+          "count": 30
         }
       ]
     },
@@ -137,26 +137,26 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 12
+          "amount": 200
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 700
         }
       ],
       "monsters": [
         {
           "id": "goblin",
-          "count": 8
+          "count": 20
         },
         {
           "id": "orc",
-          "count": 3
+          "count": 8
         },
         {
           "id": "troll",
-          "count": 1
+          "count": 3
         }
       ]
     },
@@ -168,12 +168,12 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 18
+          "amount": 300
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 800
         },
         {
           "type": "monster",
@@ -184,11 +184,11 @@
       "monsters": [
         {
           "id": "wolf",
-          "count": 10
+          "count": 20
         },
         {
           "id": "bear",
-          "count": 3
+          "count": 8
         }
       ]
     },
@@ -200,22 +200,22 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 14
+          "amount": 500
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 600
         }
       ],
       "monsters": [
         {
           "id": "skeleton",
-          "count": 5
+          "count": 25
         },
         {
           "id": "spider",
-          "count": 2
+          "count": 10
         }
       ]
     },
@@ -227,26 +227,26 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 16
+          "amount": 800
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 1000
         }
       ],
       "monsters": [
         {
           "id": "skeleton",
-          "count": 8
+          "count": 30
         },
         {
           "id": "bat",
-          "count": 10
+          "count": 20
         },
         {
           "id": "vampire",
-          "count": 1
+          "count": 6
         }
       ]
     },
@@ -258,12 +258,12 @@
         {
           "type": "currency",
           "id": "gold",
-          "amount": 30
+          "amount": 30000
         },
         {
           "type": "currency",
           "id": "glory",
-          "amount": 1
+          "amount": 10000
         }
       ],
       "monsters": [

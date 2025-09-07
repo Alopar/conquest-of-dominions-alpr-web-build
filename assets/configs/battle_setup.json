@@ -6,20 +6,16 @@
   },
   "armies": {
     "attackers": {
-      "name": "Армия Света",
-      "description": "Благородные воины и их союзники",
       "units": [
-        {"id": "warrior", "count": 3},
-        {"id": "archer", "count": 2},
-        {"id": "knight", "count": 1},
-        {"id": "mage", "count": 1}
+        {"id": "warrior", "count": 10},
+        {"id": "archer", "count": 8},
+        {"id": "knight", "count": 5},
+        {"id": "mage", "count": 2}
       ]
     },
     "defenders": {
-      "name": "Орда Тьмы",
-      "description": "Жестокие монстры и их прислужники",
       "units": [
-        {"id": "orc", "count": 3},
+        {"id": "orc", "count": 20},
         {"id": "goblin", "count": 3},
         {"id": "troll", "count": 1},
         {"id": "wolf", "count": 2},

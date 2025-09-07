@@ -2,11 +2,11 @@
   "gameSettings": {
     "name": "Настройки игры",
     "description": "Основные настройки игрового процесса",
-    "maxUnitsPerArmy": 10,
+    "unitsPerRow": 10,
     "meleeHitThreshold": 5,
     "rangeHitThreshold": 11,
     "adventureSettings": {
-      "stageProgressionMode": 1
+      "stageProgressionMode": 2
     },
     "battleSettings": {
       "showDetailedLog": true,

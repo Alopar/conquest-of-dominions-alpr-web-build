@@ -7,21 +7,15 @@
     <div class="main-content">
         <div class="battlefield-container">
             <div class="battlefield-content">
-                <div class="battle-info">
-                    <h2>Поле боя</h2>
-                    <div id="battle-status">Бой готов к началу</div>
-                    <div class="turn-info">
-                        <div id="turn-counter">Ход: 1</div>
-                    </div>
-                </div>
-                <div class="army-label" id="defenders-label">Защитники</div>
+                <div id="battle-stats" class="battle-stats">⚔️ Атакующие 0/0 ·🛡 Защитники 0/0 · ⏳ Ход 1</div>
                 <div id="defenders-line" class="army-line"></div>
-                <div class="army-label" id="attackers-label">Атакующие</div>
+                <div class="army-separator"></div>
                 <div id="attackers-line" class="army-line"></div>
                 <div class="controls">
                     <button class="btn" onclick="step()" id="step-btn">⏳ Шаг</button>
                     <button class="btn" onclick="nextTurn()" id="next-turn-btn">🔄 Ход</button>
                     <button class="btn" onclick="toggleAutoPlay()" id="auto-play-btn" style="display:none;">🎦 Продолжить</button>
+                    <button class="btn" onclick="cycleAutoSpeed()" id="auto-speed-btn" style="display:none;">⏩ x1</button>
                     <div style="display:flex; gap:12px; justify-content:center; margin-top:10px;">
                         <button class="btn" id="battle-finish-btn" onclick="finishBattleToAdventure()" style="display:none;">🗺️ Завершить бой</button>
                         <button class="btn" id="battle-retry-btn" onclick="retryBattle()" style="display:none;">⚔️ Повторить бой</button>

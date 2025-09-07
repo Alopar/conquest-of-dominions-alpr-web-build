@@ -26,14 +26,39 @@ function createUnit(typeId, unitId) {
         return null;
     }
     const type = window.battleConfig.unitTypes[typeId];
+    const role = (function(){ const v = (type && type.type ? String(type.type).toLowerCase() : 'melee'); return (v==='range'||v==='support')?v:'melee'; })();
+    const baseHp = type.hp;
+    const bonusHp = (window.Modifiers && typeof window.Modifiers.getHpBonus === 'function') ? window.Modifiers.getHpBonus(unitId && String(unitId).startsWith('defender_') ? 'defenders' : 'attackers', role) : 0;
+    const effectiveHp = Math.max(1, Number(baseHp) + Number(bonusHp || 0));
+    // Применяем бонус к урону добавлением граней (для любых ролей)
+    let effDamage = String(type.damage || '1d1');
+    try {
+        const side = (unitId && String(unitId).startsWith('defender_')) ? 'defenders' : 'attackers';
+        const dmgBonus = (window.Modifiers && window.Modifiers.getDamageBonus) ? Number(window.Modifiers.getDamageBonus(side, role) || 0) : 0;
+        if (dmgBonus > 0) {
+            const match = effDamage.match(/(\d+)d(\d+)/);
+            if (match) {
+                const count = parseInt(match[1]);
+                const sides = parseInt(match[2]);
+                effDamage = `${count}d${Math.max(1, sides + dmgBonus)}`;
+            }
+        }
+    } catch {}
+    // Цели: увеличиваем на общий бонус (для всех ролей), минимум 1
+    let effTargets = Math.max(1, Number(type.targets || 1));
+    try {
+        const side = (unitId && String(unitId).startsWith('defender_')) ? 'defenders' : 'attackers';
+        const tBonus = (window.Modifiers && window.Modifiers.getTargetsBonus) ? Number(window.Modifiers.getTargetsBonus(side, role) || 0) : 0;
+        effTargets = Math.max(1, effTargets + tBonus);
+    } catch {}
     return {
         id: unitId,
         typeId: typeId,
         name: type.name,
-        hp: type.hp,
-        maxHp: type.hp,
-        damage: type.damage,
-        targets: Math.max(1, Number(type.targets || 1)),
+        hp: effectiveHp,
+        maxHp: effectiveHp,
+        damage: effDamage,
+        targets: effTargets,
         view: type.view,
         hasAttackedThisTurn: false,
         alive: true
@@ -108,42 +133,25 @@ function initializeArmies() {
     window.gameState.defenders = [];
 
     let unitIdCounter = 0;
-    const currentSettings = window.getCurrentSettings();
-    const maxUnits = currentSettings.maxUnitsPerArmy;
 
     // Обновляем названия армий
-    const attackersLabel = document.getElementById('attackers-label');
-    const defendersLabel = document.getElementById('defenders-label');
+    // Больше не показываем названия/описания армий на экране
 
-    if (attackersLabel && window.battleConfig.armies.attackers.name) {
-        const description = window.battleConfig.armies.attackers.description ? ` - ${window.battleConfig.armies.attackers.description}` : '';
-        attackersLabel.textContent = `${window.battleConfig.armies.attackers.name}${description}`;
-    }
-
-    if (defendersLabel && window.battleConfig.armies.defenders.name) {
-        const description = window.battleConfig.armies.defenders.description ? ` - ${window.battleConfig.armies.defenders.description}` : '';
-        defendersLabel.textContent = `${window.battleConfig.armies.defenders.name}${description}`;
-    }
-
-    // Создание атакующих из конфигурации
+    // Создание атакующих из конфигурации (без ограничения по количеству)
     for (const unitGroup of window.battleConfig.armies.attackers.units) {
-        for (let i = 0; i < unitGroup.count && window.gameState.attackers.length < maxUnits; i++) {
+        for (let i = 0; i < unitGroup.count; i++) {
             const unit = createUnit(unitGroup.id, `attacker_${unitIdCounter++}`);
-            if (unit) {
-                window.gameState.attackers.push(unit);
-            }
+            if (unit) window.gameState.attackers.push(unit);
         }
     }
     // Формирование построения атакующих
     window.gameState.attackers = arrangeUnitsIntoFormation(window.gameState.attackers);
 
-    // Создание защитников из конфигурации
+    // Создание защитников из конфигурации (без ограничения по количеству)
     for (const unitGroup of window.battleConfig.armies.defenders.units) {
-        for (let i = 0; i < unitGroup.count && window.gameState.defenders.length < maxUnits; i++) {
+        for (let i = 0; i < unitGroup.count; i++) {
             const unit = createUnit(unitGroup.id, `defender_${unitIdCounter++}`);
-            if (unit) {
-                window.gameState.defenders.push(unit);
-            }
+            if (unit) window.gameState.defenders.push(unit);
         }
     }
     // Формирование построения защитников
@@ -327,10 +335,7 @@ function nextTurn() {
     window.gameState.currentTurn++;
 
     // Обновляем счетчик ходов
-    const turnCounter = document.getElementById('turn-counter');
-    if (turnCounter) {
-        turnCounter.textContent = `Ход: ${window.gameState.currentTurn}`;
-    }
+    try { if (window.updateBattleStats) window.updateBattleStats(); } catch {}
 
     window.addToLog(`🔄 Начинается ход ${window.gameState.currentTurn}`);
     renderArmies();
@@ -356,10 +361,12 @@ function endBattle(winner) {
 
     // Обновляем состояние кнопок
     updateButtonStates();
+    try { if (window.updateBattleStats) window.updateBattleStats(); } catch {}
 }
 
 function resetBattle() {
     try { if (window._stopAutoPlay) window._stopAutoPlay(); } catch {}
+    try { window._autoPlaySpeed = 1; } catch {}
     initializeArmies();
     renderArmies();
 
@@ -371,6 +378,13 @@ function resetBattle() {
         if (autoEnabled && typeof window.toggleAutoPlay === 'function' && !window._autoPlayActive) {
             window.toggleAutoPlay();
         }
+    } catch {}
+
+    try {
+        const spBtn = document.getElementById('auto-speed-btn');
+        if (spBtn) spBtn.textContent = '⏩ x1';
+        if (typeof window._rescheduleAutoPlayTick === 'function') window._rescheduleAutoPlayTick();
+        if (typeof window.updateButtonStates === 'function') window.updateButtonStates();
     } catch {}
 
     // Обновляем счетчик ходов
