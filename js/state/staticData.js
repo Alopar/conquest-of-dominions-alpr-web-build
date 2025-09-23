@@ -2,16 +2,21 @@
 
 (function(){
     const CONFIG_DEFS = [
-        { id: 'monsters', title: 'Монстры', assets: ['assets/configs/monsters_config.json'], validatorName: 'validateMonstersConfig' },
-        { id: 'adventure', title: 'Приключение', assets: ['assets/configs/adventure_config.json'], validatorName: 'validateAdventureConfig' },
-        { id: 'encounters', title: 'Встречи', assets: ['assets/configs/encounters_config.json'], validatorName: 'validateEncountersConfig' },
-        { id: 'currencies', title: 'Валюты', assets: ['assets/configs/currencies_config.json'], validatorName: 'validateCurrenciesConfig' },
-        { id: 'mercenaries', title: 'Наёмники', assets: ['assets/configs/mercenaries_config.json'], validatorName: 'validateMercenariesConfig' },
-        { id: 'heroClasses', title: 'Классы героев', assets: ['assets/configs/hero_classes.json'], validatorName: 'validateHeroClassesConfig' },
-        { id: 'heroUpgrades', title: 'Улучшения героя', assets: ['assets/configs/hero_upgrades.json'], validatorName: 'validateHeroUpgradesConfig' },
-        { id: 'perks', title: 'Перки', assets: ['assets/configs/perks_config.json'], validatorName: 'validatePerksConfig' },
+        { id: 'monsters', title: 'Монстры', assets: ['assets/configs/units/monsters_config.json'], validatorName: 'validateMonstersConfig' },
+        { id: 'adventure', title: 'Приключение', assets: ['assets/configs/adventure/adventure_config.json'], validatorName: 'validateAdventureConfig' },
+        { id: 'pathSchemes', title: 'Схемы путей', assets: ['assets/configs/adventure/path_schemes.json'], validatorName: 'validatePathSchemesConfig' },
+        { id: 'encounters', title: 'Встречи', assets: ['assets/configs/adventure/encounters_config.json'], validatorName: 'validateEncountersConfig' },
+        { id: 'events', title: 'События', assets: ['assets/configs/adventure/events_config.json'] },
+        { id: 'rewards', title: 'Награды', assets: ['assets/configs/adventure/rewards_config.json'], validatorName: 'validateRewardsConfig' },
+        { id: 'currencies', title: 'Валюты', assets: ['assets/configs/game/currencies_config.json'], validatorName: 'validateCurrenciesConfig' },
+        { id: 'mercenaries', title: 'Наёмники', assets: ['assets/configs/units/mercenaries_config.json'], validatorName: 'validateMercenariesConfig' },
+        { id: 'heroClasses', title: 'Классы героев', assets: ['assets/configs/hero/hero_classes.json'], validatorName: 'validateHeroClassesConfig' },
+        { id: 'heroUpgrades', title: 'Улучшения героя', assets: ['assets/configs/hero/hero_upgrades.json'], validatorName: 'validateHeroUpgradesConfig' },
+        { id: 'perks', title: 'Перки', assets: ['assets/configs/hero/perks_config.json'], validatorName: 'validatePerksConfig' },
+        { id: 'developmentTracks', title: 'Треки развития', assets: ['assets/configs/hero/hero_upgrade_tracks.json'], validatorName: 'validateDevelopmentTracksConfig' },
+        { id: 'achievements', title: 'Достижения', assets: ['assets/configs/game/achievements_config.json'], validatorName: 'validateAchievementsConfig' },
         // Основной файл сетапа боя
-        { id: 'battleSetup', title: 'Сетап боя', assets: ['assets/configs/battle_setup.json'], validatorName: 'validateBattleConfig' }
+        { id: 'battleSetup', title: 'Сетап боя', assets: ['assets/configs/game/battle_setup.json'], validatorName: 'validateBattleConfig' }
     ];
 
     const LS_PREFS_KEY = 'configPrefs';

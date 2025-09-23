@@ -1,3 +1,7 @@
+.adv-map-root { scrollbar-width: thin; scrollbar-color: #cd853f #1a1a1a; }
+.adv-map-root::-webkit-scrollbar { width: 10px; height: 10px; background: #1a1a1a; border-radius: 8px; }
+.adv-map-root::-webkit-scrollbar-thumb { background: linear-gradient(145deg, #8b7355, #cd853f); border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.adv-map-root::-webkit-scrollbar-thumb:hover { background: linear-gradient(145deg, #cd853f, #a0845c); }
 /* Экран правил — использует те же контейнеры, что и бестиарий */
 #rules-screen {
     height: 100vh;
@@ -66,6 +70,20 @@
     max-height: none;
     overflow: auto;
 }
+
+/* Экран конфигурации — как бестиарий: тянется по высоте, затем прокрутка */
+#config-screen {
+    height: 100vh;
+    background-color: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+}
+
+#config-screen .settings-container { align-items: stretch; }
+#config-screen .settings-content { height: calc(100vh - 140px); display: flex; flex-direction: column; }
+
+/* Контейнер таблицы заполняет остаток места между заголовком и нижней кнопкой */
+#config-screen .bestiary-table-wrapper { flex: 1; min-height: 0; overflow: auto; }
 /* Стили экранов - стартовый экран, экран боя, компоновка */
 
 /* Стартовый экран */
@@ -209,7 +227,7 @@
     flex: 1;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
     padding: 20px;
 }
 
@@ -221,8 +239,12 @@
     padding: 30px;
     width: 100%;
     max-width: 1200px;
-    height: fit-content;
+    height: calc(100vh - 160px);
+    display: flex;
+    flex-direction: column;
 }
+/* Контейнер саб-вью приключения тянем на остаток высоты */
+#adventure-subcontainer { flex: 1; display: flex; }
 
 .settings-content h2 {
     color: #cd853f;
@@ -234,21 +256,9 @@
     font-weight: 600;
 }
 
-.settings-layout {
-    display: flex;
-    gap: 30px;
-    margin-bottom: 25px;
-}
+.settings-layout { display:flex; gap:30px; margin-bottom:25px; align-items: stretch; flex: 1; height: 100%; }
 
-.settings-section {
-    flex: 1;
-    background: rgba(26, 26, 26, 0.6);
-    border: 2px solid #654321;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-    min-height: 200px;
-}
+.settings-section { flex:1; background: rgba(26,26,26,0.6); border:2px solid #654321; border-radius:12px; padding:20px; box-shadow:0 6px 16px rgba(0,0,0,0.4); min-height:200px; display:flex; flex-direction:column; height: 100%; }
 
 .settings-section h3 {
     color: #cd853f;
@@ -367,3 +377,42 @@
     gap: 20px;
     margin-top: 20px;
 }
+
+/* Adventure graph */
+.adv-map-root { position: relative; flex: 1; min-height: 300px; overflow: auto; }
+.adv-map-svg { position: absolute; left: 0; top: 0; display: block; }
+.adv-map-svg line { pointer-events: none; }
+
+/* Состояния рёбер и узлов графа */
+.adv-edge { stroke-width: 2; opacity: .8; }
+.adv-edge.locked { stroke: #444; opacity: .45; }
+.adv-edge.available { stroke: #cd853f; }
+.adv-edge.visited { stroke: #c0c0c0; }
+.adv-edge.hover { stroke: #d4af37; stroke-width: 3; opacity: 1; }
+.adv-edge.faded { stroke: #444; opacity: .18; }
+
+.adv-node rect { fill: #111; stroke:#654321; stroke-width:2; }
+.adv-node.locked rect { stroke: #555; opacity: .85; }
+.adv-node.available rect { stroke: #cd853f; }
+.adv-node.visited rect { stroke: #c0c0c0; }
+.adv-node.current rect { stroke: #cd853f; stroke-width: 3; }
+.adv-node.available:hover rect { stroke: #d4af37; }
+.adv-node.faded { opacity: .35; }
+.adv-nodes-layer { position: absolute; inset: 0; pointer-events: none; }
+.adv-nodes-layer .adv-node { pointer-events: auto; }
+/* Сброс старых правил для SVG-узлов */
+svg .adv-node { position: static !important; display: inline !important; }
+.adv-player-dot { position:absolute; width:24px; height:24px; transform:translate(-50%, -50%); display:flex; align-items:center; justify-content:center; pointer-events:none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); }
+
+#adventure-input-blocker { position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition: opacity .15s ease; }
+
+/* Шкалы развития героя */
+.dev-track-row { display:flex; align-items:center; gap:12px; padding:10px 12px; border:2px solid #654321; border-radius:10px; background: rgba(26,26,26,0.6); margin-bottom:10px; }
+.dev-track-left { display:flex; align-items:center; gap:8px; min-width:160px; }
+.dev-track-icon { font-size: 1.2em; }
+.dev-track-name { color:#cd853f; font-weight:600; }
+.dev-track-center { flex:1; display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.dev-track-item { width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; color:#a0845c; border:2px solid #555; border-radius:4px; position: relative; }
+.dev-track-item.filled { background: linear-gradient(145deg, #8b7355, #a0845c); border-color:#654321; color:#1a1a1a; }
+.dev-track-item.threshold::after { content:'🥇'; font-size: 14px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 1; }
+.dev-track-item.threshold.filled { background: linear-gradient(145deg, #d4af37, #b8860b); border-color:#d4af37; color:#1a1a1a; }

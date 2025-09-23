@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "name": "Базовый бестиарий",
+    "description": "Стандартный набор типов монстров для примеров и игры по умолчанию"
+  },
+  "unitTypes": {
+    "warrior": { "id": "warrior", "name": "Воин", "hp": 12, "damage": "1d6", "targets": 1, "view": "⚔️", "type": "melee" },
+    "rogue": { "id": "rogue", "name": "Вор", "hp": 8, "damage": "1d3", "targets": 1, "view": "🔪", "type": "melee" },
+    "archer": { "id": "archer", "name": "Лучник", "hp": 8, "damage": "1d6", "targets": 1, "view": "🏹", "type": "range" },
+    "knight": { "id": "knight", "name": "Рыцарь", "hp": 30, "damage": "1d8", "targets": 1, "view": "🛡️", "type": "melee" },
+    "elf": { "id": "elf", "name": "Эльф", "hp": 10, "damage": "1d6", "targets": 2, "view": "🧝‍♂️", "type": "range" },
+    "mage": { "id": "mage", "name": "Маг", "hp": 6, "damage": "1d3", "targets": 3, "view": "🔮", "type": "support" },
+    "dog": { "id": "dog", "name": "Собака", "hp": 4, "damage": "1d3", "targets": 1, "view": "🐶", "type": "melee" },
+    "fox": { "id": "fox", "name": "Лиса", "hp": 4, "damage": "1d3", "targets": 1, "view": "🦊", "type": "melee" },
+    "orc": { "id": "orc", "name": "Орк", "hp": 10, "damage": "1d6", "targets": 1, "view": "👹", "type": "melee" },
+    "goblin": { "id": "goblin", "name": "Гоблин", "hp": 4, "damage": "1d3", "targets": 1, "view": "👺", "type": "range" },
+    "troll": { "id": "troll", "name": "Тролль", "hp": 25, "damage": "2d6", "targets": 1, "view": "👿", "type": "melee" },
+    "wizard": { "id": "wizard", "name": "Волшебник", "hp": 8, "damage": "1d6", "targets": 5, "view": "🧙‍♂️", "type": "support" },
+    "skeleton": { "id": "skeleton", "name": "Скелет", "hp": 6, "damage": "1d4", "targets": 1, "view": "💀", "type": "melee" },
+    "vampire": { "id": "vampire", "name": "Вампир", "hp": 16, "damage": "1d8", "targets": 3, "view": "🧛", "type": "support" },
+    "wolf": { "id": "wolf", "name": "Волк", "hp": 7, "damage": "1d6", "targets": 1, "view": "🐺", "type": "melee" },
+    "bear": { "id": "bear", "name": "Медведь", "hp": 18, "damage": "2d4", "targets": 2, "view": "🐻", "type": "melee" },
+    "giant_snake": { "id": "giant_snake", "name": "Гигантская змея", "hp": 10, "damage": "1d8", "targets": 1, "view": "🐍", "type": "melee" },
+    "boar": { "id": "boar", "name": "Кабан", "hp": 9, "damage": "1d6", "targets": 1, "view": "🐗", "type": "melee" },
+    "spider": { "id": "spider", "name": "Ядовитый паук", "hp": 5, "damage": "1d6", "targets": 1, "view": "🕷️", "type": "melee" },
+    "rat": { "id": "rat", "name": "Крыса", "hp": 2, "damage": "1d2", "targets": 1, "view": "🐭", "type": "melee" },
+    "chicken": { "id": "chicken", "name": "Курица", "hp": 2, "damage": "1d1", "targets": 1, "view": "🐔", "type": "melee" },
+    "frog": { "id": "frog", "name": "Лягушка", "hp": 3, "damage": "1d2", "targets": 1, "view": "🐸", "type": "melee" },
+    "bat": { "id": "bat", "name": "Летучая мышь", "hp": 3, "damage": "1d2", "targets": 1, "view": "🦇", "type": "range" },
+    "rabbit": { "id": "rabbit", "name": "Кролик", "hp": 2, "damage": "1d1", "targets": 1, "view": "🐰", "type": "melee" },
+    "dragon": { "id": "dragon", "name": "Дракон", "hp": 40, "damage": "2d8", "targets": 5, "view": "🐉", "type": "range" },
+    "fireElemental": { "id": "fireElemental", "name": "Огненный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🔥", "type": "melee" },
+    "waterElemental": { "id": "waterElemental", "name": "Водный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "💧", "type": "melee" },
+    "airElemental": { "id": "airElemental", "name": "Воздушный элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🌪️", "type": "melee" },
+    "earthElemental": { "id": "earthElemental", "name": "Земляной элементаль", "hp": 10, "damage": "1d6", "targets": 1, "view": "🌍", "type": "melee" },
+    "golem": { "id": "golem", "name": "Голем", "hp": 10, "damage": "1d6", "targets": 1, "view": "🗿", "type": "melee" }
+  }
+}

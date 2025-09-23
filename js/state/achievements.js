@@ -1,5 +1,4 @@
 (function(){
-    const CONFIG_URL = 'assets/configs/achievements_config.json';
     const LS_KEY = 'achievementsProgress';
 
     let achievementsConfig = [];
@@ -51,7 +50,15 @@
 
     async function init(){
         try {
-            const json = await fetchJson(CONFIG_URL);
+            let json = null;
+            try {
+                if (window.StaticData && typeof window.StaticData.getConfig === 'function') {
+                    json = window.StaticData.getConfig('achievements');
+                }
+            } catch {}
+            if (!json) {
+                json = await fetchJson('assets/configs/game/achievements_config.json');
+            }
             achievementsConfig = validateConfig(json);
         } catch { achievementsConfig = []; }
         readProgress();

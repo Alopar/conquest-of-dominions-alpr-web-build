@@ -1,4 +1,4 @@
-.encounter-board { display:flex; justify-content:center; align-items:flex-start; }
+/* устаревший стиль encounter-board больше не используется для карты приключения */
 .encounter-column { display:flex; flex-direction:column; gap:12px; align-items:center; position:relative; padding:0 12px; }
 .encounter-column::after { content:""; position:absolute; right:0; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, transparent, #444, transparent); opacity:0.6; }
 .encounter-column:last-child::after { display:none; }
@@ -10,8 +10,10 @@
 
 .rewards-list { display:flex; justify-content:center; }
 .rewards-items { display:flex; gap:12px; align-items:center; justify-content:center; }
-.reward-item { width:100px; min-height:90px; border:1px solid #444; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); text-align:center; }
+.reward-item { width:100px; min-height:90px; border:1px solid #444; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); text-align:center; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
 .reward-item.clickable { cursor:pointer; }
+.reward-item:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.5); border-color:#8b7355; }
+.reward-item.selected { border:2px solid #cd853f; box-shadow: 0 6px 18px rgba(205,133,63,0.45), inset 0 1px 3px rgba(255,255,255,0.12); background: rgba(77,52,30,0.6); }
 .reward-icon { font-size:1.6em; }
 .reward-name { font-size:0.9em; max-width:95px; text-align:center; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; }
 /* Ачивки */
@@ -368,7 +370,7 @@
 .hero-dev-title { font-weight:600; color:#cd853f; white-space:nowrap; }
 .hero-dev-level { opacity:.85; white-space:nowrap; font-weight:600; }
 .hero-dev-list { display:flex; flex-direction:column; gap:8px; }
-.hero-dev-list { max-height: 480px; overflow-y: auto; padding-right: 8px; margin-left: 8px; }
+.hero-dev-list { overflow-y: auto; padding-right: 8px; margin-left: 8px; }
 /* Скроллбар как у бестиария */
 .hero-dev-list { scrollbar-width: thin; scrollbar-color: #cd853f #1a1a1a; }
 .hero-dev-list::-webkit-scrollbar { width: 10px; background: #1a1a1a; border-radius: 8px; }

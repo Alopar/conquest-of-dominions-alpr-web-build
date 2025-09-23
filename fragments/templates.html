@@ -6,6 +6,32 @@
     </div>
 </template>
 
+<!-- Герой: шкалы развития -->
+<template id="tpl-dev-tracks-screen">
+    <div class="hero-dev-root">
+        <div id="dev-tracks-header" class="hero-dev-header"></div>
+        <div id="dev-tracks-list" class="hero-dev-list"></div>
+    </div>
+    
+</template>
+
+<template id="tpl-dev-track-row">
+    <div class="dev-track-row">
+        <div class="dev-track-left">
+            <div class="dev-track-icon" data-role="icon">📊</div>
+            <div class="dev-track-name" data-role="name">Трек</div>
+        </div>
+        <div class="dev-track-center" data-role="progress"></div>
+        <div class="dev-track-right">
+            <button class="btn" data-role="invest1">+1</button>
+        </div>
+    </div>
+</template>
+
+<template id="tpl-dev-track-item">
+    <div class="dev-track-item" data-role="cell"></div>
+</template>
+
 <template id="tpl-hero-class-item">
     <div class="hero-class-item" data-id="">
         <div class="hero-class-icon" data-role="icon">❓</div>
@@ -120,6 +146,24 @@
         <div class="reward-name">Союзник</div>
     </div>
     <!-- Карточка юнита-союзника -->
+</template>
+
+<template id="tpl-reward-perk">
+    <div class="reward-item" data-id="">
+        <div class="reward-icon">🥈</div>
+        <div class="reward-name">Перк</div>
+    </div>
+</template>
+
+<template id="tpl-modal-reward-pick">
+    <div class="modal-window">
+        <div class="modal-title" data-slot="title"></div>
+        <div class="modal-body" data-role="body"></div>
+        <div class="modal-actions" data-role="actions" style="display:flex; justify-content:center; gap:12px;">
+            <button class="btn" data-action="yes" disabled>Выбрать</button>
+        </div>
+    </div>
+    
 </template>
 
 <template id="tpl-achievement-item">

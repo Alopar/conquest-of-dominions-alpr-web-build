@@ -33,6 +33,7 @@
         state.army = { current: 0, max: 0 };
         save();
         try { if (window.Development && typeof window.Development.initForClass === 'function') window.Development.initForClass(id); } catch {}
+        try { if (window.Tracks && typeof window.Tracks.initForClass === 'function') window.Tracks.initForClass(id); } catch {}
         try {
             const def = getClassDef();
             try {

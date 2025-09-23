@@ -1,0 +1,12 @@
+{
+  "adventure": {
+    "name": "Путь героя",
+    "description": "От крысиных бегов до драконьих сокровищ",
+    "startingCurrencies": [ { "id": "gold", "amount": 0 }, { "id": "glory", "amount": 0 } ]
+  },
+  "sectors": [
+    { "number": 1, "name": "I" },
+    { "number": 2, "name": "II" },
+    { "number": 3, "name": "III" }
+  ]
+}

@@ -42,7 +42,7 @@
 
     async function init(){
         try {
-            const json = await fetchJson('assets/configs/game_settings.json');
+            const json = await fetchJson('assets/configs/game/game_settings.json');
             baseSettings = json && json.gameSettings ? json.gameSettings : (json || {});
         } catch { baseSettings = {}; }
         readUser();
@@ -59,7 +59,7 @@
 
     async function refresh(){
         try {
-            const json = await fetchJson('assets/configs/game_settings.json');
+            const json = await fetchJson('assets/configs/game/game_settings.json');
             baseSettings = json && json.gameSettings ? json.gameSettings : (json || {});
         } catch {}
         readUser();
