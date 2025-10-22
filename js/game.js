@@ -122,6 +122,72 @@ function arrangeUnitsIntoFormation(units) {
     return result;
 }
 
+function assignLinesToArmy(units, perRow) {
+    if (!Array.isArray(units) || units.length === 0) return units;
+    
+    const remaining = units.slice();
+    const rows = [];
+    
+    function strength(u) {
+        const hp = Number(u.maxHp || u.hp || 0);
+        const dmg = (typeof u.damage === 'number') ? u.damage : 0;
+        return { hp, dmg };
+    }
+    
+    function sortByStrengthDesc(a, b) {
+        const sa = strength(a);
+        const sb = strength(b);
+        if (sb.hp !== sa.hp) return sb.hp - sa.hp;
+        return sb.dmg - sa.dmg;
+    }
+    
+    const hasMeleeInArmy = remaining.some(u => (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'melee');
+    
+    function takeNextRow(isFirstLine) {
+        const melee = remaining.filter(u => (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'melee').sort(sortByStrengthDesc);
+        const range = remaining.filter(u => (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'range').sort(sortByStrengthDesc);
+        const support = remaining.filter(u => (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'support').sort(sortByStrengthDesc);
+        const row = [];
+        
+        function pull(from) {
+            while (from.length > 0 && row.length < perRow) row.push(from.shift());
+        }
+        
+        if (isFirstLine && hasMeleeInArmy) {
+            pull(melee);
+        } else {
+            pull(melee);
+            if (row.length < perRow) pull(range);
+            if (row.length < perRow) pull(support);
+        }
+        
+        const used = new Set(row.map(u => u.id));
+        for (let i = remaining.length - 1; i >= 0; i--) {
+            if (used.has(remaining[i].id)) remaining.splice(i, 1);
+        }
+        return row;
+    }
+    
+    let isFirstLine = true;
+    while (remaining.length > 0) {
+        rows.push(takeNextRow(isFirstLine));
+        isFirstLine = false;
+    }
+    
+    for (let lineNum = 0; lineNum < rows.length; lineNum++) {
+        for (const unit of rows[lineNum]) {
+            unit.line = lineNum + 1;
+        }
+    }
+    
+    return units;
+}
+
+function rebuildArmyLines(armyUnits, perRow) {
+    const alive = armyUnits.filter(u => u.alive);
+    return assignLinesToArmy(alive, perRow);
+}
+
 // Инициализация армий из конфигурации
 function initializeArmies() {
     if (!window.battleConfig) {
@@ -146,6 +212,9 @@ function initializeArmies() {
     }
     // Формирование построения атакующих
     window.gameState.attackers = arrangeUnitsIntoFormation(window.gameState.attackers);
+    
+    const perRow = Math.max(1, Number((window.getCurrentSettings && window.getCurrentSettings() && window.getCurrentSettings().unitsPerRow) || 10));
+    assignLinesToArmy(window.gameState.attackers, perRow);
 
     // Создание защитников из конфигурации (без ограничения по количеству)
     for (const unitGroup of window.battleConfig.armies.defenders.units) {
@@ -156,10 +225,12 @@ function initializeArmies() {
     }
     // Формирование построения защитников
     window.gameState.defenders = arrangeUnitsIntoFormation(window.gameState.defenders);
+    assignLinesToArmy(window.gameState.defenders, perRow);
 
     window.gameState.battleEnded = false;
     window.gameState.battleLog = [];
     window.gameState.currentTurn = 1;
+    window.gameState._rebuildInProgress = false;
 
     // Устанавливаем активную сторону согласно конфигу боя (по умолчанию защитники)
     window.gameState.activeSide = getFirstSide(window.battleConfig && window.battleConfig.battleConfig);
@@ -220,14 +291,33 @@ function step() {
     const currentSettings = window.getCurrentSettings();
     const alternate = !!(currentSettings && currentSettings.battleSettings && currentSettings.battleSettings.attackAlternate);
 
-    // Подсчитываем доступных к атаке
+    // Помечаем юнитов, которые не могут ходить (melee не из первой линии)
+    window.gameState.attackers.forEach(u => {
+        if (u.alive && !u.hasAttackedThisTurn) {
+            const role = window.getUnitRole ? window.getUnitRole(u) : 'melee';
+            if (role === 'melee' && u.line !== 1) {
+                u.hasAttackedThisTurn = true;
+            }
+        }
+    });
+    window.gameState.defenders.forEach(u => {
+        if (u.alive && !u.hasAttackedThisTurn) {
+            const role = window.getUnitRole ? window.getUnitRole(u) : 'melee';
+            if (role === 'melee' && u.line !== 1) {
+                u.hasAttackedThisTurn = true;
+            }
+        }
+    });
+
+    // Подсчитываем доступных к атаке (теперь это просто живые, которые еще не ходили)
     const attackersAvailable = window.gameState.attackers.filter(u => u.alive && !u.hasAttackedThisTurn);
     const defendersAvailable = window.gameState.defenders.filter(u => u.alive && !u.hasAttackedThisTurn);
 
-    // Если нет доступных действий – ожидаем перехода хода
+    // Если нет доступных действий – автоматически переходим к следующему ходу
     if (attackersAvailable.length === 0 && defendersAvailable.length === 0) {
-        window.addToLog('⏸ Нет доступных действий. Нажмите "Следующий ход".');
-        updateButtonStates();
+        if (typeof window.nextTurn === 'function') {
+            window.nextTurn();
+        }
         return;
     }
 
@@ -239,8 +329,9 @@ function step() {
         window.gameState.activeSide = side;
         available = side === 'attackers' ? attackersAvailable : defendersAvailable;
         if (available.length === 0) {
-            // На случай гонки состояний
-            updateButtonStates();
+            if (typeof window.nextTurn === 'function') {
+                window.nextTurn();
+            }
             return;
         }
     }
@@ -324,6 +415,49 @@ function performAttack(attacker, target, army) {
 
 function nextTurn() {
     if (window.gameState.battleEnded) return;
+    
+    if (window.gameState._rebuildInProgress) return;
+    window.gameState._rebuildInProgress = true;
+
+    const currentSettings = window.getCurrentSettings();
+    const perRow = Math.max(1, Number((currentSettings && currentSettings.unitsPerRow) || 10));
+
+    const deadAttackers = window.gameState.attackers.filter(u => !u.alive);
+    const deadDefenders = window.gameState.defenders.filter(u => !u.alive);
+    
+    if (deadAttackers.length > 0 || deadDefenders.length > 0) {
+        deadAttackers.forEach(u => {
+            if (window.queueAnimation && window.anim) {
+                window.queueAnimation(window.anim.fadeout(u.id, 'attackers'));
+            }
+        });
+        deadDefenders.forEach(u => {
+            if (window.queueAnimation && window.anim) {
+                window.queueAnimation(window.anim.fadeout(u.id, 'defenders'));
+            }
+        });
+        
+        if (window.applyPendingAnimations) window.applyPendingAnimations();
+        
+        const fadeoutDelay = window.scaleTime ? window.scaleTime(350) : 350;
+        setTimeout(() => {
+            continueNextTurn(perRow);
+        }, fadeoutDelay);
+    } else {
+        continueNextTurn(perRow);
+    }
+}
+
+function continueNextTurn(perRow) {
+    if (window.gameState.battleEnded) {
+        window.gameState._rebuildInProgress = false;
+        return;
+    }
+
+    window.gameState.attackers = rebuildArmyLines(window.gameState.attackers, perRow);
+    window.gameState.defenders = rebuildArmyLines(window.gameState.defenders, perRow);
+
+    window.addToLog('👥 Армии перестраиваются...');
 
     // Сбрасываем флаги атаки для всех юнитов
     window.gameState.attackers.forEach(unit => unit.hasAttackedThisTurn = false);
@@ -338,6 +472,9 @@ function nextTurn() {
     try { if (window.updateBattleStats) window.updateBattleStats(); } catch {}
 
     window.addToLog(`🔄 Начинается ход ${window.gameState.currentTurn}`);
+    
+    window.gameState._rebuildInProgress = false;
+    
     renderArmies();
 }
 
@@ -408,3 +545,5 @@ window.step = step;
 window.nextTurn = nextTurn;
 window.resetBattle = resetBattle;
 window.initializeArmies = initializeArmies;
+window.assignLinesToArmy = assignLinesToArmy;
+window.rebuildArmyLines = rebuildArmyLines;

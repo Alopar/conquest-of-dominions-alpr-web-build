@@ -135,3 +135,6 @@
 @keyframes dodgeDown { 0% { transform: translateY(0); } 50% { transform: translateY(10px); } 100% { transform: translateY(0); } }
 .anim-dodge-up { animation: dodgeUp 0.34s ease; }
 .anim-dodge-down { animation: dodgeDown 0.34s ease; }
+
+@keyframes fadeOutShrink { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0); } }
+.anim-fadeout { animation: fadeOutShrink 0.3s ease forwards; }

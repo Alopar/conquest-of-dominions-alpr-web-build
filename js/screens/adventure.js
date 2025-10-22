@@ -143,6 +143,9 @@ async function downloadSampleAdventureConfig() { try {} catch {} }
 function beginAdventureFromSetup() {
     try { localStorage.removeItem('adventureState'); } catch {}
     if (!adventureState.selectedClassId) return;
+    if (window.Router && window.Router.setSubscreen) window.Router.setSubscreen('map');
+    else window.AppState = Object.assign(window.AppState || {}, { subscreen: 'map' });
+    if (console && console.log) console.log('[Adventure] Starting new adventure, reset subscreen to map');
     if (adventureState.config) {
         initAdventureState(adventureState.config);
         try {
@@ -175,6 +178,7 @@ function initAdventureState(cfg) {
     adventureState.lastResult = '';
     persistAdventure();
     window.adventureState = adventureState;
+    try { if (window.AdventureTime && typeof window.AdventureTime.init === 'function') window.AdventureTime.init(); } catch {}
     try { if (window.Perks && typeof window.Perks.clear === 'function') window.Perks.clear(); } catch {}
     try {
         const def = (window.Hero && typeof window.Hero.getClassDef === 'function') ? window.Hero.getClassDef() : null;
@@ -183,6 +187,7 @@ function initAdventureState(cfg) {
     } catch {}
     try { if (window.Tracks && typeof window.Tracks.initForClass === 'function') window.Tracks.initForClass((window.Hero && window.Hero.getClassId && window.Hero.getClassId()) || null); } catch {}
     try { if (window.Tracks && typeof window.Tracks.resetProgress === 'function') window.Tracks.resetProgress(); } catch {}
+    try { if (window.Raids && typeof window.Raids.init === 'function') window.Raids.init(); } catch {}
 }
 
 // Секторные хелперы и генерация
@@ -227,6 +232,13 @@ function generateSectorMap(index){
     adventureState.map = map;
     adventureState.currentNodeId = map && map.startId;
     adventureState.resolvedNodeIds = map && map.startId ? [map.startId] : [];
+    try {
+        if (window.Raids && typeof window.Raids.clearNonStarted === 'function') window.Raids.clearNonStarted();
+        const sectors = (adventureState.config && Array.isArray(adventureState.config.sectors)) ? adventureState.config.sectors : [];
+        const sector = sectors[index];
+        const availableRaids = (sector && Array.isArray(sector.availableRaids)) ? sector.availableRaids : [];
+        if (window.Raids && typeof window.Raids.addAvailableRaids === 'function') window.Raids.addAvailableRaids(availableRaids);
+    } catch {}
     persistAdventure();
 }
 
@@ -305,7 +317,12 @@ function renderAdventure() {
                 const icon = '⚔️';
                 const max = (window.Hero && window.Hero.getArmyMax) ? window.Hero.getArmyMax() : 0;
                 const current = (window.Hero && window.Hero.getArmyCurrent) ? window.Hero.getArmyCurrent() : 0;
-                armyEl.textContent = `Армия: ${current}/${max} ${icon}`;
+                const assigned = (window.Raids && typeof window.Raids.getTotalAssignedUnits === 'function') ? window.Raids.getTotalAssignedUnits() : 0;
+                if (assigned > 0) {
+                    armyEl.textContent = `Армия: ${current}/${max} ${icon} (${assigned} в рейдах)`;
+                } else {
+                    armyEl.textContent = `Армия: ${current}/${max} ${icon}`;
+                }
             }
         } catch {}
         const defs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
@@ -327,8 +344,9 @@ function renderAdventure() {
     }
     const nameEl = document.getElementById('adventure-name');
     if (nameEl) {
-        const n = adventureState.config && adventureState.config.adventure ? adventureState.config.adventure.name : 'Приключение';
-        nameEl.innerHTML = '🧭 ' + n;
+        const day = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+        nameEl.style.fontSize = '1.05em';
+        nameEl.textContent = `День: ${day} ⏳`;
     }
     // Блок сводки скрыт/удален
     ensureAdventureTabs();
@@ -340,7 +358,23 @@ function ensureAdventureTabs() {
     const screen = document.getElementById('adventure-screen');
     if (!screen) return;
     let tabs = screen.querySelector('#adventure-tabs');
-    if (tabs) { updateTabsActive(tabs); return; }
+    let isDebugMode = false;
+    try { 
+        const settings = window.GameSettings && window.GameSettings.get ? window.GameSettings.get() : {};
+        isDebugMode = !!(settings.uiSettings && settings.uiSettings.debugMode);
+        if (console && console.log) console.log('[Adventure] Debug mode:', isDebugMode, 'Settings:', settings.uiSettings);
+    } catch (e) {
+        if (console && console.error) console.error('[Adventure] Error reading debug mode:', e);
+    }
+    if (tabs) {
+        const hasModsBtn = !!tabs.querySelector('button[data-subscreen="mods"]');
+        if (hasModsBtn === isDebugMode) {
+            updateTabsActive(tabs);
+            return;
+        }
+        tabs.remove();
+        tabs = null;
+    }
     const content = screen.querySelector('.settings-content');
     if (!content) return;
     tabs = document.createElement('div');
@@ -370,6 +404,7 @@ function ensureAdventureTabs() {
         return b;
     };
     tabs.appendChild(makeBtn('map', '🗺️ Карта'));
+    tabs.appendChild(makeBtn('raids', '⚔️ Рейды'));
     tabs.appendChild(makeBtn('tavern', '🍻 Таверна'));
     // tabs.appendChild(makeBtn('army', '🛡️ Армия'));
     let devMode = 'shop';
@@ -377,7 +412,9 @@ function ensureAdventureTabs() {
     const heroLabel = devMode === 'tracks' ? '📊 Улучшения' : '💪 Улучшения';
     tabs.appendChild(makeBtn('hero', heroLabel));
     tabs.appendChild(makeBtn('perks', '🥇 Перки'));
-    tabs.appendChild(makeBtn('mods', '🔧 Модификаторы'));
+    if (isDebugMode) {
+        tabs.appendChild(makeBtn('mods', '🔧 MODS'));
+    }
     content.insertBefore(tabs, content.firstElementChild || null);
     updateTabsActive(tabs);
 }
@@ -395,7 +432,7 @@ function updateTabsActive(tabs) {
 async function loadAdventureSubscreen(key) {
     const cont = document.getElementById('adventure-subcontainer');
     if (!cont) return;
-    const map = { map: 'fragments/adventure-sub-map.html', tavern: 'fragments/adventure-sub-tavern.html', army: 'fragments/adventure-sub-army.html', hero: 'fragments/adventure-sub-hero.html', perks: 'fragments/adventure-sub-perks.html', mods: 'fragments/adventure-sub-mods.html' };
+    const map = { map: 'fragments/adventure-sub-map.html', tavern: 'fragments/adventure-sub-tavern.html', raids: 'fragments/adventure-sub-raids.html', army: 'fragments/adventure-sub-army.html', hero: 'fragments/adventure-sub-hero.html', perks: 'fragments/adventure-sub-perks.html', mods: 'fragments/adventure-sub-mods.html' };
     const url = map[key] || map.map;
     try {
         const res = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
@@ -417,6 +454,8 @@ async function renderAdventureSubscreen() {
         renderTavern();
     } else if (subscreen === 'hero') {
         renderHeroDevelopment();
+    } else if (subscreen === 'raids') {
+        renderRaids();
     } else if (subscreen === 'perks') {
         try {
             const host = document.getElementById('perks-grid');
@@ -534,15 +573,20 @@ function renderTavern() {
         }
     }
     if (hostArmy) {
+        const assigned = (window.Raids && typeof window.Raids.getAssignedUnitsByType === 'function') ? window.Raids.getAssignedUnitsByType() : {};
         const ids = Object.keys(adventureState.pool).filter(function(k){ return adventureState.pool[k] > 0; });
         for (const id of ids) {
+            const total = adventureState.pool[id];
+            const inRaids = Number(assigned[id] || 0);
+            const available = Math.max(0, total - inRaids);
+            if (available <= 0) continue;
             const tplItem = document.getElementById('tpl-reward-unit');
             const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
             if (!tplItem) el.className = 'reward-item';
             const m = monsters[id] || { name: id, view: '👤' };
             const iconEl = el.querySelector('.reward-icon') || el; const nameEl = el.querySelector('.reward-name');
             if (iconEl) iconEl.textContent = m.view || '👤';
-            if (nameEl) nameEl.textContent = `${m.name || id} x${adventureState.pool[id]}`;
+            if (nameEl) nameEl.textContent = `${m.name || id} x${available}`;
             el.classList.add('clickable');
             el.addEventListener('click', function(){ showUnitInfoModal(id); });
             hostArmy.appendChild(el);
@@ -1018,6 +1062,7 @@ async function handleEventNode(node){
             h.closed.then(async function(ok){
                 const opt = ok ? (e.options?.[0]) : (e.options?.[1]);
                 await applyEffects(opt && opt.effects);
+                try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
                 renderAdventure();
             });
         } else { renderAdventure(); }
@@ -1031,6 +1076,7 @@ async function handleRewardNode(){
         const t = tables[0] || null;
         if (t) await applyEffects(t.rewards);
     } catch {}
+    try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
     renderAdventure();
 }
 
@@ -1302,6 +1348,7 @@ function showUnitInfoModal(unitTypeId) {
 
 function pickSquadForBattle() {
     const monsters = window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : {};
+    const assigned = (window.Raids && typeof window.Raids.getAssignedUnitsByType === 'function') ? window.Raids.getAssignedUnitsByType() : {};
     const ids = Object.keys(adventureState.pool).filter(id => adventureState.pool[id] > 0);
     ids.sort((a,b) => {
         const pa = typeof monsters[a]?.price === 'number' ? monsters[a].price : 10;
@@ -1310,8 +1357,10 @@ function pickSquadForBattle() {
     });
     const result = [];
     for (const id of ids) {
-        const take = adventureState.pool[id];
-        if (take > 0) { result.push({ id, count: take }); }
+        const total = adventureState.pool[id];
+        const inRaids = Number(assigned[id] || 0);
+        const available = Math.max(0, total - inRaids);
+        if (available > 0) { result.push({ id, count: available }); }
     }
     return result;
 }
@@ -1410,27 +1459,86 @@ function ensureEndBattleHook() {
 ensureEndBattleHook();
 
 function finishAdventureBattle(winner) {
-    // Победителей возвращаем в пул
+    const isRaid = !!window._currentRaidData;
+    const raid = window._currentRaidData;
     const attackersAlive = (window.gameState.attackers || []).filter(u => u.alive);
-    for (const u of attackersAlive) { adventureState.pool[u.typeId] = (adventureState.pool[u.typeId] || 0) + 1; }
-    try {
-        const sent = Number(window._lastAttackersSentCount || 0);
-        const returned = attackersAlive.length || 0;
-        const lost = Math.max(0, sent - returned);
-        if (lost > 0 && window.Hero && typeof window.Hero.setArmyCurrent === 'function') window.Hero.setArmyCurrent(Math.max(0, ((window.Hero.getArmyCurrent && window.Hero.getArmyCurrent()) || 0) - lost));
-    } catch {}
-    const last = window._lastEncounterData;
-    if (winner === 'attackers' && last) {
-        if (!isEncounterDone(last.id)) adventureState.completedEncounterIds.push(last.id);
+    if (isRaid) {
         try {
-            const map = adventureState.map;
-            const bossIds = Object.keys(map.nodes || {}).filter(function(id){ const n = map.nodes[id]; return n && n.type === 'boss'; });
-            const allVisited = bossIds.every(function(id){ return Array.isArray(adventureState.resolvedNodeIds) && adventureState.resolvedNodeIds.includes(id); });
-            if (allVisited) adventureState.lastResult = 'Победа!';
+            const sent = Number(window._lastAttackersSentCount || 0);
+            const returned = attackersAlive.length || 0;
+            const lost = Math.max(0, sent - returned);
+            if (lost > 0) {
+                if (window.Hero && typeof window.Hero.setArmyCurrent === 'function') {
+                    window.Hero.setArmyCurrent(Math.max(0, ((window.Hero.getArmyCurrent && window.Hero.getArmyCurrent()) || 0) - lost));
+                }
+                const lostByType = {};
+                if (raid && raid.assignedUnits) {
+                    for (const unitId in raid.assignedUnits) {
+                        const assigned = Number(raid.assignedUnits[unitId] || 0);
+                        const survived = attackersAlive.filter(u => u.typeId === unitId).length;
+                        const unitLost = Math.max(0, assigned - survived);
+                        if (unitLost > 0) {
+                            lostByType[unitId] = unitLost;
+                            adventureState.pool[unitId] = Math.max(0, (adventureState.pool[unitId] || 0) - unitLost);
+                        }
+                    }
+                }
+            }
+            persistAdventure();
         } catch {}
-        adventureState.lastResult = `Победа!`;
+        if (winner === 'attackers') {
+            adventureState.lastResult = `Рейд успешен!`;
+        } else {
+            adventureState.lastResult = 'Рейд провален';
+            try {
+                const sent = Number(window._lastAttackersSentCount || 0);
+                if (sent > 0) {
+                    if (window.Hero && typeof window.Hero.setArmyCurrent === 'function') {
+                        window.Hero.setArmyCurrent(Math.max(0, ((window.Hero.getArmyCurrent && window.Hero.getArmyCurrent()) || 0) - sent));
+                    }
+                    if (raid && raid.assignedUnits) {
+                        for (const unitId in raid.assignedUnits) {
+                            const assigned = Number(raid.assignedUnits[unitId] || 0);
+                            if (assigned > 0) {
+                                adventureState.pool[unitId] = Math.max(0, (adventureState.pool[unitId] || 0) - assigned);
+                            }
+                        }
+                    }
+                }
+                persistAdventure();
+            } catch {}
+        }
+        if (raid && raid.id && window.Raids && typeof window.Raids.removeRaid === 'function') {
+            window.Raids.removeRaid(raid.id);
+        }
+        window._raidBattleResult = {
+            raidId: raid && raid.id,
+            rewardId: raid && raid.rewardId,
+            won: winner === 'attackers'
+        };
+        window._currentRaidData = null;
     } else {
-        adventureState.lastResult = 'Поражение';
+        for (const u of attackersAlive) { adventureState.pool[u.typeId] = (adventureState.pool[u.typeId] || 0) + 1; }
+        try {
+            const sent = Number(window._lastAttackersSentCount || 0);
+            const returned = attackersAlive.length || 0;
+            const lost = Math.max(0, sent - returned);
+            if (lost > 0 && window.Hero && typeof window.Hero.setArmyCurrent === 'function') window.Hero.setArmyCurrent(Math.max(0, ((window.Hero.getArmyCurrent && window.Hero.getArmyCurrent()) || 0) - lost));
+        } catch {}
+        const last = window._lastEncounterData;
+        if (winner === 'attackers' && last) {
+            if (!isEncounterDone(last.id)) adventureState.completedEncounterIds.push(last.id);
+            try {
+                const map = adventureState.map;
+                const bossIds = Object.keys(map.nodes || {}).filter(function(id){ const n = map.nodes[id]; return n && n.type === 'boss'; });
+                const allVisited = bossIds.every(function(id){ return Array.isArray(adventureState.resolvedNodeIds) && adventureState.resolvedNodeIds.includes(id); });
+                if (allVisited) adventureState.lastResult = 'Победа!';
+            } catch {}
+            adventureState.lastResult = `Победа!`;
+            try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
+        } else {
+            adventureState.lastResult = 'Поражение';
+        }
     }
     adventureState.inBattle = false;
     persistAdventure();
@@ -1457,6 +1565,391 @@ function restoreAdventure() {
     } catch {}
 }
 
+function renderRaids() {
+    const container = document.getElementById('raids-container');
+    if (!container) return;
+    container.innerHTML = '';
+    try { if (window.Raids && typeof window.Raids.load === 'function') window.Raids.load(); } catch {}
+    const allRaids = (window.Raids && typeof window.Raids.getAllRaids === 'function') ? window.Raids.getAllRaids() : [];
+    if (allRaids.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.textAlign = 'center';
+        empty.style.color = '#888';
+        empty.style.padding = '24px';
+        empty.textContent = 'Нет доступных рейдов в этом секторе';
+        container.appendChild(empty);
+        return;
+    }
+    for (const raid of allRaids) {
+        const def = (window.Raids && window.Raids.getRaidDefById) ? window.Raids.getRaidDefById(raid.raidDefId) : null;
+        if (!def) continue;
+        const tpl = document.getElementById('tpl-raid-card');
+        const card = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        if (!tpl) card.className = 'raid-card';
+        card.dataset.id = raid.id;
+        const iconEl = card.querySelector('[data-role="icon"]');
+        const nameEl = card.querySelector('[data-role="name"]');
+        const durationEl = card.querySelector('[data-role="duration"]');
+        const statusEl = card.querySelector('[data-role="status"]');
+        if (iconEl) iconEl.textContent = def.icon || '⚔️';
+        if (nameEl) nameEl.textContent = def.name || def.id;
+        if (durationEl) {
+            if (raid.status === 'available') {
+                durationEl.textContent = `Длительность: ${raid.durationDays} дн.`;
+            } else if (raid.status === 'started') {
+                const currentDay = (window.AdventureTime && window.AdventureTime.getCurrentDay) ? window.AdventureTime.getCurrentDay() : 1;
+                const elapsed = currentDay - (raid.startDay || 0);
+                const remaining = Math.max(0, raid.durationDays - elapsed);
+                durationEl.textContent = `Осталось: ${remaining} дн.`;
+            } else if (raid.status === 'ready') {
+                durationEl.textContent = 'Готов к завершению!';
+            }
+        }
+        if (statusEl) {
+            if (raid.status === 'available') {
+                statusEl.textContent = 'Доступен';
+                statusEl.style.color = '#cd853f';
+            } else if (raid.status === 'started') {
+                statusEl.textContent = 'В процессе';
+                statusEl.style.color = '#888';
+            } else if (raid.status === 'ready') {
+                statusEl.textContent = 'Готов!';
+                statusEl.style.color = '#4a4';
+            }
+        }
+        if (raid.status === 'available') card.classList.add('raid-available');
+        else if (raid.status === 'started') card.classList.add('raid-started');
+        else if (raid.status === 'ready') card.classList.add('raid-ready');
+        card.classList.add('clickable');
+        card.addEventListener('click', function(){ onRaidClick(raid); });
+        container.appendChild(card);
+    }
+}
+
+async function onRaidClick(raid) {
+    const def = (window.Raids && window.Raids.getRaidDefById) ? window.Raids.getRaidDefById(raid.raidDefId) : null;
+    if (!def) return;
+    if (raid.status === 'ready') {
+        await showRaidCompleteModal(raid, def);
+    } else {
+        await showRaidDetailsModal(raid, def);
+    }
+}
+
+async function showRaidDetailsModal(raid, def) {
+    const body = document.createElement('div');
+    const desc = document.createElement('div');
+    desc.style.textAlign = 'center';
+    desc.style.margin = '8px 0 10px 0';
+    desc.textContent = `Длительность: ${def.duration_days} дней`;
+    body.appendChild(desc);
+    (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+    const encCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('encounters') : null;
+    const encounters = encCfg && Array.isArray(encCfg.encounters) ? encCfg.encounters : [];
+    const enc = encounters.find(function(e){ return e && e.id === def.encounter_id; });
+    if (enc) {
+        const enemiesTitle = document.createElement('div');
+        enemiesTitle.style.margin = '6px 0';
+        enemiesTitle.style.color = '#cd853f';
+        enemiesTitle.style.textAlign = 'center';
+        enemiesTitle.textContent = 'Возможные противники';
+        body.appendChild(enemiesTitle);
+        const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+        const enemiesWrapTpl = document.getElementById('tpl-rewards-list');
+        const enemiesWrap = enemiesWrapTpl ? enemiesWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        const enemiesItems = enemiesWrap.querySelector('[data-role="items"]') || enemiesWrap;
+        const uniqEnemyIds = Array.from(new Set((enc.monsters || []).map(function(g){ return g && g.id; }).filter(Boolean)));
+        uniqEnemyIds.forEach(function(id){
+            const itemTpl = document.getElementById('tpl-reward-unit');
+            const el = itemTpl ? itemTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            if (!itemTpl) el.className = 'reward-item';
+            el.classList.add('clickable');
+            const m = monsters[id] || { name: id, view: '👤' };
+            const iconEl = el.querySelector('.reward-icon') || el;
+            const nameEl = el.querySelector('.reward-name');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = m.name || id;
+            el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(id); });
+            enemiesItems.appendChild(el);
+        });
+        body.appendChild(enemiesWrap);
+        (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '10px 0 8px 0'; body.appendChild(sep); })();
+    }
+    const rewardsTitle = document.createElement('div');
+    rewardsTitle.style.margin = '10px 0 6px 0';
+    rewardsTitle.style.color = '#cd853f';
+    rewardsTitle.style.textAlign = 'center';
+    rewardsTitle.textContent = 'Возможные награды';
+    body.appendChild(rewardsTitle);
+    const rewardsCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('rewards') : null;
+    const rewardsTables = rewardsCfg && Array.isArray(rewardsCfg.tables) ? rewardsCfg.tables : [];
+    const rewardTable = rewardsTables.find(function(t){ return t && t.id === def.reward_id; });
+    if (rewardTable && Array.isArray(rewardTable.rewards)) {
+        const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+        const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+        const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+        const rewardsWrapTpl = document.getElementById('tpl-rewards-list');
+        const rewardsWrap = rewardsWrapTpl ? rewardsWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        const rewardsItems = rewardsWrap.querySelector('[data-role="items"]') || rewardsWrap;
+        rewardTable.rewards.forEach(function(r){
+            if (r && r.type === 'currency') {
+                const tplItem = document.getElementById('tpl-reward-currency');
+                const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                if (!tplItem) el.className = 'reward-item';
+                const cd = curById[r.id] || { name: r.id, icon: '💠' };
+                const iconEl = el.querySelector('.reward-icon') || el;
+                const nameEl = el.querySelector('.reward-name');
+                if (iconEl) iconEl.textContent = cd.icon || '💠';
+                if (nameEl) nameEl.textContent = cd.name || r.id;
+                rewardsItems.appendChild(el);
+            }
+        });
+        body.appendChild(rewardsWrap);
+    }
+    if (raid.status !== 'available') {
+        try {
+            if (window.UI && window.UI.showModal) window.UI.showModal(body, { type: 'info', title: `${def.icon || ''} ${def.name}`.trim() });
+        } catch {}
+        return;
+    }
+    let accepted = false;
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal(body, { type: 'dialog', title: `${def.icon || ''} ${def.name}`.trim(), yesText: 'Подготовиться', noText: 'Закрыть' });
+            accepted = await h.closed;
+        }
+    } catch {}
+    if (!accepted) return;
+    await showArmySplitModal(raid, def);
+}
+
+async function showRaidCompleteModal(raid, def) {
+    const body = document.createElement('div');
+    const text = document.createElement('div');
+    text.style.textAlign = 'center';
+    text.style.margin = '8px 0';
+    text.textContent = `Рейд "${def.name}" готов к завершению!`;
+    body.appendChild(text);
+    let accepted = false;
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal(body, { type: 'dialog', title: `${def.icon || ''} ${def.name}`.trim(), yesText: 'Завершить', noText: 'Отмена' });
+            accepted = await h.closed;
+        }
+    } catch {}
+    if (!accepted) return;
+    await startRaidBattle(raid);
+}
+
+async function showArmySplitModal(raid, def) {
+    const body = document.createElement('div');
+    body.style.display = 'flex';
+    body.style.flexDirection = 'column';
+    body.style.gap = '16px';
+    body.style.minWidth = '500px';
+    const mainArmyBlock = document.createElement('div');
+    mainArmyBlock.style.display = 'flex';
+    mainArmyBlock.style.flexDirection = 'column';
+    mainArmyBlock.style.gap = '8px';
+    const mainTitle = document.createElement('div');
+    mainTitle.textContent = 'Основная армия';
+    mainTitle.style.fontWeight = 'bold';
+    mainTitle.style.textAlign = 'center';
+    mainTitle.style.color = '#cd853f';
+    const mainList = document.createElement('div');
+    mainList.id = 'army-split-main';
+    mainList.style.display = 'flex';
+    mainList.style.flexWrap = 'wrap';
+    mainList.style.gap = '8px';
+    mainList.style.justifyContent = 'center';
+    mainList.style.minHeight = '60px';
+    mainArmyBlock.appendChild(mainTitle);
+    mainArmyBlock.appendChild(mainList);
+    const raidArmyBlock = document.createElement('div');
+    raidArmyBlock.style.display = 'flex';
+    raidArmyBlock.style.flexDirection = 'column';
+    raidArmyBlock.style.gap = '8px';
+    const raidTitle = document.createElement('div');
+    raidTitle.textContent = 'Отряд для рейда';
+    raidTitle.style.fontWeight = 'bold';
+    raidTitle.style.textAlign = 'center';
+    raidTitle.style.color = '#cd853f';
+    const raidList = document.createElement('div');
+    raidList.id = 'army-split-raid';
+    raidList.style.display = 'flex';
+    raidList.style.flexWrap = 'wrap';
+    raidList.style.gap = '8px';
+    raidList.style.justifyContent = 'center';
+    raidList.style.minHeight = '60px';
+    raidArmyBlock.appendChild(raidTitle);
+    raidArmyBlock.appendChild(raidList);
+    body.appendChild(mainArmyBlock);
+    body.appendChild(raidArmyBlock);
+    const assigned = (window.Raids && typeof window.Raids.getAssignedUnitsByType === 'function') ? window.Raids.getAssignedUnitsByType() : {};
+    const mainArmy = {};
+    const raidArmy = {};
+    const pool = adventureState.pool || {};
+    for (const unitId in pool) {
+        const total = Number(pool[unitId] || 0);
+        const inRaids = Number(assigned[unitId] || 0);
+        const available = Math.max(0, total - inRaids);
+        if (available > 0) mainArmy[unitId] = available;
+    }
+    function renderSplit() {
+        const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+        mainList.innerHTML = '';
+        raidList.innerHTML = '';
+        for (const unitId in mainArmy) {
+            if (mainArmy[unitId] <= 0) continue;
+            const tpl = document.getElementById('tpl-raid-army-unit');
+            const el = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            el.dataset.id = unitId;
+            const m = monsters[unitId] || { name: unitId, view: '👤' };
+            const iconEl = el.querySelector('[data-role="icon"]');
+            const nameEl = el.querySelector('[data-role="name"]');
+            const countEl = el.querySelector('[data-role="count"]');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = m.name || unitId;
+            if (countEl) countEl.textContent = `x${mainArmy[unitId]}`;
+            el.addEventListener('click', function(){
+                if (mainArmy[unitId] > 0) {
+                    const totalMainArmy = Object.values(mainArmy).reduce(function(sum, v){ return sum + Number(v || 0); }, 0);
+                    if (totalMainArmy <= 1) {
+                        if (window.UI && window.UI.showToast) window.UI.showToast('error', 'В основной армии должен остаться хотя бы один юнит');
+                        return;
+                    }
+                    mainArmy[unitId]--;
+                    raidArmy[unitId] = (raidArmy[unitId] || 0) + 1;
+                    renderSplit();
+                }
+            });
+            mainList.appendChild(el);
+        }
+        for (const unitId in raidArmy) {
+            if (raidArmy[unitId] <= 0) continue;
+            const tpl = document.getElementById('tpl-raid-army-unit');
+            const el = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+            el.dataset.id = unitId;
+            const m = monsters[unitId] || { name: unitId, view: '👤' };
+            const iconEl = el.querySelector('[data-role="icon"]');
+            const nameEl = el.querySelector('[data-role="name"]');
+            const countEl = el.querySelector('[data-role="count"]');
+            if (iconEl) iconEl.textContent = m.view || '👤';
+            if (nameEl) nameEl.textContent = m.name || unitId;
+            if (countEl) countEl.textContent = `x${raidArmy[unitId]}`;
+            el.addEventListener('click', function(){
+                if (raidArmy[unitId] > 0) {
+                    raidArmy[unitId]--;
+                    mainArmy[unitId] = (mainArmy[unitId] || 0) + 1;
+                    renderSplit();
+                }
+            });
+            raidList.appendChild(el);
+        }
+    }
+    renderSplit();
+    let accepted = false;
+    try {
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const h = window.UI.showModal(body, { type: 'dialog', title: 'Разделение армии', yesText: 'Отправить', noText: 'Отмена' });
+            accepted = await h.closed;
+        }
+    } catch {}
+    if (!accepted) return;
+    const totalRaid = Object.values(raidArmy).reduce(function(sum, v){ return sum + Number(v || 0); }, 0);
+    if (totalRaid === 0) {
+        if (window.UI && window.UI.showToast) window.UI.showToast('error', 'Нужно выделить хотя бы один юнит для рейда');
+        return;
+    }
+    if (window.Raids && typeof window.Raids.startRaid === 'function') {
+        const success = window.Raids.startRaid(raid.id, raidArmy);
+        if (success) {
+            if (window.UI && window.UI.showToast) window.UI.showToast('success', `Рейд "${def.name}" начат!`);
+            renderAdventure();
+            renderRaids();
+        }
+    }
+}
+
+function pickSquadForRaid(raidInstance) {
+    const units = raidInstance.assignedUnits || {};
+    const result = [];
+    for (const unitId in units) {
+        const count = Number(units[unitId] || 0);
+        if (count > 0) result.push({ id: unitId, count });
+    }
+    return result;
+}
+
+async function startRaidBattle(raidInstance) {
+    const encCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('encounters') : null;
+    const encounters = encCfg && Array.isArray(encCfg.encounters) ? encCfg.encounters : [];
+    const enc = encounters.find(function(e){ return e && e.id === raidInstance.encounterId; });
+    if (!enc) return;
+    const attackers = pickSquadForRaid(raidInstance);
+    if (attackers.length === 0) return;
+    const cfg = {
+        battleConfig: { name: 'Рейд', defendersStart: true },
+        armies: {
+            attackers: { name: 'Отряд рейда', units: attackers },
+            defenders: { name: enc.id, units: (enc.monsters || []).map(function(g){
+                const v = g && g.amount;
+                let cnt = 0;
+                if (typeof v === 'number') cnt = Math.max(0, Math.floor(v));
+                else if (typeof v === 'string') {
+                    const m = v.match(/^(\s*\d+)\s*-\s*(\d+\s*)$/);
+                    if (m) {
+                        const a = Number(m[1]); const b = Number(m[2]);
+                        const min = Math.min(a,b); const max = Math.max(a,b);
+                        cnt = min + Math.floor(Math.random() * (max - min + 1));
+                    } else {
+                        const n = Number(v); if (!isNaN(n)) cnt = Math.max(0, Math.floor(n));
+                    }
+                }
+                return { id: g.id, count: cnt };
+            }) }
+        },
+        unitTypes: (window.StaticData && typeof window.StaticData.getConfig === 'function') ? (function(){
+            const m = window.StaticData.getConfig('monsters');
+            return (m && m.unitTypes) ? m.unitTypes : m;
+        })() : (window.battleConfig && window.battleConfig.unitTypes ? window.battleConfig.unitTypes : undefined)
+    };
+    window._currentRaidData = raidInstance;
+    window._lastEncounterData = null;
+    window.battleConfig = cfg;
+    window.configLoaded = true;
+    window.battleConfigSource = 'raid';
+    try { window._lastAttackersSentCount = attackers.reduce(function(a,g){ return a + Math.max(0, Number(g.count || 0)); }, 0); } catch {}
+    adventureState.inBattle = true;
+    persistAdventure();
+    window.adventureState = adventureState;
+    const logDiv = document.getElementById('battle-log');
+    if (logDiv) logDiv.innerHTML = '';
+    const btnHome = document.getElementById('battle-btn-home');
+    if (btnHome) btnHome.style.display = 'none';
+    if (window.showBattle) await window.showBattle();
+    window.initializeArmies();
+    window.renderArmies();
+    try { window._autoPlaySpeed = 1; } catch {}
+    try {
+        const spBtn = document.getElementById('auto-speed-btn');
+        if (spBtn) spBtn.textContent = '⏩ x1';
+    } catch {}
+    try { if (typeof window._rescheduleAutoPlayTick === 'function') window._rescheduleAutoPlayTick(); } catch {}
+    try {
+        try { if (window._stopAutoPlay) window._stopAutoPlay(); } catch {}
+        let autoEnabled = false;
+        try {
+            const s = (window.GameSettings && typeof window.GameSettings.get === 'function') ? window.GameSettings.get() : (typeof window.getCurrentSettings === 'function' ? window.getCurrentSettings() : null);
+            autoEnabled = !!(s && s.battleSettings && s.battleSettings.autoPlay);
+        } catch {}
+        if (autoEnabled && typeof window.toggleAutoPlay === 'function' && !window._autoPlayActive) {
+            window.toggleAutoPlay();
+        }
+    } catch {}
+    window.addToLog('🚩 Рейд начался!');
+}
+
 window.showAdventureSetup = showAdventureSetup;
 window.backToIntroFromAdventure = backToIntroFromAdventure;
 window.loadAdventureFile = loadAdventureFile;
@@ -1467,3 +1960,5 @@ window.startEncounterBattle = startEncounterBattle;
 window.renderAdventure = renderAdventure;
 window.showAdventureResult = showAdventureResult;
 window.showUnitInfoModal = showUnitInfoModal;
+
+window._raidBattleResult = null;

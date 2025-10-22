@@ -7,6 +7,7 @@
         { id: 'pathSchemes', title: 'Схемы путей', assets: ['assets/configs/adventure/path_schemes.json'], validatorName: 'validatePathSchemesConfig' },
         { id: 'encounters', title: 'Встречи', assets: ['assets/configs/adventure/encounters_config.json'], validatorName: 'validateEncountersConfig' },
         { id: 'events', title: 'События', assets: ['assets/configs/adventure/events_config.json'] },
+        { id: 'raids', title: 'Рейды', assets: ['assets/configs/adventure/raids_config.json'] },
         { id: 'rewards', title: 'Награды', assets: ['assets/configs/adventure/rewards_config.json'], validatorName: 'validateRewardsConfig' },
         { id: 'currencies', title: 'Валюты', assets: ['assets/configs/game/currencies_config.json'], validatorName: 'validateCurrenciesConfig' },
         { id: 'mercenaries', title: 'Наёмники', assets: ['assets/configs/units/mercenaries_config.json'], validatorName: 'validateMercenariesConfig' },

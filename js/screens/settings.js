@@ -9,6 +9,9 @@ let gameSettings = {
         showDetailedLog: true,
         attackAlternate: true,
         autoPlay: true
+    },
+    uiSettings: {
+        debugMode: false
     }
 };
 
@@ -49,6 +52,8 @@ function displaySettings() {
         if (hideEl) hideEl.checked = !!(gameSettings.mapSettings && gameSettings.mapSettings.hideNodeTypes);
         const hidePathEl = document.getElementById('hidePath');
         if (hidePathEl) hidePathEl.checked = !!(gameSettings.mapSettings && gameSettings.mapSettings.hidePath);
+        const debugEl = document.getElementById('debugMode');
+        if (debugEl) debugEl.checked = !!(gameSettings.uiSettings && gameSettings.uiSettings.debugMode);
     } catch {}
 
     // Блок приключения удалён
@@ -81,6 +86,9 @@ function saveSettingsFromScreen() {
         if (hideEl) gameSettings.mapSettings.hideNodeTypes = !!hideEl.checked;
         const hidePathEl = document.getElementById('hidePath');
         if (hidePathEl) gameSettings.mapSettings.hidePath = !!hidePathEl.checked;
+        const debugEl = document.getElementById('debugMode');
+        if (!gameSettings.uiSettings) gameSettings.uiSettings = {};
+        if (debugEl) gameSettings.uiSettings.debugMode = !!debugEl.checked;
     } catch {}
 
     // Блок приключения удалён
@@ -106,7 +114,8 @@ function resetSettingsToDefault() {
             attackAlternate: true,
             autoPlay: true
         },
-        mapSettings: { hideNodeTypes: false, hidePath: false }
+        mapSettings: { hideNodeTypes: false, hidePath: false },
+        uiSettings: { debugMode: false }
     };
     displaySettings();
     saveGameSettings();
@@ -128,6 +137,12 @@ async function showSettings() {
 // Сохранить настройки
 function saveSettings() {
     saveSettingsFromScreen();
+    try {
+        if (console && console.log) {
+            console.log('[Settings] Saved settings:', gameSettings);
+            console.log('[Settings] Debug mode:', gameSettings.uiSettings && gameSettings.uiSettings.debugMode);
+        }
+    } catch {}
     try {
         if (window.UI && typeof window.UI.showToast === 'function') {
             window.UI.showToast('success', 'Настройки сохранены!', 2000);

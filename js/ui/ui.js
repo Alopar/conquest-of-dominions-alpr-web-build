@@ -77,39 +77,6 @@ function renderUnit(unit, army) {
             window.UI.showModal(body, { type: 'info', title: 'Описание существа' });
         } catch {}
     });
-    try {
-        if (window.UI && typeof window.UI.attachTooltip === 'function') {
-            window.UI.attachTooltip(unitDiv, function(){
-                const wrap = document.createElement('div');
-                wrap.style.display = 'flex';
-                wrap.style.alignItems = 'center';
-                const name = document.createElement('span');
-                name.textContent = String(unit.name || '');
-                const sep1 = document.createElement('span');
-                sep1.textContent = '|';
-                sep1.style.opacity = '0.6';
-                sep1.style.margin = '0 8px';
-                const hp = document.createElement('span');
-                hp.textContent = `${unit.hp}/${unit.maxHp} ❤️`;
-                const sep2 = document.createElement('span');
-                sep2.textContent = '|';
-                sep2.style.opacity = '0.6';
-                sep2.style.margin = '0 8px';
-                const status = document.createElement('span');
-                let statusText = '';
-                if (!unit.alive) statusText = '💀 Мертв';
-                else if (unit.hasAttackedThisTurn) statusText = '⚔️ Атаковал';
-                else statusText = '✅ Готов';
-                status.textContent = statusText;
-                wrap.appendChild(name);
-                wrap.appendChild(sep1);
-                wrap.appendChild(hp);
-                wrap.appendChild(sep2);
-                wrap.appendChild(status);
-                return wrap;
-            }, { delay: 500, hideDelay: 100 });
-        }
-    } catch {}
     return unitDiv;
 }
 
@@ -133,7 +100,9 @@ function renderArmyLine(units, army, lineEl) {
         return sb.dmg - sa.dmg;
     }
 
-    function takeNextRow(){
+    const hasMeleeInArmy = remaining.some(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'melee'; });
+
+    function takeNextRow(isFirstLine){
         const melee = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'melee'; }).sort(sortByStrengthDesc);
         const range = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'range'; }).sort(sortByStrengthDesc);
         const support = remaining.filter(function(u){ return (window.getUnitRole ? window.getUnitRole(u) : 'melee') === 'support'; }).sort(sortByStrengthDesc);
@@ -141,7 +110,15 @@ function renderArmyLine(units, army, lineEl) {
         function pull(from){
             while (from.length > 0 && row.length < perRow) row.push(from.shift());
         }
-        pull(melee); if (row.length < perRow) pull(range); if (row.length < perRow) pull(support);
+        
+        if (isFirstLine && hasMeleeInArmy) {
+            pull(melee);
+        } else {
+            pull(melee);
+            if (row.length < perRow) pull(range);
+            if (row.length < perRow) pull(support);
+        }
+        
         // Переупорядочиваем внутри строки: самые сильные в центре, далее по убыванию симметрично
         const rolePriorityOrder = row.slice();
         // Уже удовлетворяет приоритетам ролей: melee -> range -> support, и отсортирован по силе в каждой группе
@@ -165,7 +142,11 @@ function renderArmyLine(units, army, lineEl) {
         return row;
     }
 
-    while (remaining.length > 0) { rows.push(takeNextRow()); }
+    var isFirstLine = true;
+    while (remaining.length > 0) {
+        rows.push(takeNextRow(isFirstLine));
+        isFirstLine = false;
+    }
 
     const frag = document.createDocumentFragment();
     const container = document.createElement('div');
@@ -219,7 +200,7 @@ function updateButtonStates() {
             try { if (window._autoPlayActive) window._stopAutoPlay && window._stopAutoPlay(); } catch {}
         }
         if (autoSpeedBtn) autoSpeedBtn.style.display = 'none';
-        const isAdventureBattle = (typeof window.battleConfigSource !== 'undefined' && window.battleConfigSource === 'adventure');
+        const isAdventureBattle = (typeof window.battleConfigSource !== 'undefined' && (window.battleConfigSource === 'adventure' || window.battleConfigSource === 'raid'));
         if (finishBtn) finishBtn.style.display = isAdventureBattle ? '' : 'none';
         if (retryBtn) retryBtn.style.display = isAdventureBattle ? 'none' : '';
         return;
@@ -578,12 +559,52 @@ window.updateButtonStates = updateButtonStates;
 
 async function finishBattleToAdventure() {
     if (!window.adventureState || !window.adventureState.config) return;
+    
+    const isRaid = !!(window._raidBattleResult);
+    const raidResult = window._raidBattleResult;
+    
+    if (isRaid) {
+        const won = window.adventureState.lastResult && window.adventureState.lastResult.includes('успешен');
+        
+        if (won) {
+            if (raidResult && raidResult.rewardId && window.Rewards && typeof window.Rewards.grantById === 'function') {
+                await window.Rewards.grantById(raidResult.rewardId);
+            }
+        } else {
+            try {
+                if (window.UI && window.UI.showModal) {
+                    const body = document.createElement('div');
+                    body.style.textAlign = 'center';
+                    body.textContent = 'Рейд провален. Отряд погиб.';
+                    const h = window.UI.showModal(body, { type: 'confirm', title: 'Неудача' });
+                    if (h && h.closed) {
+                        await h.closed;
+                    }
+                }
+            } catch {}
+        }
+        window._currentRaidData = null;
+        window._raidBattleResult = null;
+        window.showAdventure();
+        return;
+    }
+    
     // Возврат на экран приключения с модалкой наград
-    const hasAnyUnits = Object.values(window.adventureState.pool || {}).some(v => v > 0);
+    const assigned = (window.Raids && typeof window.Raids.getAssignedUnitsByType === 'function') ? window.Raids.getAssignedUnitsByType() : {};
+    let hasAvailableUnits = false;
+    for (const unitId in (window.adventureState.pool || {})) {
+        const total = Number(window.adventureState.pool[unitId] || 0);
+        const inRaids = Number(assigned[unitId] || 0);
+        const available = Math.max(0, total - inRaids);
+        if (available > 0) {
+            hasAvailableUnits = true;
+            break;
+        }
+    }
     const sectorCleared = (function(){
         try { return (typeof window.isCurrentSectorCleared === 'function') ? window.isCurrentSectorCleared() : false; } catch { return false; }
     })();
-    if (!hasAnyUnits) {
+    if (!hasAvailableUnits) {
         window.showAdventureResult('💀💀💀 Поражение! Вся армия потеряна! 💀💀💀');
         return;
     }

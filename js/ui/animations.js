@@ -2,7 +2,8 @@ const DURATION = {
     attack: 420,
     hit: 380,
     kill: 600,
-    dodge: 340
+    dodge: 340,
+    fadeout: 300
 };
 
 const GAP = {
@@ -18,14 +19,15 @@ function scaleTime(ms){
 }
 
 const keyOf = (unitId, army) => `${army}::${unitId}`;
-const AnimEvt = { Attack: 'attack', Hit: 'hit', Kill: 'kill', Dodge: 'dodge' };
+const AnimEvt = { Attack: 'attack', Hit: 'hit', Kill: 'kill', Dodge: 'dodge', FadeOut: 'fadeout' };
 const HitColor = { Red: 'red', Yellow: 'yellow' };
 
 const anim = {
     attack(unitId, army) { return { type: AnimEvt.Attack, unitId, army }; },
     hit(unitId, army, color) { return { type: AnimEvt.Hit, unitId, army, hitColor: color }; },
     kill(unitId, army) { return { type: AnimEvt.Kill, unitId, army }; },
-    dodge(unitId, army) { return { type: AnimEvt.Dodge, unitId, army }; }
+    dodge(unitId, army) { return { type: AnimEvt.Dodge, unitId, army }; },
+    fadeout(unitId, army) { return { type: AnimEvt.FadeOut, unitId, army }; }
 };
 function selectNode(unitId, army) {
     const selector = `.army-line [data-unit-id="${unitId}"][data-army="${army}"]`;
@@ -109,6 +111,18 @@ function applyEvt(evt) {
         }, scaleTime(GAP.attackToImpact));
         return;
     }
+
+    if (evt.type === 'fadeout') {
+        const elNow = selectNode(evt.unitId, evt.army);
+        if (elNow) {
+            elNow.classList.add('anim-fadeout');
+            setTimeout(() => {
+                const elLater = selectNode(evt.unitId, evt.army);
+                if (elLater) elLater.classList.remove('anim-fadeout');
+            }, scaleTime(DURATION.fadeout));
+        }
+        return;
+    }
 }
 
 window.applyPendingAnimations = function () {
@@ -116,6 +130,7 @@ window.applyPendingAnimations = function () {
     queued.forEach(applyEvt);
 };
 
+window.scaleTime = scaleTime;
 window.AnimEvt = AnimEvt;
 window.HitColor = HitColor;
 window.anim = anim;

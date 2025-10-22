@@ -399,3 +399,22 @@
 /* Бесплатные (авто) улучшения — серебряный стиль */
 .upgrade-item.owned-free { border:2px solid #c0c0c0; box-shadow: 0 4px 14px rgba(192,192,192,0.25), inset 0 1px 2px rgba(255,255,255,0.10); }
 .upgrade-item.owned-free .upgrade-price { display:none; }
+
+/* Рейды */
+.raid-card { padding:16px; border:1px solid #444; border-radius:8px; background:#1a1a1a; cursor:pointer; transition:all .15s ease; }
+.raid-card:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.5); border-color:#8b7355; }
+.raid-card-header { display:flex; align-items:center; gap:16px; }
+.raid-icon { font-size:2.4em; flex-shrink:0; }
+.raid-info { flex:1; display:flex; flex-direction:column; gap:4px; }
+.raid-name { font-size:1.1em; font-weight:600; color:#cd853f; }
+.raid-duration { font-size:0.95em; color:#aaa; }
+.raid-status-badge { padding:4px 12px; border-radius:6px; font-size:0.9em; font-weight:600; flex-shrink:0; }
+.raid-available { border-color:#8b7355; }
+.raid-started { border-color:#666; opacity:0.85; }
+.raid-ready { border-color:#4a4; box-shadow:0 4px 12px rgba(68,170,68,0.3); }
+
+.raid-army-unit { width:100px; min-height:90px; border:1px solid #444; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#1a1a1a; color:#cd853f; box-shadow:0 4px 10px rgba(0,0,0,0.4); text-align:center; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; cursor:pointer; }
+.raid-army-unit:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,0.5); border-color:#8b7355; }
+.raid-unit-icon { font-size:1.6em; }
+.raid-unit-name { font-size:0.9em; max-width:95px; }
+.raid-unit-count { font-size:0.85em; font-weight:600; color:#cd853f; }

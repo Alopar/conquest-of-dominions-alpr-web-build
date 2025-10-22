@@ -17,6 +17,9 @@
     "mapSettings": {
       "hideNodeTypes": false,
       "hidePath": false
+    },
+    "uiSettings": {
+      "debugMode": false
     }
   }
 }

@@ -8,16 +8,13 @@ function getUnitRole(unit) {
 
 function selectTargetByRules(attacker, aliveEnemies) {
     if (!attacker || !Array.isArray(aliveEnemies) || aliveEnemies.length === 0) return null;
-    const role = getUnitRole(attacker);
-    if (role === 'melee') {
-        const meleeEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'melee');
-        if (meleeEnemies.length > 0) return meleeEnemies[Math.floor(Math.random() * meleeEnemies.length)];
-        const rangeEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'range');
-        if (rangeEnemies.length > 0) return rangeEnemies[Math.floor(Math.random() * rangeEnemies.length)];
-        const supportEnemies = aliveEnemies.filter(e => getUnitRole(e) === 'support');
-        if (supportEnemies.length > 0) return supportEnemies[Math.floor(Math.random() * supportEnemies.length)];
-        return null;
+    
+    const frontLineEnemies = aliveEnemies.filter(e => e.line === 1);
+    
+    if (frontLineEnemies.length > 0) {
+        return frontLineEnemies[Math.floor(Math.random() * frontLineEnemies.length)];
     }
+    
     return aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
 }
 
