@@ -1,4 +1,12 @@
-const ADVENTURE_MOVE_DURATION_MS = 5000;
+function getAdventureMoveDurationMs() {
+    try {
+        const settings = (window.GameSettings && typeof window.GameSettings.get === 'function') ? window.GameSettings.get() : null;
+        const seconds = settings && typeof settings.adventureMoveDuration === 'number' ? settings.adventureMoveDuration : 5;
+        return Math.max(100, seconds * 1000);
+    } catch {
+        return 5000;
+    }
+}
 
 function renderModsDebug() {
     const host = document.getElementById('mods-debug-table');
@@ -30,7 +38,11 @@ let adventureState = {
     currentStageIndex: 0,
     completedEncounterIds: [],
     inBattle: false,
-    lastResult: ''
+    lastResult: '',
+    nodeContents: {},
+    currentNodeContent: [],
+    sectorStartDay: null,
+    sectorThreatLevel: 0
 };
 
 let adventureUserLoaded = false;
@@ -55,7 +67,7 @@ async function showAdventureSetup() {
     } catch {}
     // Полный сброс сохранения приключения при входе на экран подготовки
     try { localStorage.removeItem('adventureState'); } catch {}
-    adventureState = { config: null, currencies: {}, pool: {}, selectedClassId: null, currentStageIndex: 0, completedEncounterIds: [], inBattle: false, lastResult: '' };
+    adventureState = { config: null, currencies: {}, pool: {}, selectedClassId: null, currentStageIndex: 0, completedEncounterIds: [], inBattle: false, lastResult: '', nodeContents: {}, currentNodeContent: [], sectorStartDay: null, sectorThreatLevel: 0 };
     window.adventureState = adventureState;
     restoreAdventure();
     if (adventureState.config) {
@@ -176,6 +188,10 @@ function initAdventureState(cfg) {
     adventureState.completedEncounterIds = [];
     adventureState.inBattle = false;
     adventureState.lastResult = '';
+    adventureState.nodeContents = adventureState.nodeContents || {};
+    adventureState.currentNodeContent = adventureState.currentNodeContent || [];
+    adventureState.sectorStartDay = adventureState.sectorStartDay || null;
+    adventureState.sectorThreatLevel = adventureState.sectorThreatLevel || 0;
     persistAdventure();
     window.adventureState = adventureState;
     try { if (window.AdventureTime && typeof window.AdventureTime.init === 'function') window.AdventureTime.init(); } catch {}
@@ -210,6 +226,50 @@ function getPathSchemeForSector(sectorNumber){
     } catch { return null; }
 }
 
+function calculatePathLength(map){
+    if (!map || !map.nodes) return 0;
+    const nodes = Object.values(map.nodes);
+    if (nodes.length === 0) return 0;
+    const maxX = Math.max(...nodes.map(function(n){ return n.x || 0; }));
+    return maxX;
+}
+
+function calculateThreatThresholds(pathLength, scheme){
+    const multipliers = Array.isArray(scheme && scheme.threatDayMultipliers) ? scheme.threatDayMultipliers : [1.0, 1.25, 1.5];
+    const additions = Array.isArray(scheme && scheme.threatDayAdditions) ? scheme.threatDayAdditions : [3, 5, 5];
+    return [
+        Math.floor(pathLength * multipliers[0] + additions[0]),
+        Math.floor(pathLength * multipliers[1] + additions[1]),
+        Math.floor(pathLength * multipliers[2] + additions[2])
+    ];
+}
+
+function getCurrentThreatLevel(){
+    if (!adventureState.sectorStartDay) return 0;
+    const currentDay = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+    const daysInSector = currentDay - adventureState.sectorStartDay;
+    const sectorNumber = getSectorNumberByIndex(adventureState.currentStageIndex || 0);
+    const scheme = getPathSchemeForSector(sectorNumber);
+    if (!scheme) return 0;
+    const map = adventureState.map;
+    if (!map) return 0;
+    const pathLength = calculatePathLength(map);
+    const thresholds = calculateThreatThresholds(pathLength, scheme);
+    if (daysInSector <= thresholds[0]) return 0;
+    if (daysInSector <= thresholds[1]) return 1;
+    if (daysInSector <= thresholds[2]) return 2;
+    return 2;
+}
+
+function getThreatMultiplier(){
+    const sectorNumber = getSectorNumberByIndex(adventureState.currentStageIndex || 0);
+    const scheme = getPathSchemeForSector(sectorNumber);
+    if (!scheme) return 1.0;
+    const levels = Array.isArray(scheme.threatLevels) ? scheme.threatLevels : [1.0, 1.5, 2.0];
+    const threatLevel = getCurrentThreatLevel();
+    return levels[threatLevel] || 1.0;
+}
+
 function ensureSectorSeeds(count){
     adventureState.sectorSeeds = Array.isArray(adventureState.sectorSeeds) ? adventureState.sectorSeeds : [];
     for (let i = adventureState.sectorSeeds.length; i < count; i++) adventureState.sectorSeeds[i] = Date.now() + i * 7919;
@@ -232,12 +292,17 @@ function generateSectorMap(index){
     adventureState.map = map;
     adventureState.currentNodeId = map && map.startId;
     adventureState.resolvedNodeIds = map && map.startId ? [map.startId] : [];
+    if (map && map.nodeContents) {
+        adventureState.nodeContents = map.nodeContents;
+    } else {
+        adventureState.nodeContents = {};
+    }
+    adventureState.currentNodeContent = [];
+    const currentDay = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+    adventureState.sectorStartDay = currentDay;
+    adventureState.sectorThreatLevel = 0;
     try {
         if (window.Raids && typeof window.Raids.clearNonStarted === 'function') window.Raids.clearNonStarted();
-        const sectors = (adventureState.config && Array.isArray(adventureState.config.sectors)) ? adventureState.config.sectors : [];
-        const sector = sectors[index];
-        const availableRaids = (sector && Array.isArray(sector.availableRaids)) ? sector.availableRaids : [];
-        if (window.Raids && typeof window.Raids.addAvailableRaids === 'function') window.Raids.addAvailableRaids(availableRaids);
     } catch {}
     persistAdventure();
 }
@@ -352,6 +417,9 @@ function renderAdventure() {
     ensureAdventureTabs();
     try { const tabs = document.getElementById('adventure-tabs'); if (tabs) updateTabsActive(tabs); } catch {}
     renderAdventureSubscreen();
+    if ((window.AppState && window.AppState.subscreen) === 'map' || !window.AppState || !window.AppState.subscreen) {
+        setTimeout(function(){ renderThreatLevelIndicator(); }, 100);
+    }
 }
 
 function ensureAdventureTabs() {
@@ -450,6 +518,7 @@ async function renderAdventureSubscreen() {
         renderPool();
     } else if (subscreen === 'map') {
         renderMapBoard();
+        setTimeout(function(){ renderThreatLevelIndicator(); }, 50);
     } else if (subscreen === 'tavern') {
         renderTavern();
     } else if (subscreen === 'hero') {
@@ -848,6 +917,10 @@ function renderMapBoard() {
             const idx = Number(adventureState.currentStageIndex || 0);
             const secNum = (function(){ const s = adventureState && adventureState.config && adventureState.config.sectors; return (Array.isArray(s) && s[idx] && s[idx].number) || (idx+1); })();
             sectorEl.textContent = total > 0 ? ('Сектор: ' + secNum + '/' + total + '🌍') : '';
+            sectorEl.style.color = '#cd853f';
+            sectorEl.style.fontSize = '1.05em';
+            sectorEl.style.fontWeight = '600';
+            sectorEl.style.textShadow = '1px 1px 3px rgba(0,0,0,0.7)';
         }
     } catch {}
     // Ленивая генерация карты сектора, если её нет
@@ -858,6 +931,12 @@ function renderMapBoard() {
             ensureSectorSeeds(adventureState.sectorCount || 1);
             generateSectorMap(adventureState.currentStageIndex || 0);
         } catch {}
+    }
+    if (adventureState.map && !adventureState.sectorStartDay) {
+        const currentDay = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+        adventureState.sectorStartDay = currentDay;
+        adventureState.sectorThreatLevel = getCurrentThreatLevel();
+        persistAdventure();
     }
     const map = adventureState.map;
     if (!map || !map.nodes) { board.innerHTML = '<div>Карта недоступна</div>'; return; }
@@ -952,16 +1031,551 @@ function renderMapBoard() {
             }, 0);
         }
     } catch {}
+    renderThreatLevelIndicator();
+    renderNodeContentItems();
+}
+
+function renderThreatLevelIndicator(){
+    const container = document.getElementById('adventure-threat-indicator');
+    if (!container) {
+        if (console && console.log) console.log('[Threat] Container not found');
+        return;
+    }
+    container.innerHTML = '';
+    container.style.position = 'relative';
+    container.style.zIndex = '0';
+    
+    if (!adventureState.map) {
+        if (console && console.log) console.log('[Threat] Map not found');
+        return;
+    }
+    
+    if (!adventureState.sectorStartDay) {
+        const currentDay = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+        adventureState.sectorStartDay = currentDay;
+        adventureState.sectorThreatLevel = getCurrentThreatLevel();
+        persistAdventure();
+    }
+    
+    const currentDay = (window.AdventureTime && typeof window.AdventureTime.getCurrentDay === 'function') ? window.AdventureTime.getCurrentDay() : 1;
+    const daysInSector = currentDay - adventureState.sectorStartDay;
+    const sectorNumber = getSectorNumberByIndex(adventureState.currentStageIndex || 0);
+    const scheme = getPathSchemeForSector(sectorNumber);
+    if (!scheme) {
+        if (console && console.log) console.log('[Threat] Scheme not found for sector', sectorNumber);
+        return;
+    }
+    
+    const pathLength = calculatePathLength(adventureState.map);
+    const thresholds = calculateThreatThresholds(pathLength, scheme);
+    const threatLevel = getCurrentThreatLevel();
+    
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '6px';
+    wrapper.style.flex = '1';
+    wrapper.style.cursor = 'pointer';
+    wrapper.style.position = 'relative';
+    wrapper.addEventListener('click', function(){ showThreatDetailsModal(daysInSector, threatLevel, thresholds, pathLength, scheme); });
+    
+    const label = document.createElement('span');
+    label.textContent = 'Угроза:';
+    label.style.color = '#cd853f';
+    label.style.fontSize = '1.05em';
+    label.style.fontWeight = '600';
+    label.style.textShadow = '1px 1px 3px rgba(0,0,0,0.7)';
+    label.style.minWidth = '70px';
+    wrapper.appendChild(label);
+    
+    const barWrapper = document.createElement('div');
+    barWrapper.style.flex = '1';
+    barWrapper.style.position = 'relative';
+    barWrapper.style.height = '32px';
+    barWrapper.style.minWidth = '200px';
+    barWrapper.style.border = '2px solid #8b7355';
+    barWrapper.style.borderRadius = '6px';
+    barWrapper.style.boxShadow = 'inset 0 2px 8px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4)';
+    barWrapper.style.overflow = 'hidden';
+    
+    const maxDays = thresholds[2];
+    const threshold0Percent = (thresholds[0] / maxDays) * 100;
+    const threshold1Percent = (thresholds[1] / maxDays) * 100;
+    
+    const baseBg = document.createElement('div');
+    baseBg.style.position = 'absolute';
+    baseBg.style.left = '0';
+    baseBg.style.top = '0';
+    baseBg.style.width = '100%';
+    baseBg.style.height = '100%';
+    baseBg.style.background = 'linear-gradient(135deg, #1a0f08 0%, #2d1a0b 50%, #1a0f08 100%)';
+    barWrapper.appendChild(baseBg);
+    
+    const zone1 = document.createElement('div');
+    zone1.style.position = 'absolute';
+    zone1.style.left = '0';
+    zone1.style.top = '0';
+    zone1.style.width = threshold0Percent + '%';
+    zone1.style.height = '100%';
+    zone1.style.background = 'linear-gradient(135deg, rgba(74,124,89,0.25) 0%, rgba(90,156,105,0.2) 50%, rgba(74,124,89,0.25) 100%)';
+    zone1.style.borderRight = '2px solid rgba(192,192,192,0.5)';
+    barWrapper.appendChild(zone1);
+    
+    const zone2 = document.createElement('div');
+    zone2.style.position = 'absolute';
+    zone2.style.left = threshold0Percent + '%';
+    zone2.style.top = '0';
+    zone2.style.width = (threshold1Percent - threshold0Percent) + '%';
+    zone2.style.height = '100%';
+    zone2.style.background = 'linear-gradient(135deg, rgba(184,134,11,0.25) 0%, rgba(218,165,32,0.2) 50%, rgba(184,134,11,0.25) 100%)';
+    zone2.style.borderRight = '2px solid rgba(212,175,55,0.6)';
+    barWrapper.appendChild(zone2);
+    
+    const zone3 = document.createElement('div');
+    zone3.style.position = 'absolute';
+    zone3.style.left = threshold1Percent + '%';
+    zone3.style.top = '0';
+    zone3.style.width = (100 - threshold1Percent) + '%';
+    zone3.style.height = '100%';
+    zone3.style.background = 'linear-gradient(135deg, rgba(139,0,0,0.25) 0%, rgba(165,42,42,0.2) 50%, rgba(139,0,0,0.25) 100%)';
+    barWrapper.appendChild(zone3);
+    
+    const fillPercent = Math.min(100, (daysInSector / maxDays) * 100);
+    
+    const fillBar = document.createElement('div');
+    fillBar.style.position = 'absolute';
+    fillBar.style.left = '0';
+    fillBar.style.top = '0';
+    fillBar.style.height = '100%';
+    fillBar.style.width = fillPercent + '%';
+    fillBar.style.transition = 'width 0.5s ease, background 0.3s ease';
+    
+    if (threatLevel === 0) {
+        fillBar.style.background = 'linear-gradient(90deg, #4a7c59 0%, #5a9c69 50%, #4a7c59 100%)';
+        fillBar.style.boxShadow = 'inset 0 1px 3px rgba(255,255,255,0.2), 0 0 8px rgba(74,124,89,0.4)';
+    } else if (threatLevel === 1) {
+        fillBar.style.background = 'linear-gradient(90deg, #b8860b 0%, #daa520 50%, #b8860b 100%)';
+        fillBar.style.boxShadow = 'inset 0 1px 3px rgba(255,255,255,0.25), 0 0 10px rgba(218,165,32,0.5)';
+    } else {
+        fillBar.style.background = 'linear-gradient(90deg, #8b0000 0%, #a52a2a 50%, #8b0000 100%)';
+        fillBar.style.boxShadow = 'inset 0 1px 3px rgba(255,200,200,0.2), 0 0 12px rgba(165,42,42,0.6)';
+    }
+    
+    barWrapper.appendChild(fillBar);
+    
+    const cellCount = maxDays;
+    const cellWidth = 100 / cellCount;
+    
+    for (let i = 0; i <= cellCount; i++) {
+        const tick = document.createElement('div');
+        tick.style.position = 'absolute';
+        tick.style.left = (i * cellWidth) + '%';
+        tick.style.top = '0';
+        tick.style.width = '1px';
+        tick.style.height = '100%';
+        tick.style.background = i % 5 === 0 ? 'rgba(205,133,63,0.5)' : 'rgba(139,115,85,0.2)';
+        barWrapper.appendChild(tick);
+    }
+    
+    wrapper.appendChild(barWrapper);
+    
+    const threshold1 = document.createElement('div');
+    threshold1.style.position = 'absolute';
+    threshold1.style.left = threshold0Percent + '%';
+    threshold1.style.top = '0';
+    threshold1.style.width = '3px';
+    threshold1.style.height = '100%';
+    threshold1.style.background = 'linear-gradient(to bottom, transparent, #c0c0c0, transparent)';
+    threshold1.style.boxShadow = '0 0 4px rgba(192,192,192,0.6)';
+    barWrapper.appendChild(threshold1);
+    
+    const threshold2 = document.createElement('div');
+    threshold2.style.position = 'absolute';
+    threshold2.style.left = threshold1Percent + '%';
+    threshold2.style.top = '0';
+    threshold2.style.width = '3px';
+    threshold2.style.height = '100%';
+    threshold2.style.background = 'linear-gradient(to bottom, transparent, #d4af37, transparent)';
+    threshold2.style.boxShadow = '0 0 6px rgba(212,175,55,0.7)';
+    barWrapper.appendChild(threshold2);
+    
+    const indicator = document.createElement('div');
+    indicator.style.position = 'absolute';
+    indicator.style.left = fillPercent + '%';
+    indicator.style.top = '0';
+    indicator.style.width = '10px';
+    indicator.style.height = '100%';
+    indicator.style.background = 'linear-gradient(to bottom, #d4af37 0%, #b8860b 50%, #8b7355 100%)';
+    indicator.style.border = '2px solid #654321';
+    indicator.style.borderLeft = '3px solid #d4af37';
+    indicator.style.borderRight = '3px solid #d4af37';
+    indicator.style.borderRadius = '2px';
+    indicator.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3), 0 0 8px rgba(212,175,55,0.6)';
+    indicator.style.transform = 'translateX(-50%)';
+    indicator.style.transition = 'left 0.5s ease';
+    indicator.style.pointerEvents = 'none';
+    barWrapper.appendChild(indicator);
+    
+    wrapper.appendChild(barWrapper);
+    
+    const threatIcons = ['🛡️', '⚔️', '💀'];
+    const iconEl = document.createElement('span');
+    iconEl.textContent = threatIcons[threatLevel] || '🛡️';
+    iconEl.style.fontSize = '1.3em';
+    iconEl.style.transition = 'transform 0.3s ease';
+    wrapper.appendChild(iconEl);
+    
+    wrapper.addEventListener('mouseenter', function(){
+        wrapper.style.opacity = '0.9';
+        iconEl.style.transform = 'scale(1.1)';
+    });
+    wrapper.addEventListener('mouseleave', function(){
+        wrapper.style.opacity = '1';
+        iconEl.style.transform = 'scale(1)';
+    });
+    
+    container.appendChild(wrapper);
+}
+
+function showThreatDetailsModal(daysInSector, threatLevel, thresholds, pathLength, scheme){
+    try {
+        if (!window.UI || typeof window.UI.showModal !== 'function') return;
+        
+        const body = document.createElement('div');
+        body.style.padding = '12px';
+        body.style.minWidth = '400px';
+        
+        const titleSection = document.createElement('div');
+        titleSection.style.textAlign = 'center';
+        titleSection.style.marginBottom = '16px';
+        titleSection.style.padding = '12px';
+        titleSection.style.background = 'linear-gradient(135deg, #2d1a0b 0%, #1a0f08 100%)';
+        titleSection.style.border = '2px solid #8b7355';
+        titleSection.style.borderRadius = '8px';
+        titleSection.style.boxShadow = 'inset 0 2px 6px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4)';
+        
+        const threatIcons = ['🛡️', '⚔️', '💀'];
+        const levelNames = ['Нет угрозы', 'Умеренная угроза', 'Серьезная угроза'];
+        
+        const iconEl = document.createElement('div');
+        iconEl.textContent = threatIcons[threatLevel] || '🛡️';
+        iconEl.style.fontSize = '3em';
+        iconEl.style.marginBottom = '8px';
+        titleSection.appendChild(iconEl);
+        
+        const titleText = document.createElement('div');
+        titleText.textContent = levelNames[threatLevel] || '';
+        titleText.style.fontSize = '1.4em';
+        titleText.style.fontWeight = '600';
+        titleText.style.color = '#cd853f';
+        titleText.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+        titleSection.appendChild(titleText);
+        
+        body.appendChild(titleSection);
+        
+        const separator = document.createElement('div');
+        separator.style.height = '2px';
+        separator.style.margin = '16px 0';
+        separator.style.background = 'linear-gradient(to right, transparent, #8b7355, transparent)';
+        body.appendChild(separator);
+        
+        const infoSection = document.createElement('div');
+        infoSection.style.display = 'flex';
+        infoSection.style.flexDirection = 'column';
+        infoSection.style.gap = '12px';
+        
+        const daysRow = document.createElement('div');
+        daysRow.style.display = 'flex';
+        daysRow.style.justifyContent = 'space-between';
+        daysRow.style.padding = '8px';
+        daysRow.style.background = 'rgba(26,15,8,0.6)';
+        daysRow.style.borderRadius = '6px';
+        daysRow.style.border = '1px solid #654321';
+        
+        const daysLabel = document.createElement('span');
+        daysLabel.textContent = 'Дней в секторе:';
+        daysLabel.style.color = '#cd853f';
+        daysLabel.style.fontWeight = '600';
+        daysRow.appendChild(daysLabel);
+        
+        const daysValue = document.createElement('span');
+        daysValue.textContent = daysInSector;
+        daysValue.style.color = '#cd853f';
+        daysValue.style.fontWeight = '600';
+        daysRow.appendChild(daysValue);
+        
+        infoSection.appendChild(daysRow);
+        
+        const thresholdsRow = document.createElement('div');
+        thresholdsRow.style.display = 'flex';
+        thresholdsRow.style.flexDirection = 'column';
+        thresholdsRow.style.gap = '6px';
+        thresholdsRow.style.padding = '8px';
+        thresholdsRow.style.background = 'rgba(26,15,8,0.6)';
+        thresholdsRow.style.borderRadius = '6px';
+        thresholdsRow.style.border = '1px solid #654321';
+        
+        const thresholdsTitle = document.createElement('div');
+        thresholdsTitle.textContent = 'Пороги угрозы:';
+        thresholdsTitle.style.color = '#cd853f';
+        thresholdsTitle.style.fontWeight = '600';
+        thresholdsTitle.style.marginBottom = '4px';
+        thresholdsRow.appendChild(thresholdsTitle);
+        
+        const thresholdLabels = ['Нет угрозы', 'Умеренная угроза', 'Серьезная угроза'];
+        thresholds.forEach(function(threshold, index){
+            const thresholdItem = document.createElement('div');
+            thresholdItem.style.display = 'flex';
+            thresholdItem.style.justifyContent = 'space-between';
+            thresholdItem.style.fontSize = '0.95em';
+            
+            const label = document.createElement('span');
+            label.textContent = thresholdLabels[index] + ':';
+            label.style.color = '#cd853f';
+            thresholdItem.appendChild(label);
+            
+            const value = document.createElement('span');
+            value.textContent = threshold + ' дн.';
+            value.style.color = '#cd853f';
+            value.style.fontWeight = '600';
+            thresholdItem.appendChild(value);
+            
+            thresholdsRow.appendChild(thresholdItem);
+        });
+        
+        infoSection.appendChild(thresholdsRow);
+        
+        const multiplierRow = document.createElement('div');
+        multiplierRow.style.display = 'flex';
+        multiplierRow.style.flexDirection = 'column';
+        multiplierRow.style.gap = '8px';
+        multiplierRow.style.padding = '12px';
+        multiplierRow.style.background = 'linear-gradient(135deg, rgba(139,0,0,0.3) 0%, rgba(26,15,8,0.6) 100%)';
+        multiplierRow.style.borderRadius = '6px';
+        multiplierRow.style.border = '2px solid #8b0000';
+        multiplierRow.style.boxShadow = 'inset 0 2px 6px rgba(0,0,0,0.5)';
+        
+        const multiplierTitle = document.createElement('div');
+        multiplierTitle.textContent = '⚔️ Влияние на босса сектора:';
+        multiplierTitle.style.color = '#cd853f';
+        multiplierTitle.style.fontWeight = '600';
+        multiplierTitle.style.fontSize = '1.1em';
+        multiplierTitle.style.marginBottom = '4px';
+        multiplierRow.appendChild(multiplierTitle);
+        
+        const levels = Array.isArray(scheme.threatLevels) ? scheme.threatLevels : [1.0, 1.5, 2.0];
+        const currentMultiplier = levels[threatLevel] || 1.0;
+        
+        const multiplierDesc = document.createElement('div');
+        multiplierDesc.style.color = '#cd853f';
+        multiplierDesc.style.fontSize = '1em';
+        multiplierDesc.style.lineHeight = '1.5';
+        if (threatLevel === 0) {
+            multiplierDesc.textContent = 'Модификатор не применяется. Босс сражается с базовой силой.';
+        } else {
+            multiplierDesc.innerHTML = `Количество юнитов босса умножено на <strong style="color:#cd853f; font-size:1.2em;">${currentMultiplier}x</strong>`;
+        }
+        multiplierRow.appendChild(multiplierDesc);
+        
+        infoSection.appendChild(multiplierRow);
+        
+        body.appendChild(infoSection);
+        
+        window.UI.showModal(body, { type: 'info', title: 'Уровень угрозы сектора' });
+    } catch {}
 }
 
 async function onGraphNodeClick(nodeId) {
     if (!window.AdventureGraph) return;
     const avail = window.AdventureGraph.isNodeAvailable({ map: adventureState.map, currentNodeId: adventureState.currentNodeId, resolvedNodeIds: adventureState.resolvedNodeIds }, nodeId);
     if (!avail) return;
-    await movePlayerToNode(nodeId);
-    adventureState.currentNodeId = nodeId;
-    persistAdventure();
-    resolveGraphNode(nodeId);
+    await showNodePreviewModal(nodeId);
+}
+
+async function showNodePreviewModal(nodeId) {
+    try {
+        const contents = Array.isArray(adventureState.nodeContents[nodeId]) ? adventureState.nodeContents[nodeId] : [];
+        if (!window.UI || typeof window.UI.showModal !== 'function') {
+            await movePlayerToNode(nodeId);
+            adventureState.currentNodeId = nodeId;
+            adventureState.resolvedNodeIds = Array.isArray(adventureState.resolvedNodeIds) ? adventureState.resolvedNodeIds : [];
+            if (!adventureState.resolvedNodeIds.includes(nodeId)) {
+                adventureState.resolvedNodeIds.push(nodeId);
+            }
+            adventureState.currentNodeContent = contents.slice();
+            persistAdventure();
+            renderAdventure();
+            return;
+        }
+        
+        const terrainNames = {
+            'town': 'Город',
+            'plain': 'Поля',
+            'forest': 'Лес',
+            'mountains': 'Горы'
+        };
+        
+        const terrainEmojis = {
+            'town': '🏰',
+            'plain': '🌾',
+            'forest': '🌲',
+            'mountains': '🗻'
+        };
+        
+        const node = adventureState.map && adventureState.map.nodes ? adventureState.map.nodes[nodeId] : null;
+        const terrainType = node && node.terrainType ? node.terrainType : null;
+        const travelDays = node && node.travelDays ? node.travelDays : 1;
+        const terrainName = terrainType && terrainNames[terrainType] ? terrainNames[terrainType] : 'Местность';
+        const terrainEmoji = terrainType && terrainEmojis[terrainType] ? terrainEmojis[terrainType] : '';
+        
+        function getDaysText(days) {
+            const lastDigit = days % 10;
+            const lastTwoDigits = days % 100;
+            if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+                return days + ' дней';
+            }
+            if (lastDigit === 1) {
+                return days + ' день';
+            }
+            if (lastDigit >= 2 && lastDigit <= 4) {
+                return days + ' дня';
+            }
+            return days + ' дней';
+        }
+        
+        const body = document.createElement('div');
+        body.style.padding = '8px';
+        
+        if (terrainType && travelDays) {
+            const travelInfo = document.createElement('div');
+            travelInfo.style.textAlign = 'center';
+            travelInfo.style.marginBottom = '16px';
+            travelInfo.style.padding = '12px';
+            travelInfo.style.background = '#1a1a1a';
+            travelInfo.style.border = '1px solid #654321';
+            travelInfo.style.borderRadius = '8px';
+            travelInfo.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+            const travelText = document.createElement('div');
+            travelText.textContent = 'Время пути: ' + getDaysText(travelDays);
+            travelText.style.fontSize = '16px';
+            travelText.style.fontWeight = '600';
+            travelText.style.color = '#cd853f';
+            travelInfo.appendChild(travelText);
+            body.appendChild(travelInfo);
+            
+            const separator = document.createElement('div');
+            separator.style.height = '2px';
+            separator.style.margin = '0 0 16px 0';
+            separator.style.background = 'linear-gradient(to right, rgba(128,128,128,0), rgba(160,160,160,0.6), rgba(128,128,128,0))';
+            body.appendChild(separator);
+        }
+        
+        if (contents.length === 0) {
+            const text = document.createElement('div');
+            text.textContent = 'Эта нода не содержит событий, энкаунтеров или рейдов.';
+            text.style.textAlign = 'center';
+            text.style.marginBottom = '12px';
+            body.appendChild(text);
+        } else {
+            const list = document.createElement('div');
+            list.style.display = 'flex';
+            list.style.flexWrap = 'wrap';
+            list.style.gap = '12px';
+            list.style.justifyContent = 'center';
+            contents.forEach(function(item) {
+                const card = document.createElement('div');
+                card.className = 'achievement-card';
+                card.style.width = '100px';
+                card.style.height = '90px';
+                card.style.minHeight = '90px';
+                card.style.padding = '8px';
+                
+                const icon = document.createElement('div');
+                icon.className = 'achievement-icon';
+                icon.style.fontSize = '1.6em';
+                if (item.type === 'event') {
+                    const ev = item.data;
+                    icon.textContent = ev.icon || '✨';
+                } else if (item.type === 'encounter') {
+                    const enc = item.data;
+                    icon.textContent = enc.icon || (enc.class === 'boss' ? '👑' : enc.class === 'elite' ? '💀' : '😡');
+                } else if (item.type === 'raid') {
+                    const raid = item.data;
+                    icon.textContent = raid.icon || '⚔️';
+                }
+                
+                const name = document.createElement('div');
+                name.className = 'achievement-name';
+                name.style.fontSize = '0.9em';
+                name.style.lineHeight = '1.2';
+                name.style.maxWidth = '100%';
+                name.style.overflow = 'hidden';
+                name.style.textOverflow = 'ellipsis';
+                name.style.display = '-webkit-box';
+                name.style.webkitLineClamp = '2';
+                name.style.webkitBoxOrient = 'vertical';
+                name.style.whiteSpace = 'normal';
+                if (item.type === 'event') {
+                    name.textContent = item.data.name || item.data.id || 'Событие';
+                } else if (item.type === 'raid') {
+                    name.textContent = item.data.name || item.data.id || 'Рейд';
+                } else if (item.type === 'encounter') {
+                    name.textContent = item.data.name || item.data.id || 'Энкаунтер';
+                } else {
+                    name.textContent = item.data.id || 'Энкаунтер';
+                }
+                
+                card.appendChild(icon);
+                card.appendChild(name);
+                list.appendChild(card);
+            });
+            body.appendChild(list);
+        }
+        
+        const h = window.UI.showModal(body, { type: 'dialog', title: '', yesText: 'Перейти', noText: 'Закрыть' });
+        
+        setTimeout(function() {
+            const titleEl = document.querySelector('.modal-title');
+            if (titleEl && terrainEmoji) {
+                titleEl.innerHTML = '';
+                titleEl.style.display = 'flex';
+                titleEl.style.alignItems = 'center';
+                titleEl.style.justifyContent = 'center';
+                titleEl.style.gap = '8px';
+                const iconSpan = document.createElement('span');
+                iconSpan.textContent = terrainEmoji;
+                iconSpan.style.fontSize = '1.5em';
+                const textSpan = document.createElement('span');
+                textSpan.textContent = terrainName;
+                titleEl.appendChild(iconSpan);
+                titleEl.appendChild(textSpan);
+            } else if (titleEl) {
+                titleEl.textContent = terrainName;
+            }
+        }, 0);
+        const proceed = await h.closed;
+        if (proceed) {
+            adventureState.currentNodeContent = [];
+            adventureState.currentNodeContent = contents.slice();
+            await movePlayerToNode(nodeId);
+            adventureState.currentNodeId = nodeId;
+            adventureState.resolvedNodeIds = Array.isArray(adventureState.resolvedNodeIds) ? adventureState.resolvedNodeIds : [];
+            if (!adventureState.resolvedNodeIds.includes(nodeId)) {
+                adventureState.resolvedNodeIds.push(nodeId);
+            }
+            persistAdventure();
+            renderAdventure();
+        }
+    } catch {
+        await movePlayerToNode(nodeId);
+        adventureState.currentNodeId = nodeId;
+        adventureState.resolvedNodeIds = Array.isArray(adventureState.resolvedNodeIds) ? adventureState.resolvedNodeIds : [];
+        if (!adventureState.resolvedNodeIds.includes(nodeId)) {
+            adventureState.resolvedNodeIds.push(nodeId);
+        }
+        persistAdventure();
+        renderAdventure();
+    }
 }
 
 function setAdventureInputBlock(on){
@@ -985,8 +1599,9 @@ function movePlayerMarker(from, to, durationMs){
         const el = document.getElementById('adv-player');
         if (!el) { resolve(); return; }
         const start = performance.now();
+        const duration = durationMs || getAdventureMoveDurationMs();
         function tick(t){
-            const k = Math.min(1, (t - start) / Math.max(1, durationMs||ADVENTURE_MOVE_DURATION_MS));
+            const k = Math.min(1, (t - start) / Math.max(1, duration));
             const x = from.x + (to.x - from.x) * k;
             const y = from.y + (to.y - from.y) * k;
             el.setAttribute('transform', `translate(${x},${y})`);
@@ -1007,9 +1622,23 @@ async function movePlayerToNode(nodeId){
     adventureState.movingToNodeId = nodeId;
     persistAdventure();
     setAdventureInputBlock(true);
-    await movePlayerMarker(from, to, ADVENTURE_MOVE_DURATION_MS);
+    await movePlayerMarker(from, to, getAdventureMoveDurationMs());
     setAdventureInputBlock(false);
-    // Центрируем контейнер на новой позиции героя
+    
+    const map = adventureState.map;
+    const node = map && map.nodes ? map.nodes[nodeId] : null;
+    if (node && node.terrainType && node.travelDays && nodeId !== adventureState.currentNodeId && node.type !== 'start') {
+        try {
+            if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') {
+                window.AdventureTime.addDays(node.travelDays);
+            }
+        } catch {}
+    }
+    
+    adventureState.currentNodeId = nodeId;
+    adventureState.sectorThreatLevel = getCurrentThreatLevel();
+    persistAdventure();
+    
     try {
         const board = document.getElementById('adventure-map-board');
         if (board && to) {
@@ -1021,6 +1650,340 @@ async function movePlayerToNode(nodeId){
     } catch {}
     adventureState.movingToNodeId = undefined;
     persistAdventure();
+    renderThreatLevelIndicator();
+    renderNodeContentItems();
+}
+
+function renderNodeContentItems() {
+    const container = document.getElementById('adventure-node-content-area');
+    if (!container) return;
+    container.innerHTML = '';
+    const contents = Array.isArray(adventureState.currentNodeContent) ? adventureState.currentNodeContent : [];
+    if (contents.length === 0) return;
+    contents.forEach(function(item, index) {
+        const tpl = document.getElementById('tpl-node-content-item');
+        const el = tpl ? tpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+        if (!tpl) {
+            el.className = 'node-content-item';
+            const icon = document.createElement('div');
+            icon.className = 'node-content-icon';
+            el.appendChild(icon);
+        }
+        const iconEl = el.querySelector('.node-content-icon') || el.querySelector('[data-role="icon"]');
+        if (iconEl) {
+            if (item.type === 'event') {
+                const ev = item.data;
+                iconEl.textContent = ev.icon || '✨';
+            } else if (item.type === 'encounter') {
+                const enc = item.data;
+                iconEl.textContent = enc.icon || (enc.class === 'boss' ? '👑' : enc.class === 'elite' ? '💀' : '😡');
+            } else if (item.type === 'raid') {
+                const raid = item.data;
+                iconEl.textContent = raid.icon || '⚔️';
+            }
+        }
+        el.setAttribute('data-index', String(index));
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', function() {
+            showContentItemModal(item, index);
+        });
+        container.appendChild(el);
+    });
+}
+
+async function showContentItemModal(item, index) {
+    try {
+        if (!window.UI || typeof window.UI.showModal !== 'function') return;
+        const body = document.createElement('div');
+        body.style.padding = '8px';
+        if (item.type === 'encounter') {
+            const enc = item.data;
+            const iconBlock = document.createElement('div');
+            iconBlock.style.textAlign = 'center';
+            iconBlock.style.marginBottom = '16px';
+            iconBlock.style.padding = '12px';
+            iconBlock.style.background = '#1a1a1a';
+            iconBlock.style.border = '1px solid #654321';
+            iconBlock.style.borderRadius = '8px';
+            iconBlock.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+            const iconEl = document.createElement('div');
+            iconEl.style.fontSize = '3em';
+            iconEl.textContent = enc.icon || (enc.class === 'boss' ? '👑' : enc.class === 'elite' ? '💀' : '😡');
+            iconBlock.appendChild(iconEl);
+            const nameEl = document.createElement('div');
+            nameEl.style.fontSize = '1.2em';
+            nameEl.style.fontWeight = '600';
+            nameEl.style.color = '#cd853f';
+            nameEl.style.marginTop = '8px';
+            nameEl.textContent = enc.name || enc.id || 'Энкаунтер';
+            iconBlock.appendChild(nameEl);
+            body.appendChild(iconBlock);
+            (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+            if (enc.monsters && Array.isArray(enc.monsters)) {
+                const enemiesTitle = document.createElement('div');
+                enemiesTitle.style.margin = '6px 0';
+                enemiesTitle.style.color = '#cd853f';
+                enemiesTitle.style.textAlign = 'center';
+                enemiesTitle.textContent = 'Возможные противники';
+                body.appendChild(enemiesTitle);
+                const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+                const enemiesWrapTpl = document.getElementById('tpl-rewards-list');
+                const enemiesWrap = enemiesWrapTpl ? enemiesWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                const enemiesItems = enemiesWrap.querySelector('[data-role="items"]') || enemiesWrap;
+                const uniqEnemyIds = Array.from(new Set((enc.monsters || []).map(function(g){ return g && g.id; }).filter(Boolean)));
+                uniqEnemyIds.forEach(function(id){
+                    const itemTpl = document.getElementById('tpl-reward-unit');
+                    const el = itemTpl ? itemTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                    if (!itemTpl) el.className = 'reward-item';
+                    el.classList.add('clickable');
+                    const m = monsters[id] || { name: id, view: '👤' };
+                    const monsterData = enc.monsters.find(function(mon){ return mon && mon.id === id; });
+                    const amountText = monsterData && monsterData.amount ? monsterData.amount : '?';
+                    const iconEl = el.querySelector('.reward-icon') || el;
+                    const nameEl = el.querySelector('.reward-name');
+                    if (iconEl) iconEl.textContent = m.view || '👤';
+                    if (nameEl) nameEl.textContent = `${m.name || id} (${amountText})`;
+                    el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(id); });
+                    enemiesItems.appendChild(el);
+                });
+                body.appendChild(enemiesWrap);
+                (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '10px 0 8px 0'; body.appendChild(sep); })();
+            }
+            const rewardsTitle = document.createElement('div');
+            rewardsTitle.style.margin = '10px 0 6px 0';
+            rewardsTitle.style.color = '#cd853f';
+            rewardsTitle.style.textAlign = 'center';
+            rewardsTitle.textContent = 'Возможные награды';
+            body.appendChild(rewardsTitle);
+            let rewards = [];
+            if (enc.rewardId) {
+                const rewardsCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('rewards') : null;
+                const rewardsTables = rewardsCfg && Array.isArray(rewardsCfg.tables) ? rewardsCfg.tables : [];
+                const rewardTable = rewardsTables.find(function(t){ return t && t.id === enc.rewardId; });
+                if (rewardTable && Array.isArray(rewardTable.rewards)) {
+                    rewards = rewardTable.rewards;
+                }
+            } else if (Array.isArray(enc.rewards)) {
+                rewards = enc.rewards;
+            }
+            if (rewards.length > 0) {
+                const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+                const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+                const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+                const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+                const rewardsWrapTpl = document.getElementById('tpl-rewards-list');
+                const rewardsWrap = rewardsWrapTpl ? rewardsWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                const rewardsItems = rewardsWrap.querySelector('[data-role="items"]') || rewardsWrap;
+                rewards.forEach(function(r){
+                    if (r && r.type === 'currency') {
+                        const tplItem = document.getElementById('tpl-reward-currency');
+                        const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                        if (!tplItem) el.className = 'reward-item';
+                        const cd = curById[r.id] || { name: r.id, icon: '💠' };
+                        const iconEl = el.querySelector('.reward-icon') || el;
+                        const nameEl = el.querySelector('.reward-name');
+                        if (iconEl) iconEl.textContent = cd.icon || '💠';
+                        if (nameEl) nameEl.textContent = cd.name || r.id;
+                        rewardsItems.appendChild(el);
+                    } else if (r && (r.type === 'monster' || r.type === 'unit')) {
+                        const tplItem = document.getElementById('tpl-reward-unit');
+                        const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                        if (!tplItem) el.className = 'reward-item';
+                        el.classList.add('clickable');
+                        const m = monsters[r.id] || { name: r.id, view: '👤' };
+                        const iconEl = el.querySelector('.reward-icon') || el;
+                        const nameEl = el.querySelector('.reward-name');
+                        if (iconEl) iconEl.textContent = m.view || '👤';
+                        if (nameEl) nameEl.textContent = m.name || r.id;
+                        el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(r.id); });
+                        rewardsItems.appendChild(el);
+                    }
+                });
+                body.appendChild(rewardsWrap);
+            } else {
+                const noRewards = document.createElement('div');
+                noRewards.style.textAlign = 'center';
+                noRewards.style.color = '#888';
+                noRewards.style.padding = '8px';
+                noRewards.textContent = 'Награды не указаны';
+                body.appendChild(noRewards);
+            }
+        } else if (item.type === 'event') {
+            const ev = item.data;
+            const iconBlock = document.createElement('div');
+            iconBlock.style.textAlign = 'center';
+            iconBlock.style.marginBottom = '16px';
+            iconBlock.style.padding = '12px';
+            iconBlock.style.background = '#1a1a1a';
+            iconBlock.style.border = '1px solid #654321';
+            iconBlock.style.borderRadius = '8px';
+            iconBlock.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+            const iconEl = document.createElement('div');
+            iconEl.style.fontSize = '3em';
+            iconEl.textContent = ev.icon || '✨';
+            iconBlock.appendChild(iconEl);
+            const nameEl = document.createElement('div');
+            nameEl.style.fontSize = '1.2em';
+            nameEl.style.fontWeight = '600';
+            nameEl.style.color = '#cd853f';
+            nameEl.style.marginTop = '8px';
+            nameEl.textContent = ev.name || ev.id || 'Событие';
+            iconBlock.appendChild(nameEl);
+            body.appendChild(iconBlock);
+        } else if (item.type === 'raid') {
+            const raidDef = item.data;
+            const iconBlock = document.createElement('div');
+            iconBlock.style.textAlign = 'center';
+            iconBlock.style.marginBottom = '16px';
+            iconBlock.style.padding = '12px';
+            iconBlock.style.background = '#1a1a1a';
+            iconBlock.style.border = '1px solid #654321';
+            iconBlock.style.borderRadius = '8px';
+            iconBlock.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+            const iconEl = document.createElement('div');
+            iconEl.style.fontSize = '3em';
+            iconEl.textContent = raidDef.icon || '⚔️';
+            iconBlock.appendChild(iconEl);
+            const nameEl = document.createElement('div');
+            nameEl.style.fontSize = '1.2em';
+            nameEl.style.fontWeight = '600';
+            nameEl.style.color = '#cd853f';
+            nameEl.style.marginTop = '8px';
+            nameEl.textContent = raidDef.name || raidDef.id || 'Рейд';
+            iconBlock.appendChild(nameEl);
+            body.appendChild(iconBlock);
+            const desc = document.createElement('div');
+            desc.style.textAlign = 'center';
+            desc.style.margin = '8px 0 10px 0';
+            desc.textContent = `Длительность: ${raidDef.duration_days} дней`;
+            body.appendChild(desc);
+            (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '8px 0'; body.appendChild(sep); })();
+            const encCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('encounters') : null;
+            const encounters = encCfg && Array.isArray(encCfg.encounters) ? encCfg.encounters : [];
+            const enc = encounters.find(function(e){ return e && e.id === raidDef.encounter_id; });
+            if (enc) {
+                const enemiesTitle = document.createElement('div');
+                enemiesTitle.style.margin = '6px 0';
+                enemiesTitle.style.color = '#cd853f';
+                enemiesTitle.style.textAlign = 'center';
+                enemiesTitle.textContent = 'Возможные противники';
+                body.appendChild(enemiesTitle);
+                const monsters = (window.StaticData && window.StaticData.getConfig) ? (function(){ const m = window.StaticData.getConfig('monsters'); return (m && m.unitTypes) ? m.unitTypes : m; })() : {};
+                const enemiesWrapTpl = document.getElementById('tpl-rewards-list');
+                const enemiesWrap = enemiesWrapTpl ? enemiesWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                const enemiesItems = enemiesWrap.querySelector('[data-role="items"]') || enemiesWrap;
+                const uniqEnemyIds = Array.from(new Set((enc.monsters || []).map(function(g){ return g && g.id; }).filter(Boolean)));
+                uniqEnemyIds.forEach(function(id){
+                    const itemTpl = document.getElementById('tpl-reward-unit');
+                    const el = itemTpl ? itemTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                    if (!itemTpl) el.className = 'reward-item';
+                    el.classList.add('clickable');
+                    const m = monsters[id] || { name: id, view: '👤' };
+                    const iconEl = el.querySelector('.reward-icon') || el;
+                    const nameEl = el.querySelector('.reward-name');
+                    if (iconEl) iconEl.textContent = m.view || '👤';
+                    if (nameEl) nameEl.textContent = m.name || id;
+                    el.addEventListener('click', function(e){ try { e.stopPropagation(); } catch {} showUnitInfoModal(id); });
+                    enemiesItems.appendChild(el);
+                });
+                body.appendChild(enemiesWrap);
+                (function(){ const sep = document.createElement('div'); sep.style.height = '1px'; sep.style.background = '#444'; sep.style.opacity = '0.6'; sep.style.margin = '10px 0 8px 0'; body.appendChild(sep); })();
+            }
+            const rewardsTitle = document.createElement('div');
+            rewardsTitle.style.margin = '10px 0 6px 0';
+            rewardsTitle.style.color = '#cd853f';
+            rewardsTitle.style.textAlign = 'center';
+            rewardsTitle.textContent = 'Возможные награды';
+            body.appendChild(rewardsTitle);
+            const rewardsCfg = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('rewards') : null;
+            const rewardsTables = rewardsCfg && Array.isArray(rewardsCfg.tables) ? rewardsCfg.tables : [];
+            const rewardTable = rewardsTables.find(function(t){ return t && t.id === raidDef.reward_id; });
+            if (rewardTable && Array.isArray(rewardTable.rewards)) {
+                const curDefs = (window.StaticData && window.StaticData.getConfig) ? window.StaticData.getConfig('currencies') : null;
+                const curList = curDefs && Array.isArray(curDefs.currencies) ? curDefs.currencies : [];
+                const curById = {}; curList.forEach(function(c){ curById[c.id] = c; });
+                const rewardsWrapTpl = document.getElementById('tpl-rewards-list');
+                const rewardsWrap = rewardsWrapTpl ? rewardsWrapTpl.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                const rewardsItems = rewardsWrap.querySelector('[data-role="items"]') || rewardsWrap;
+                rewardTable.rewards.forEach(function(r){
+                    if (r && r.type === 'currency') {
+                        const tplItem = document.getElementById('tpl-reward-currency');
+                        const el = tplItem ? tplItem.content.firstElementChild.cloneNode(true) : document.createElement('div');
+                        if (!tplItem) el.className = 'reward-item';
+                        const cd = curById[r.id] || { name: r.id, icon: '💠' };
+                        const iconEl = el.querySelector('.reward-icon') || el;
+                        const nameEl = el.querySelector('.reward-name');
+                        if (iconEl) iconEl.textContent = cd.icon || '💠';
+                        if (nameEl) nameEl.textContent = cd.name || r.id;
+                        rewardsItems.appendChild(el);
+                    }
+                });
+                body.appendChild(rewardsWrap);
+            }
+        }
+        const titleText = item.type === 'event' ? 'Событие' : (item.type === 'raid' ? 'Рейд' : 'Энкаунтер');
+        const h = window.UI.showModal(body, { type: 'dialog', title: titleText, yesText: 'Начать', noText: 'Закрыть' });
+        const proceed = await h.closed;
+        if (proceed) {
+            if (item.type === 'encounter') {
+                startEncounterBattle(item.data);
+            } else if (item.type === 'event') {
+                await handleEventFromContent(item.data);
+            } else if (item.type === 'raid') {
+                const raidDef = item.data;
+                if (window.Raids && typeof window.Raids.addAvailableRaids === 'function') {
+                    window.Raids.addAvailableRaids([raidDef.id]);
+                }
+                const allRaids = (window.Raids && typeof window.Raids.getAllRaids === 'function') ? window.Raids.getAllRaids() : [];
+                const raidInstance = allRaids.find(function(r){ return r.raidDefId === raidDef.id && r.status === 'available'; });
+                if (raidInstance) {
+                    await showArmySplitModal(raidInstance, raidDef);
+                    const idx = adventureState.currentNodeContent.findIndex(function(ci) {
+                        return ci.type === item.type && ci.id === item.id && ci.data && ci.data.id === item.data.id;
+                    });
+                    if (idx >= 0) {
+                        adventureState.currentNodeContent.splice(idx, 1);
+                        persistAdventure();
+                        renderNodeContentItems();
+                    }
+                }
+                return;
+            }
+            const idx = adventureState.currentNodeContent.findIndex(function(ci) {
+                return ci.type === item.type && ci.id === item.id && ci.data && ci.data.id === item.data.id;
+            });
+            if (idx >= 0) {
+                adventureState.currentNodeContent.splice(idx, 1);
+                persistAdventure();
+                renderNodeContentItems();
+            }
+        }
+    } catch {}
+}
+
+async function handleEventFromContent(eventData) {
+    try {
+        if (!eventData) return;
+        if (window.UI && typeof window.UI.showModal === 'function') {
+            const body = document.createElement('div');
+            const text = document.createElement('div');
+            text.textContent = eventData.description || eventData.name || eventData.id;
+            text.style.textAlign = 'center';
+            text.style.margin = '8px 0 10px 0';
+            body.appendChild(text);
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.justifyContent = 'center';
+            wrap.style.gap = '10px';
+            body.appendChild(wrap);
+            const h = window.UI.showModal(body, { type: 'dialog', title: eventData.name || 'Событие', yesText: eventData.options?.[0]?.text || 'Ок', noText: eventData.options?.[1]?.text || 'Пропустить' });
+            h.closed.then(async function(ok) {
+                const opt = ok ? (eventData.options?.[0]) : (eventData.options?.[1]);
+                await applyEffects(opt && opt.effects);
+                renderAdventure();
+            });
+        }
+    } catch {}
 }
 
 function resolveGraphNode(nodeId){
@@ -1031,18 +1994,7 @@ function resolveGraphNode(nodeId){
         adventureState.resolvedNodeIds = Array.isArray(adventureState.resolvedNodeIds) ? adventureState.resolvedNodeIds : [];
         if (!adventureState.resolvedNodeIds.includes(nodeId)) adventureState.resolvedNodeIds.push(nodeId);
         persistAdventure();
-        if (node.type === 'event') {
-            handleEventNode(node);
-            return;
-        }
-        if (node.type === 'reward') {
-            handleRewardNode();
-            return;
-        }
-        // fight/elite/boss
-        const enc = (window.AdventureGraph && window.AdventureGraph.pickEncounterFor) ? window.AdventureGraph.pickEncounterFor({ class: node.class || 'normal', tier: node.tier || 1 }) : null;
-        if (enc) startEncounterBattle(enc);
-        else renderAdventure();
+        renderAdventure();
     } catch { renderAdventure(); }
 }
 
@@ -1062,7 +2014,6 @@ async function handleEventNode(node){
             h.closed.then(async function(ok){
                 const opt = ok ? (e.options?.[0]) : (e.options?.[1]);
                 await applyEffects(opt && opt.effects);
-                try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
                 renderAdventure();
             });
         } else { renderAdventure(); }
@@ -1076,7 +2027,6 @@ async function handleRewardNode(){
         const t = tables[0] || null;
         if (t) await applyEffects(t.rewards);
     } catch {}
-    try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
     renderAdventure();
 }
 
@@ -1374,6 +2324,8 @@ async function startEncounterBattle(encData) {
     const attackers = pickSquadForBattle();
     if (attackers.length === 0) return;
     for (const g of attackers) { adventureState.pool[g.id] -= g.count; if (adventureState.pool[g.id] < 0) adventureState.pool[g.id] = 0; }
+    const isBoss = enc.class === 'boss';
+    const threatMultiplier = isBoss ? getThreatMultiplier() : 1.0;
     const cfg = {
         battleConfig: { name: adventureState.config.adventure.name, defendersStart: true },
         armies: {
@@ -1391,6 +2343,9 @@ async function startEncounterBattle(encData) {
                     } else {
                         const n = Number(v); if (!isNaN(n)) cnt = Math.max(0, Math.floor(n));
                     }
+                }
+                if (isBoss && threatMultiplier > 1.0) {
+                    cnt = Math.floor(cnt * threatMultiplier);
                 }
                 return { id: g.id, count: cnt };
             }) }
@@ -1462,6 +2417,7 @@ function finishAdventureBattle(winner) {
     const isRaid = !!window._currentRaidData;
     const raid = window._currentRaidData;
     const attackersAlive = (window.gameState.attackers || []).filter(u => u.alive);
+    const encData = window._lastEncounterData;
     if (isRaid) {
         try {
             const sent = Number(window._lastAttackersSentCount || 0);
@@ -1535,7 +2491,6 @@ function finishAdventureBattle(winner) {
                 if (allVisited) adventureState.lastResult = 'Победа!';
             } catch {}
             adventureState.lastResult = `Победа!`;
-            try { if (window.AdventureTime && typeof window.AdventureTime.addDays === 'function') window.AdventureTime.addDays(1); } catch {}
         } else {
             adventureState.lastResult = 'Поражение';
         }
@@ -1543,6 +2498,16 @@ function finishAdventureBattle(winner) {
     adventureState.inBattle = false;
     persistAdventure();
     window.adventureState = adventureState;
+    if (!isRaid && encData) {
+        const idx = adventureState.currentNodeContent.findIndex(function(item) {
+            return item.type === 'encounter' && item.data && item.data.id === encData.id;
+        });
+        if (idx >= 0) {
+            adventureState.currentNodeContent.splice(idx, 1);
+            persistAdventure();
+            renderNodeContentItems();
+        }
+    }
     const btnHome = document.getElementById('battle-btn-home');
     if (btnHome) btnHome.style.display = 'none';
     if (window.addToLog) window.addToLog('📯 Бой завершён. Нажмите «Завершить бой», чтобы вернуться к приключению.');

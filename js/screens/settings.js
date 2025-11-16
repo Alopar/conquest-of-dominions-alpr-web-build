@@ -4,6 +4,7 @@ let gameSettings = {
     unitsPerRow: 10,
     meleeHitThreshold: 5,
     rangeHitThreshold: 11,
+    adventureMoveDuration: 5,
     development: { mode: 'tracks' },
     battleSettings: {
         showDetailedLog: true,
@@ -40,6 +41,8 @@ function displaySettings() {
     const rangeEl = document.getElementById('rangeHitThreshold');
     if (meleeEl) meleeEl.value = gameSettings.meleeHitThreshold;
     if (rangeEl) rangeEl.value = gameSettings.rangeHitThreshold;
+    const moveDurEl = document.getElementById('adventureMoveDuration');
+    if (moveDurEl) moveDurEl.value = Number(gameSettings.adventureMoveDuration || 5);
 
     document.getElementById('showDetailedLog').checked = gameSettings.battleSettings.showDetailedLog;
     const altEl = document.getElementById('attackAlternate');
@@ -73,6 +76,8 @@ function saveSettingsFromScreen() {
     const rangeEl = document.getElementById('rangeHitThreshold');
     gameSettings.meleeHitThreshold = parseInt(meleeEl ? meleeEl.value : 5);
     gameSettings.rangeHitThreshold = parseInt(rangeEl ? rangeEl.value : 11);
+    const moveDurEl = document.getElementById('adventureMoveDuration');
+    gameSettings.adventureMoveDuration = parseInt(moveDurEl ? moveDurEl.value : 5);
 
     gameSettings.battleSettings.showDetailedLog = document.getElementById('showDetailedLog').checked;
     const altEl = document.getElementById('attackAlternate');
@@ -109,6 +114,7 @@ function resetSettingsToDefault() {
         unitsPerRow: 10,
         meleeHitThreshold: 5,
         rangeHitThreshold: 11,
+        adventureMoveDuration: 5,
         battleSettings: {
             showDetailedLog: true,
             attackAlternate: true,

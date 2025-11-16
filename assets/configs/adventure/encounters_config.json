@@ -4,6 +4,8 @@
       "id": "01.001",
       "tier": 1,
       "class": "normal",
+      "name": "Крысиная засада",
+      "icon": "🐭",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -14,6 +16,8 @@
       "id": "01.002",
       "tier": 1,
       "class": "normal",
+      "name": "Воровская банда",
+      "icon": "🔪",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -25,6 +29,8 @@
       "id": "01.003",
       "tier": 1,
       "class": "normal",
+      "name": "Лисья охота",
+      "icon": "🐔",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -36,6 +42,8 @@
       "id": "02.001",
       "tier": 2,
       "class": "normal",
+      "name": "Разбойный отряд",
+      "icon": "🔪",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -48,6 +56,8 @@
       "id": "02.002",
       "tier": 2,
       "class": "normal",
+      "name": "Лучники и лисы",
+      "icon": "🏹",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -59,6 +69,8 @@
       "id": "02.003",
       "tier": 2,
       "class": "elite",
+      "name": "Элитный отряд",
+      "icon": "🔪",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -70,6 +82,8 @@
       "id": "02.004",
       "tier": 2,
       "class": "boss",
+      "name": "Куриный король",
+      "icon": "🔪",
       "tags": ["village"],
       "weight": 1,
       "monsters": [
@@ -81,6 +95,8 @@
       "id": "03.001",
       "tier": 3,
       "class": "normal",
+      "name": "Болотные твари",
+      "icon": "🐍",
       "tags": ["swamp"],
       "weight": 1,
       "monsters": [
@@ -92,6 +108,8 @@
       "id": "03.002",
       "tier": 3,
       "class": "normal",
+      "name": "Паучье болото",
+      "icon": "🕷️",
       "tags": ["swamp"],
       "weight": 1,
       "monsters": [
@@ -103,6 +121,8 @@
       "id": "03.003",
       "tier": 3,
       "class": "elite",
+      "name": "Маг пауков",
+      "icon": "🔮",
       "tags": ["swamp"],
       "weight": 1,
       "monsters": [
@@ -114,6 +134,8 @@
       "id": "04.001",
       "tier": 4,
       "class": "normal",
+      "name": "Орки и волки",
+      "icon": "👹",
       "tags": ["mountain"],
       "weight": 1,
       "monsters": [
@@ -125,6 +147,8 @@
       "id": "04.002",
       "tier": 4,
       "class": "normal",
+      "name": "Гоблинская орда",
+      "icon": "👹",
       "tags": ["mountain"],
       "weight": 1,
       "monsters": [
@@ -136,6 +160,8 @@
       "id": "04.003",
       "tier": 4,
       "class": "elite",
+      "name": "Тролль и кабаны",
+      "icon": "👿",
       "tags": ["mountain"],
       "weight": 1,
       "monsters": [
@@ -148,6 +174,8 @@
       "id": "04.004",
       "tier": 4,
       "class": "boss",
+      "name": "Горный вождь",
+      "icon": "👿",
       "tags": ["mountain"],
       "weight": 1,
       "monsters": [
@@ -161,6 +189,8 @@
       "id": "05.001",
       "tier": 5,
       "class": "normal",
+      "name": "Кладбищенская нечисть",
+      "icon": "💀",
       "tags": ["graveyard"],
       "weight": 1,
       "monsters": [
@@ -173,6 +203,8 @@
       "id": "05.002",
       "tier": 5,
       "class": "normal",
+      "name": "Вампир и скелеты",
+      "icon": "🧛",
       "tags": ["graveyard"],
       "weight": 1,
       "monsters": [
@@ -185,6 +217,8 @@
       "id": "05.003",
       "tier": 5,
       "class": "elite",
+      "name": "Некромант",
+      "icon": "🧙‍♂️",
       "tags": ["graveyard"],
       "weight": 1,
       "monsters": [
@@ -197,6 +231,8 @@
       "id": "06.001",
       "tier": 6,
       "class": "normal",
+      "name": "Пещерные змеи",
+      "icon": "🐍",
       "tags": ["cave"],
       "weight": 1,
       "monsters": [
@@ -208,6 +244,8 @@
       "id": "06.002",
       "tier": 6,
       "class": "elite",
+      "name": "Дракон и змеи",
+      "icon": "🐉",
       "tags": ["cave"],
       "weight": 1,
       "monsters": [
@@ -219,6 +257,8 @@
       "id": "06.003",
       "tier": 6,
       "class": "boss",
+      "name": "Драконье логово",
+      "icon": "🐉",
       "tags": ["cave"],
       "weight": 1,
       "monsters": [

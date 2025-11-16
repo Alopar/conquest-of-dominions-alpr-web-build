@@ -402,6 +402,44 @@
 .adv-nodes-layer .adv-node { pointer-events: auto; }
 /* Сброс старых правил для SVG-узлов */
 svg .adv-node { position: static !important; display: inline !important; }
+
+.node-content-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    min-height: 80px;
+    border-top: 1px solid #444;
+}
+
+.node-content-item {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #cd853f;
+    border-radius: 8px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.node-content-item:hover {
+    border-color: #d4af37;
+    background: #2a2a2a;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.node-content-icon {
+    font-size: 28px;
+    text-align: center;
+    line-height: 1;
+}
 .adv-player-dot { position:absolute; width:24px; height:24px; transform:translate(-50%, -50%); display:flex; align-items:center; justify-content:center; pointer-events:none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); }
 
 #adventure-input-blocker { position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition: opacity .15s ease; }
