@@ -120,12 +120,32 @@
     border-radius: 18px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 2px 8px rgba(0,0,0,0.3);
     padding: 48px 32px 36px 32px;
-    margin: 32px auto;
+    margin: 10px auto;
     min-width: 500px;
     max-width: 1000px;
-    width: 100%;
+    width: 90%;
     min-height: 420px;
     z-index: 2;
+}
+
+@media (max-height: 600px) {
+    .intro-table-container {
+        padding: 20px;
+        min-height: auto;
+        min-width: auto;
+        width: 95%;
+        margin: 5px auto;
+    }
+    #intro-screen h1 {
+        font-size: 1.8em;
+        margin-bottom: 10px;
+    }
+    .intro-table {
+        border-spacing: 0 8px;
+    }
+    .intro-table-container {
+        padding: 15px 20px;
+    }
 }
 
 .intro-table {

@@ -12,7 +12,11 @@ body {
     background-color: #0d0d0d;
     color: #cd853f;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
 }
 
 .z-shell { z-index: 0; }
@@ -24,6 +28,8 @@ body {
 
 #app-shell {
     position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 #screen-layer {

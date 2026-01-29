@@ -9,7 +9,47 @@
                 this.setupMobileBehaviors();
                 this.setupOrientationCheck();
                 this.setupFullscreenPrompt();
+                this.setupAutoScaling();
             }
+        },
+
+        setupAutoScaling() {
+            const updateScale = () => {
+                const appShell = document.getElementById('app-shell');
+                if (!appShell) return;
+
+                const baseWidth = 1024;
+                const baseHeight = 576;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+
+                // Если экран меньше базового, масштабируем
+                if (windowWidth < baseWidth || windowHeight < baseHeight) {
+                    const scaleX = windowWidth / baseWidth;
+                    const scaleY = windowHeight / baseHeight;
+                    const scale = Math.min(scaleX, scaleY);
+
+                    appShell.style.transform = `scale(${scale})`;
+                    appShell.style.transformOrigin = 'top center';
+                    appShell.style.width = `${baseWidth}px`;
+                    appShell.style.height = `${baseHeight}px`;
+                    
+                    // Центрируем по горизонтали
+                    const left = (windowWidth - baseWidth * scale) / 2;
+                    appShell.style.position = 'absolute';
+                    appShell.style.left = `${left / scale}px`;
+                } else {
+                    appShell.style.transform = '';
+                    appShell.style.transformOrigin = '';
+                    appShell.style.width = '';
+                    appShell.style.height = '';
+                    appShell.style.position = '';
+                    appShell.style.left = '';
+                }
+            };
+
+            window.addEventListener('resize', updateScale);
+            updateScale();
         },
 
         setupMobileBehaviors() {
