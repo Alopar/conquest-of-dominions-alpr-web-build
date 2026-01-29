@@ -1,9 +1,0 @@
-{
-  "adventure": { "name": "Путь героя", "description": "Цепочка испытаний", "startingGold": 30 },
-  "startingArmy": [ { "id": "warrior", "count": 2 }, { "id": "archer", "count": 1 } ],
-  "shop": { "mercenaries": [ {"id":"warrior","price":12}, {"id":"archer","price":10}, {"id":"orc","price":11} ] },
-  "encounters": [
-    { "name": "Столкновение у брода", "rewardGold": 10, "defenders": [ {"id":"goblin","count":3}, {"id":"orc","count":1} ] },
-    { "name": "Логово тролля", "rewardGold": 20, "defenders": [ {"id":"troll","count":1}, {"id":"goblin","count":2} ] }
-  ]
-}
