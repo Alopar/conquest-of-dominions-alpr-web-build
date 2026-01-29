@@ -1,0 +1,25 @@
+{
+  "gameSettings": {
+    "name": "Настройки игры",
+    "description": "Основные настройки игрового процесса",
+    "unitsPerRow": 10,
+    "meleeHitThreshold": 5,
+    "rangeHitThreshold": 11,
+    "development": { "mode": "tracks" },
+    "adventureSettings": {
+      "stageProgressionMode": 2
+    },
+    "battleSettings": {
+      "showDetailedLog": true,
+      "attackAlternate": true,
+      "autoPlay": true
+    },
+    "mapSettings": {
+      "hideNodeTypes": false,
+      "hidePath": false
+    },
+    "uiSettings": {
+      "debugMode": false
+    }
+  }
+}

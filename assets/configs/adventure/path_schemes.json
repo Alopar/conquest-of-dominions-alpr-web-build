@@ -1,0 +1,69 @@
+{
+  "schemes": [
+    {
+      "sector": 1,
+      "edgeDensity": 0.55,
+      "threatLevels": [1.0, 1.5, 2.0],
+      "threatDayMultipliers": [1.0, 1.25, 1.5],
+      "threatDayAdditions": [3, 5, 5],
+      "columns": [
+        { "tier": 1, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 1, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 1, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 1, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 1, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 2, "widthRange": [1, 3], "types": { "battle": 0.5, "event": 0.2, "elite": 0.2, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 2, "widthRange": [1, 3], "types": { "battle": 0.5, "event": 0.2, "elite": 0.2, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 2, "widthRange": [1, 3], "types": { "battle": 0.2, "elite": 0.7, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 2, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.5, "elite": 0.2, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 2, "widthRange": [1, 1], "types": { "boss": 1 } }
+      ]
+    },
+    {
+      "sector": 2,
+      "edgeDensity": 0.55,
+      "threatLevels": [1.0, 1.5, 2.0],
+      "threatDayMultipliers": [1.0, 1.25, 1.5],
+      "threatDayAdditions": [3, 5, 5],
+      "columns": [
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 3, "widthRange": [1, 3], "types": { "battle": 0.2, "elite": 0.6, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.2, "elite": 0.7, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 4, "widthRange": [1, 1], "types": { "boss": 1 } }
+      ]
+    },
+    {
+      "sector": 3,
+      "edgeDensity": 0.55,
+      "threatLevels": [1.0, 1.5, 2.0],
+      "threatDayMultipliers": [1.0, 1.25, 1.5],
+      "threatDayAdditions": [3, 5, 5],
+      "columns": [
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 5, "widthRange": [1, 3], "types": { "battle": 0.2, "elite": 0.6, "raid": 0.2 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.2, "elite": 0.7, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.6, "event": 0.2, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 3], "types": { "battle": 0.2, "event": 0.6, "elite": 0.1, "raid": 0.1 }, "terrain": { "town": 0.25, "plain": 0.25, "forest": 0.25, "mountains": 0.25 } },
+        { "tier": 6, "widthRange": [1, 1], "types": { "boss": 1 } }
+      ]
+    }
+  ]
+}
+
+

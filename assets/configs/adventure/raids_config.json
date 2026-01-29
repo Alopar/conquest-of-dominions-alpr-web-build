@@ -1,0 +1,59 @@
+{
+  "raids": [
+    {
+      "id": "raid_s1_01",
+      "name": "Зачистка деревни",
+      "icon": "🏚️",
+      "tier": 1,
+      "duration_days": 2,
+      "encounter_id": "01.001",
+      "reward_id": "B-01.001"
+    },
+    {
+      "id": "raid_s1_02",
+      "name": "Охота на лис",
+      "icon": "🦊",
+      "tier": 1,
+      "duration_days": 3,
+      "encounter_id": "01.003",
+      "reward_id": "B-01.001"
+    },
+    {
+      "id": "raid_s2_01",
+      "name": "Налет на бандитов",
+      "icon": "⚔️",
+      "tier": 3,
+      "duration_days": 4,
+      "encounter_id": "02.001",
+      "reward_id": "B-02.001"
+    },
+    {
+      "id": "raid_s2_02",
+      "name": "Охрана караваны",
+      "icon": "🛡️",
+      "tier": 4,
+      "duration_days": 5,
+      "encounter_id": "02.002",
+      "reward_id": "B-02.001"
+    },
+    {
+      "id": "raid_s3_01",
+      "name": "Разведка болот",
+      "icon": "🏕️",
+      "tier": 5,
+      "duration_days": 5,
+      "encounter_id": "03.001",
+      "reward_id": "B-03.001"
+    },
+    {
+      "id": "raid_s3_02",
+      "name": "Истребление пауков",
+      "icon": "🕷️",
+      "tier": 6,
+      "duration_days": 6,
+      "encounter_id": "03.002",
+      "reward_id": "B-03.001"
+    }
+  ]
+}
+

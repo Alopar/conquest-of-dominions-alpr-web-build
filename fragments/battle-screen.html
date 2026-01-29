@@ -1,0 +1,31 @@
+<div id="battle-screen" class="screen" style="display: none !important;">
+    <div class="menu-bar">
+        <div class="menu-left">
+            <button class="btn" id="battle-btn-home" onclick="showIntro()">Главная</button>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="battlefield-container">
+            <div class="battlefield-content">
+                <div id="battle-stats" class="battle-stats">⚔️ Атакующие 0/0 ·🛡 Защитники 0/0 · ⏳ Ход 1</div>
+                <div id="defenders-line" class="army-line"></div>
+                <div class="army-separator"></div>
+                <div id="attackers-line" class="army-line"></div>
+                <div class="controls">
+                    <button class="btn" onclick="step()" id="step-btn">⏳ Шаг</button>
+                    <button class="btn" onclick="nextTurn()" id="next-turn-btn">🔄 Ход</button>
+                    <button class="btn" onclick="toggleAutoPlay()" id="auto-play-btn" style="display:none;">🎦 Продолжить</button>
+                    <button class="btn" onclick="cycleAutoSpeed()" id="auto-speed-btn" style="display:none;">⏩ x1</button>
+                    <div style="display:flex; gap:12px; justify-content:center; margin-top:10px;">
+                        <button class="btn" id="battle-finish-btn" onclick="finishBattleToAdventure()" style="display:none;">🗺️ Завершить бой</button>
+                        <button class="btn" id="battle-retry-btn" onclick="retryBattle()" style="display:none;">⚔️ Повторить бой</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="log-panel">
+            <h3>Лог боя</h3>
+            <div id="battle-log"></div>
+        </div>
+    </div>
+</div>

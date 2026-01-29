@@ -1,0 +1,194 @@
+{
+  "tables": [
+    {
+      "id": "B-01.001",
+      "tier": 1,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "10-50" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-02.001",
+      "tier": 2,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "20-60" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-03.001",
+      "tier": 3,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "30-70" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-04.001",
+      "tier": 4,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "40-80" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-05.001",
+      "tier": 5,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "50-90" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-06.001",
+      "tier": 6,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "60-100" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-07.001",
+      "tier": 7,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "70-110" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-08.001",
+      "tier": 8,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "80-120" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-09.001",
+      "tier": 9,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "90-130" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "B-10.001",
+      "tier": 10,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "100-140" },
+        { "type": "currency", "id": "glory", "amount": "150-250" }
+      ]
+    },
+    {
+      "id": "E-01.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "100-150" }
+      ]
+    },
+    {
+      "id": "E-02.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "150-200" }
+      ]
+    },
+    {
+      "id": "E-03.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "200-250" }
+      ]
+    },
+    {
+      "id": "E-04.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "250-300" }
+      ]
+    },
+    {
+      "id": "E-05.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "300-350" }
+      ]
+    },
+    {
+      "id": "E-06.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "350-400" }
+      ]
+    },
+    {
+      "id": "E-07.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "400-450" }
+      ]
+    },
+    {
+      "id": "E-08.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "450-500" }
+      ]
+    },
+    {
+      "id": "E-09.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "500-550" }
+      ]
+    },
+    {
+      "id": "E-10.001",
+      "tier": 99,
+      "tags": [],
+      "mode": "all",
+      "rewards": [
+        { "type": "currency", "id": "gold", "amount": "550-600" }
+      ]
+    }
+  ]
+}

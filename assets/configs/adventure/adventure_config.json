@@ -1,0 +1,12 @@
+{
+  "adventure": {
+    "name": "Путь героя",
+    "description": "От крысиных бегов до драконьих сокровищ",
+    "startingCurrencies": [ { "id": "gold", "amount": 0 }, { "id": "glory", "amount": 0 } ]
+  },
+  "sectors": [
+    { "number": 1, "name": "I", "availableRaids": ["raid_s1_01", "raid_s1_02"] },
+    { "number": 2, "name": "II", "availableRaids": ["raid_s2_01", "raid_s2_02"] },
+    { "number": 3, "name": "III", "availableRaids": ["raid_s3_01", "raid_s3_02"] }
+  ]
+}

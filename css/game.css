@@ -1,0 +1,140 @@
+/* Игровые элементы - юниты, анимации, боевые элементы */
+
+.unit {
+    width: 55px;
+    height: 55px;
+    border: 3px solid #654321;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    background: linear-gradient(145deg, #8b7355, #a0845c, #8b7355);
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3);
+    transition: all 0.2s ease;
+}
+
+.unit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.4);
+}
+
+.unit.active {
+    border-color: #cd853f;
+    box-shadow: 0 0 15px #cd853f, 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.unit.dead {
+    opacity: 0.4;
+    background: linear-gradient(145deg, #555, #777, #555);
+    border-color: #666;
+    transform: none;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.unit.attacked {
+    background: linear-gradient(145deg, #654321, #8b7355, #654321);
+    border-color: #4a3218;
+    opacity: 0.8;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.army-line {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 25px 0;
+    min-height: 70px;
+    border: 3px solid #654321;
+    background-color: rgba(26, 26, 26, 0.5);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.battle-stats {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    color: #cd853f;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.army-separator {
+    height: 2px;
+    margin: 10px 0 20px 0;
+    background: linear-gradient(to right, rgba(128,128,128,0), rgba(160,160,160,0.6), rgba(128,128,128,0));
+}
+
+.hp-bar {
+    position: absolute;
+    bottom: -18px;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    background: linear-gradient(90deg, #8b0000, #dc143c, #8b0000);
+    border-radius: 3px;
+    border: 1px solid #654321;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+    width: var(--hp, 100%);
+    transition: width 0.3s ease;
+}
+
+.army-label {
+    font-weight: 600;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #cd853f;
+}
+
+.battle-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.battle-info h2 {
+    color: #cd853f;
+    font-size: 2em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+#battle-status {
+    font-size: 1.2em;
+    color: #cd853f;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Анимации боя */
+@keyframes attackUp { 0% { transform: translateY(0); } 50% { transform: translateY(-12px) scale(1.06); } 100% { transform: translateY(0); } }
+@keyframes attackDown { 0% { transform: translateY(0); } 50% { transform: translateY(12px) scale(1.06); } 100% { transform: translateY(0); } }
+.anim-attack-up { animation: attackUp 0.42s ease; }
+.anim-attack-down { animation: attackDown 0.42s ease; }
+
+@keyframes hitShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
+@keyframes hitFlashRed { 0%,100% { box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3); } 50% { box-shadow: 0 0 14px rgba(255,45,45,0.9), inset 0 0 0 999px rgba(255,45,45,0.25); } }
+@keyframes hitFlashYellow { 0%,100% { box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3); } 50% { box-shadow: 0 0 14px rgba(255,190,30,0.9), inset 0 0 0 999px rgba(255,190,30,0.25); } }
+.anim-hit-red { animation: hitShake 0.38s ease, hitFlashRed 0.38s ease; }
+.anim-hit-yellow { animation: hitShake 0.38s ease, hitFlashYellow 0.38s ease; }
+
+@keyframes killFade { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0.4; transform: scale(0.9); } }
+.anim-kill { animation: killFade 0.6s ease forwards; }
+
+@keyframes dodgeUp { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+@keyframes dodgeDown { 0% { transform: translateY(0); } 50% { transform: translateY(10px); } 100% { transform: translateY(0); } }
+.anim-dodge-up { animation: dodgeUp 0.34s ease; }
+.anim-dodge-down { animation: dodgeDown 0.34s ease; }
+
+@keyframes fadeOutShrink { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0); } }
+.anim-fadeout { animation: fadeOutShrink 0.3s ease forwards; }

@@ -1,0 +1,70 @@
+{
+  "perks": [
+    { "id": "merc_tier_1", "icon": "📜", "name": "Доступ к наёмникам I", "description": "Открывает наёмников I тира", "hidden": true,
+      "effects": [ { "type": "access", "path": "merc.tier", "value": 1 } ] },
+    { "id": "merc_tier_2", "icon": "📜", "name": "Доступ к наёмникам II", "description": "Открывает наёмников II тира", "hidden": false,
+      "effects": [ { "type": "access", "path": "merc.tier", "value": 2 } ] },
+    { "id": "merc_tier_3", "icon": "📜", "name": "Доступ к наёмникам III", "description": "Открывает наёмников III тира", "hidden": false,
+      "effects": [ { "type": "access", "path": "merc.tier", "value": 3 } ] },
+
+    { "id": "army_size_1", "icon": "⚔️", "name": "Расширение армии I", "description": "+5 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 5 } ] },
+    { "id": "army_size_2", "icon": "⚔️", "name": "Расширение армии II", "description": "+5 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 5 } ] },
+    { "id": "army_size_3", "icon": "⚔️", "name": "Расширение армии III", "description": "+10 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 10 } ] },
+    { "id": "army_size_4", "icon": "⚔️", "name": "Расширение армии IV", "description": "+10 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 10 } ] },
+    { "id": "army_size_5", "icon": "⚔️", "name": "Расширение армии V", "description": "+10 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 10 } ] },
+    { "id": "army_size_6", "icon": "⚔️", "name": "Расширение армии VI", "description": "+15 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 15 } ] },
+    { "id": "army_size_7", "icon": "⚔️", "name": "Расширение армии VII", "description": "+25 к лимиту армии", "hidden": false,
+      "effects": [ { "type": "stat", "path": "adventure.army.size", "value": 25 } ] },
+
+    { "id": "hp_melee_1", "icon": "❤️", "name": "Крепкие мышцы I", "description": "Юниты ближнего боя получают +1 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.melee", "value": 1 } ] },
+    { "id": "hp_melee_2", "icon": "❤️", "name": "Крепкие мышцы II", "description": "Юниты ближнего боя получают +2 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.melee", "value": 2 } ] },
+    { "id": "hp_melee_3", "icon": "❤️", "name": "Крепкие мышцы III", "description": "Юниты ближнего боя получают +2 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.melee", "value": 2 } ] },
+    { "id": "hp_melee_4", "icon": "❤️", "name": "Крепкие мышцы IV", "description": "Юниты ближнего боя получают +5 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.melee", "value": 5 } ] },
+    { "id": "dmg_melee_1", "icon": "💥", "name": "Мощные удары I", "description": "Юниты ближнего боя наносят +1 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.melee", "value": 1 } ] },
+    { "id": "dmg_melee_2", "icon": "💥", "name": "Мощные удары II", "description": "Юниты ближнего боя наносят +2 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.melee", "value": 2 } ] },
+
+
+    { "id": "hp_range_1", "icon": "❤️", "name": "Тактики уклонения I", "description": "Юниты дальнего боя получают +2 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.range", "value": 2 } ] },
+    { "id": "hp_range_2", "icon": "❤️", "name": "Тактики уклонения II", "description": "Юниты дальнего боя получают +3 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.range", "value": 3 } ] },
+    { "id": "dmg_range_1", "icon": "💥", "name": "Меткая стрела I", "description": "Юниты дальнего боя наносят +2 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.range", "value": 2 } ] },
+    { "id": "dmg_range_2", "icon": "💥", "name": "Меткая стрела II", "description": "Юниты дальнего боя наносят +3 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.range", "value": 3 } ] },
+    { "id": "targets_range_1", "icon": "🎯", "name": "Две стрелы", "description": "Юниты дальнего боя поражают +1 цель", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.targets.range", "value": 1 } ] },
+
+    { "id": "hp_support_1", "icon": "❤️", "name": "Энергетические щиты", "description": "Юниты поддержки получают +5 к здоровью", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.hp.support", "value": 5 } ] },
+    { "id": "dmg_support_1", "icon": "💥", "name": "Каналы магии I", "description": "Юниты поддержки наносят +1 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.support", "value": 1 } ] },
+    { "id": "dmg_support_2", "icon": "💥", "name": "Каналы магии II", "description": "Юниты поддержки наносят +1 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.support", "value": 1 } ] },
+    { "id": "dmg_support_3", "icon": "💥", "name": "Каналы магии III", "description": "Юниты поддержки наносят +1 урона", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.damage.support", "value": 1 } ] },
+    { "id": "targets_support_1", "icon": "🎯", "name": "Тайные техники I", "description": "Юниты поддержки поражают +2 цель", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.targets.support", "value": 2 } ] },
+    { "id": "targets_support_2", "icon": "🎯", "name": "Тайные техники II", "description": "Юниты поддержки поражают +3 цель", "hidden": false,
+      "effects": [ { "type": "stat", "path": "combat.targets.support", "value": 3 } ] },
+
+    { "id": "gold_bonus_20", "icon": "💰", "name": "Марадерство", "description": "+20% золота за награды", "hidden": false,
+      "effects": [ { "type": "multiplier", "path": "rewards.currency.gold", "value": 1.2 } ] },
+    { "id": "glory_bonus_10", "icon": "🏅", "name": "Баллады о героях", "description": "+10% славы за награды", "hidden": false,
+      "effects": [ { "type": "multiplier", "path": "rewards.currency.glory", "value": 1.1 } ] }
+  ]
+}
+
+
