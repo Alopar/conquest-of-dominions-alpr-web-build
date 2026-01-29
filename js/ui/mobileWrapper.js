@@ -23,33 +23,30 @@
                 const windowWidth = window.innerWidth;
                 const windowHeight = window.innerHeight;
 
-                // Если экран меньше базового, масштабируем
-                if (windowWidth < baseWidth || windowHeight < baseHeight) {
-                    const scaleX = windowWidth / baseWidth;
-                    const scaleY = windowHeight / baseHeight;
-                    const scale = Math.min(scaleX, scaleY);
+                const scale = Math.min(windowWidth / baseWidth, windowHeight / baseHeight);
 
-                    appShell.style.transform = `scale(${scale})`;
-                    appShell.style.transformOrigin = 'top center';
-                    appShell.style.width = `${baseWidth}px`;
-                    appShell.style.height = `${baseHeight}px`;
-                    
-                    // Центрируем по горизонтали
-                    const left = (windowWidth - baseWidth * scale) / 2;
-                    appShell.style.position = 'absolute';
-                    appShell.style.left = `${left / scale}px`;
-                } else {
-                    appShell.style.transform = '';
-                    appShell.style.transformOrigin = '';
-                    appShell.style.width = '';
-                    appShell.style.height = '';
-                    appShell.style.position = '';
-                    appShell.style.left = '';
-                }
+                // Применяем масштабирование и точное центрирование
+                appShell.style.width = `${baseWidth}px`;
+                appShell.style.height = `${baseHeight}px`;
+                appShell.style.transform = `scale(${scale})`;
+                appShell.style.transformOrigin = '0 0';
+                
+                const offsetX = (windowWidth - baseWidth * scale) / 2;
+                const offsetY = (windowHeight - baseHeight * scale) / 2;
+                
+                appShell.style.position = 'absolute';
+                appShell.style.left = `${offsetX}px`;
+                appShell.style.top = `${offsetY}px`;
+                
+                // Исправляем проблему с возможным смещением body
+                document.body.style.width = `${windowWidth}px`;
+                document.body.style.height = `${windowHeight}px`;
             };
 
             window.addEventListener('resize', updateScale);
             updateScale();
+            // Повторный вызов через небольшую задержку для учета появления/скрытия панелей браузера
+            setTimeout(updateScale, 500);
         },
 
         setupMobileBehaviors() {

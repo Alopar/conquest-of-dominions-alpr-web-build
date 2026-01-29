@@ -366,7 +366,7 @@ body.is-mobile {
 }
 
 .log-panel {
-    width: 25vw;
+    width: 25%;
     background-color: #1a1a1a;
     border-left: 3px solid #654321;
     padding: 20px;
@@ -425,7 +425,7 @@ body.is-mobile {
     padding: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.7);
     min-width: 600px;
-    max-width: 90vw;
+    max-width: 95%;
 }
 .modal-title { font-size: 1.1em; margin-bottom: 12px; color: #cd853f; display:none; text-align: center; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #654321; padding-bottom: 8px; }
 .modal-body { margin: 8px 0 12px 0; }
